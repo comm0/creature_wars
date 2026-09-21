@@ -15,13 +15,13 @@ int main(int argc, char* argv[])
     QApplication app(argc, argv);
 
     FelgoApplication felgo;
+    GameBackend game_backend;
     QQmlApplicationEngine engine;
 
     felgo.initialize(&engine);
 
-    GameBackend gameBackend;
     engine.setInitialProperties({
-        {QStringLiteral("gameBackend"), QVariant::fromValue(&gameBackend)}
+        {QStringLiteral("gameBackend"), QVariant::fromValue(&game_backend)}
     });
 
     QObject::connect(
