@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Controls 2.15
 
 Item {
     id: root
@@ -8,10 +9,51 @@ Item {
     property int tileSize: 16
     property bool gridVisible: true
     property var creatureModel
+    property bool spawnEnabled: true
+    property int contextColumn: 0
+    property int contextRow: 0
+
+    signal spawnRequested(string identifier, int column, int row)
 
     width: columns * tileSize
     height: rows * tileSize
     clip: true
+
+    TapHandler {
+        acceptedButtons: Qt.RightButton
+
+        onTapped: function(eventPoint) {
+            root.contextColumn = Math.floor(eventPoint.position.x / root.tileSize)
+            root.contextRow = Math.floor(eventPoint.position.y / root.tileSize)
+            spawnMenu.popup(eventPoint.position.x, eventPoint.position.y)
+        }
+    }
+
+    Menu {
+        id: spawnMenu
+
+        MenuItem {
+            text: qsTr("Spawn Minotaur")
+            enabled: root.spawnEnabled
+
+            onTriggered: root.spawnRequested(
+                "minotaur",
+                root.contextColumn,
+                root.contextRow
+            )
+        }
+
+        MenuItem {
+            text: qsTr("Spawn Orc")
+            enabled: root.spawnEnabled
+
+            onTriggered: root.spawnRequested(
+                "orc",
+                root.contextColumn,
+                root.contextRow
+            )
+        }
+    }
 
     Grid {
         anchors.fill: parent

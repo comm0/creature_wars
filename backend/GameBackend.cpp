@@ -123,22 +123,20 @@ void GameBackend::stop()
     emit runningChanged();
 }
 
-void GameBackend::spawnMinotaur()
+void GameBackend::spawnCreature(
+    const QString& identifier_p,
+    int column_p,
+    int row_p
+)
 {
     if (!game_running_) {
         return;
     }
 
-    game_.spawn_creature("minotaurs");
-}
-
-void GameBackend::spawnOrc()
-{
-    if (!game_running_) {
-        return;
-    }
-
-    game_.spawn_creature("orcs");
+    game_.spawn_creature(
+        identifier_p.toStdString(),
+        position_t{column_p, row_p}
+    );
 }
 
 void GameBackend::receive_creature(

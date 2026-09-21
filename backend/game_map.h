@@ -17,6 +17,7 @@ public:
     bool place_creature(creature_t& creature_p, position_t position_p) noexcept;
     bool move_creature(creature_t& creature_p, position_t position_p) noexcept;
 
+    bool can_place_creature(position_t position_p) const noexcept;
     bool is_position_occupied(position_t position_p) const noexcept;
 
 #ifndef NDEBUG

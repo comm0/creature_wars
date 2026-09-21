@@ -25,8 +25,11 @@ public:
 
     Q_INVOKABLE void start();
     Q_INVOKABLE void stop();
-    Q_INVOKABLE void spawnMinotaur();
-    Q_INVOKABLE void spawnOrc();
+    Q_INVOKABLE void spawnCreature(
+        const QString& identifier_p,
+        int column_p,
+        int row_p
+    );
 
 signals:
     void runningChanged();

@@ -26,6 +26,11 @@ Scene {
         rows: gameScene.gameBackend.mapRowCount
         tileSize: 16
         creatureModel: gameScene.gameBackend.creaturesModel
+        spawnEnabled: gameScene.gameBackend.running
+
+        onSpawnRequested: function(identifier, column, row) {
+            gameScene.gameBackend.spawnCreature(identifier, column, row)
+        }
     }
 
     Rectangle {
@@ -81,19 +86,6 @@ Scene {
                 onClicked: gameScene.gameBackend.stop()
             }
 
-            Button {
-                text: qsTr("Spawn Minotaur")
-                enabled: gameScene.gameBackend.running
-
-                onClicked: gameScene.gameBackend.spawnMinotaur()
-            }
-
-            Button {
-                text: qsTr("Spawn Orc")
-                enabled: gameScene.gameBackend.running
-
-                onClicked: gameScene.gameBackend.spawnOrc()
-            }
         }
     }
 

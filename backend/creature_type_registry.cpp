@@ -133,36 +133,3 @@ const creature_type_t& creature_type_registry_t::get(
 
     return *creature_type;
 }
-
-std::size_t creature_type_registry_t::group_size(
-    std::string_view group_p
-) const noexcept
-{
-    return static_cast<std::size_t>(std::count_if(
-        creature_types_.begin(),
-        creature_types_.end(),
-        [group_p](const auto& creature_type_p) {
-            return creature_type_p.group() == group_p;
-        }
-    ));
-}
-
-const creature_type_t& creature_type_registry_t::get_from_group(
-    std::string_view group_p,
-    std::size_t index_p
-) const
-{
-    for (const auto& creature_type : creature_types_) {
-        if (creature_type.group() != group_p) {
-            continue;
-        }
-
-        if (index_p == 0) {
-            return creature_type;
-        }
-
-        --index_p;
-    }
-
-    throw std::out_of_range("Unknown creature group index.");
-}

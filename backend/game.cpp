@@ -5,14 +5,11 @@
 #endif
 #include "game_constants.h"
 
-#include <random>
 #include <stdexcept>
 #include <utility>
 
 namespace
 {
-std::mt19937 random_generator{std::random_device{}()};
-
 position_t destination_position(position_t position_p, direction_t direction_p)
 {
     switch (direction_p) {
@@ -167,46 +164,28 @@ void game_t::collect_actions()
     }
 }
 
-/*! Creates a creature at a random map position. */
-void game_t::spawn_creature(std::string group_p)
+/*! Creates a creature of the requested type at a map position. */
+void game_t::spawn_creature(
+    std::string identifier_p,
+    position_t position_p
+)
 {
     if (std::this_thread::get_id() != thread_.get_id()) {
-        post([this, group = std::move(group_p)]() mutable {
-            spawn_creature(std::move(group));
+        post([this, identifier = std::move(identifier_p), position_p]() mutable {
+            spawn_creature(std::move(identifier), position_p);
         });
         return;
     }
 
-    const auto group_size = creature_type_registry_.group_size(group_p);
-
-    if (group_size == 0) {
+    if (!game_map_.can_place_creature(position_p)) {
         return;
     }
 
-    auto position_distribution = std::uniform_int_distribution<std::size_t>(
-        0,
-        game_map_t::position_count - 1
-    );
-    const auto position = game_map_.find_free_position(
-        position_distribution(random_generator)
-    );
+    const auto& creature_type = creature_type_registry_.get(identifier_p);
+    auto& creature = creatures_.create(creature_type, position_p);
 
-    if (!position.has_value()) {
-        return;
-    }
-
-    auto type_distribution = std::uniform_int_distribution<std::size_t>(
-        0,
-        group_size - 1
-    );
-    const auto& creature_type = creature_type_registry_.get_from_group(
-        group_p,
-        type_distribution(random_generator)
-    );
-    auto& creature = creatures_.create(creature_type, *position);
-
-    if (!game_map_.place_creature(creature, *position)) {
-        throw std::logic_error("Could not place a creature on a free position.");
+    if (!game_map_.place_creature(creature, position_p)) {
+        throw std::logic_error("Could not place a creature at the requested position.");
     }
 
     observer_->on_creature_created(creature);

@@ -30,7 +30,10 @@ public:
     void start(igame_observer_t& observer_p);
     void stop();
     void post(std::function<void()> event_p);
-    void spawn_creature(std::string group_p);
+    void spawn_creature(
+        std::string identifier_p,
+        position_t position_p
+    );
     void request_move(std::uint64_t id_p, direction_t direction_p);
 
 private:
