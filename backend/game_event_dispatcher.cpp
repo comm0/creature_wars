@@ -1,5 +1,8 @@
 #include "game_event_dispatcher.h"
 
+#ifndef NDEBUG
+#include <algorithm>
+#endif
 #include <stdexcept>
 #include <utility>
 
@@ -17,6 +20,12 @@ void game_event_dispatcher_t::enqueue(std::function<void()> event_p)
     }
 
     events_.push_back(std::move(event_p));
+#ifndef NDEBUG
+    peak_pending_event_count_ = std::max(
+        peak_pending_event_count_,
+        events_.size()
+    );
+#endif
 }
 
 /*! Processes queued events in arrival order. */
@@ -33,6 +42,9 @@ void game_event_dispatcher_t::dispatch_pending()
             auto event = std::move(events_.front());
             events_.pop_front();
             event();
+#ifndef NDEBUG
+            ++dispatched_event_count_;
+#endif
         }
     } catch (...) {
         dispatching_ = false;

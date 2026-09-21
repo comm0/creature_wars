@@ -47,3 +47,17 @@ add_test(
     NAME game_map_tests
     COMMAND game_map_tests
 )
+
+if(MINGW)
+    get_filename_component(MingwRuntimeDirectory "${CMAKE_CXX_COMPILER}" DIRECTORY)
+
+    foreach(RuntimeLibrary libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll)
+        add_custom_command(
+            TARGET game_map_tests
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${MingwRuntimeDirectory}/${RuntimeLibrary}"
+                "$<TARGET_FILE_DIR:game_map_tests>"
+        )
+    endforeach()
+endif()

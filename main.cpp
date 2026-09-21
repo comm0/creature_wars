@@ -1,6 +1,8 @@
 #include <QApplication>
 #include <QCoreApplication>
+#include <QByteArray>
 #include <QQmlApplicationEngine>
+#include <QtLogging>
 #include <QVariant>
 #include <QVariantMap>
 
@@ -9,9 +11,30 @@
 #include <FelgoApplication>
 
 #include "backend/GameBackend.h"
+#include "backend/debug_console.h"
+
+#ifndef NDEBUG
+namespace
+{
+void qt_message_handler(
+    QtMsgType type_p,
+    const QMessageLogContext& context_p,
+    const QString& message_p
+)
+{
+    const auto message = qFormatLogMessage(type_p, context_p, message_p).toLocal8Bit();
+    debug_console::print_message(message.constData());
+}
+}
+#endif
 
 int main(int argc, char* argv[])
 {
+#ifndef NDEBUG
+    debug_console::initialize();
+    qInstallMessageHandler(qt_message_handler);
+#endif
+
     QApplication app(argc, argv);
 
     FelgoApplication felgo;
@@ -35,5 +58,10 @@ int main(int argc, char* argv[])
     felgo.setMainQmlFileName(QStringLiteral("qml/Main.qml"));
     engine.load(QUrl(felgo.mainQmlFileName()));
 
-    return app.exec();
+    const auto exit_code = app.exec();
+    game_backend.stop();
+#ifndef NDEBUG
+    debug_console::shutdown();
+#endif
+    return exit_code;
 }

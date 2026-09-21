@@ -14,6 +14,13 @@ public:
 
     creature_t* find(std::uint64_t id_p) noexcept;
 
+#ifndef NDEBUG
+    std::size_t size() const noexcept
+    {
+        return creatures_.size();
+    }
+#endif
+
     void on_think(game_t& game_p);
 
     void publish_positions(

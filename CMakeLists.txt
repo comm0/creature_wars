@@ -38,6 +38,8 @@ else()
 endif()
 
 set(CoreFiles
+    backend/debug_console.h
+    backend/debug_console.cpp
     backend/creature.h
     backend/creature.cpp
     backend/creatures.h
@@ -58,6 +60,10 @@ target_link_libraries(creature_wars_core
     PUBLIC Threads::Threads
     PRIVATE creature_wars_warnings
 )
+
+if(WIN32)
+    target_link_libraries(creature_wars_core PRIVATE $<$<CONFIG:Debug>:psapi>)
+endif()
 
 if(CREATURE_WARS_ENABLE_CLANG_TIDY)
     find_program(CLANG_TIDY_EXECUTABLE clang-tidy)

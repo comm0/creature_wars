@@ -1,5 +1,8 @@
 #include "game.h"
 
+#ifndef NDEBUG
+#include "debug_console.h"
+#endif
 #include "game_constants.h"
 
 #include <random>
@@ -199,12 +202,39 @@ void game_t::spawn_creature()
 
 void game_t::dispatch_tick()
 {
+#ifndef NDEBUG
+    const auto tick_start = std::chrono::steady_clock::now();
+#endif
+
     creatures_.on_think(*this);
 
     if (heartbeat_handler_) {
         heartbeat_handler_();
     }
+
+#ifndef NDEBUG
+    update_debug_monitor(tick_start);
+#endif
 }
+
+#ifndef NDEBUG
+void game_t::update_debug_monitor(
+    std::chrono::steady_clock::time_point tick_start_p
+) const
+{
+    debug_console::update_monitor({
+        .tick_duration_ = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now() - tick_start_p
+        ),
+        .creature_count_ = creatures_.size(),
+        .occupied_position_count_ = game_map_.occupied_position_count(),
+        .position_count_ = game_map_t::position_count,
+        .pending_event_count_ = dispatcher_.pending_event_count(),
+        .peak_pending_event_count_ = dispatcher_.peak_pending_event_count(),
+        .dispatched_event_count_ = dispatcher_.dispatched_event_count()
+    });
+}
+#endif
 
 void game_t::request_move(std::uint64_t id_p, direction_t direction_p)
 {

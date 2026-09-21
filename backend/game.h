@@ -8,6 +8,10 @@
 #include <stop_token>
 #include <thread>
 
+#ifndef NDEBUG
+#include <chrono>
+#endif
+
 #include "creatures.h"
 #include "game_event_dispatcher.h"
 #include "game_map.h"
@@ -35,6 +39,12 @@ private:
     void collect_actions();
     void dispatch_tick();
     void publish_creature_positions();
+
+#ifndef NDEBUG
+    void update_debug_monitor(
+        std::chrono::steady_clock::time_point tick_start_p
+    ) const;
+#endif
 
     game_event_dispatcher_t dispatcher_;
     creatures_t creatures_;

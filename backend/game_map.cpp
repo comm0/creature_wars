@@ -1,5 +1,9 @@
 #include "game_map.h"
 
+#ifndef NDEBUG
+#include "debug_console.h"
+#endif
+
 bool game_map_t::place_creature(
     creature_t& creature_p,
     position_t position_p
@@ -10,6 +14,9 @@ bool game_map_t::place_creature(
     }
 
     creatures_[position_index(position_p)] = &creature_p;
+#ifndef NDEBUG
+    ++occupied_position_count_;
+#endif
     creature_p.move_to(position_p);
     return true;
 }
@@ -27,6 +34,9 @@ bool game_map_t::move_creature(
 
     if (!is_position_inside(current_position)
         || creatures_[position_index(current_position)] != &creature_p) {
+#ifndef NDEBUG
+        debug_console::print_warning("Creature position does not match the game map.");
+#endif
         return false;
     }
 
