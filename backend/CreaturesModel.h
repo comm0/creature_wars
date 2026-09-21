@@ -15,7 +15,8 @@ class CreaturesModel : public QAbstractListModel
 public:
     enum role_t
     {
-        column_role = Qt::UserRole + 1,
+        id_role = Qt::UserRole + 1,
+        column_role,
         row_role,
         name_role,
         group_role,

@@ -12,12 +12,64 @@ Item {
     property bool spawnEnabled: true
     property int contextColumn: 0
     property int contextRow: 0
+    property var selectedCreatureIds: []
 
     signal spawnRequested(string identifier, int column, int row)
+
+    function isCreatureSelected(creatureId) {
+        return selectedCreatureIds.indexOf(creatureId) !== -1
+    }
+
+    function creatureAt(position) {
+        for (let index = creatureRepeater.count - 1; index >= 0; --index) {
+            const creature = creatureRepeater.itemAt(index)
+
+            if (creature !== null
+                    && position.x >= creature.x
+                    && position.x <= creature.x + creature.width
+                    && position.y >= creature.y
+                    && position.y <= creature.y + creature.height) {
+                return creature
+            }
+        }
+
+        return null
+    }
+
+    function selectAt(position) {
+        const creature = creatureAt(position)
+        selectedCreatureIds = creature === null ? [] : [creature.creatureId]
+    }
+
+    function selectInRectangle(left, top, right, bottom) {
+        const selectedIds = []
+
+        for (let index = 0; index < creatureRepeater.count; ++index) {
+            const creature = creatureRepeater.itemAt(index)
+
+            if (creature !== null
+                    && creature.x + creature.width >= left
+                    && creature.x <= right
+                    && creature.y + creature.height >= top
+                    && creature.y <= bottom) {
+                selectedIds.push(creature.creatureId)
+            }
+        }
+
+        selectedCreatureIds = selectedIds
+    }
 
     width: columns * tileSize
     height: rows * tileSize
     clip: true
+
+    TapHandler {
+        acceptedButtons: Qt.LeftButton
+
+        onTapped: function(eventPoint) {
+            root.selectAt(eventPoint.position)
+        }
+    }
 
     TapHandler {
         acceptedButtons: Qt.RightButton
@@ -26,6 +78,47 @@ Item {
             root.contextColumn = Math.floor(eventPoint.position.x / root.tileSize)
             root.contextRow = Math.floor(eventPoint.position.y / root.tileSize)
             spawnMenu.popup(eventPoint.position.x, eventPoint.position.y)
+        }
+    }
+
+    DragHandler {
+        id: selectionDrag
+
+        property real startX: 0
+        property real startY: 0
+        property real currentX: 0
+        property real currentY: 0
+        property bool selectionStarted: false
+
+        target: null
+        acceptedButtons: Qt.LeftButton
+
+        onActiveChanged: {
+            if (active) {
+                startX = centroid.pressPosition.x
+                startY = centroid.pressPosition.y
+                currentX = centroid.position.x
+                currentY = centroid.position.y
+                selectionStarted = true
+                return
+            }
+
+            if (selectionStarted) {
+                root.selectInRectangle(
+                    Math.min(startX, currentX),
+                    Math.min(startY, currentY),
+                    Math.max(startX, currentX),
+                    Math.max(startY, currentY)
+                )
+                selectionStarted = false
+            }
+        }
+
+        onCentroidChanged: {
+            if (active) {
+                currentX = centroid.position.x
+                currentY = centroid.position.y
+            }
         }
     }
 
@@ -75,11 +168,14 @@ Item {
     }
 
     Repeater {
+        id: creatureRepeater
+
         model: root.creatureModel
 
         delegate: Rectangle {
             id: creatureDelegate
 
+            required property var creatureId
             required property int column
             required property int row
             required property string creatureName
@@ -97,8 +193,10 @@ Item {
             height: root.tileSize - 4
             radius: width / 2
             color: creatureColor
-            border.width: 1
-            border.color: Qt.darker(creatureColor, 1.5)
+            border.width: root.isCreatureSelected(creatureId) ? 2 : 1
+            border.color: root.isCreatureSelected(creatureId)
+                ? "#f4df5a"
+                : Qt.darker(creatureColor, 1.5)
             z: 2
 
             Rectangle {
@@ -197,5 +295,17 @@ Item {
                 }
             }
         }
+    }
+
+    Rectangle {
+        x: Math.min(selectionDrag.startX, selectionDrag.currentX)
+        y: Math.min(selectionDrag.startY, selectionDrag.currentY)
+        width: Math.abs(selectionDrag.currentX - selectionDrag.startX)
+        height: Math.abs(selectionDrag.currentY - selectionDrag.startY)
+        color: "#304d8fd8"
+        border.width: 1
+        border.color: "#8eb9ff"
+        visible: selectionDrag.active
+        z: 20
     }
 }

@@ -32,6 +32,8 @@ QVariant CreaturesModel::data(const QModelIndex& index_p, int role_p) const
     const auto& creature = creatures_[static_cast<std::size_t>(row)];
 
     switch (role_p) {
+    case id_role:
+        return QVariant::fromValue(creature.id_);
     case column_role:
         return creature.position_.column_;
     case row_role:
@@ -60,6 +62,7 @@ QVariant CreaturesModel::data(const QModelIndex& index_p, int role_p) const
 QHash<int, QByteArray> CreaturesModel::roleNames() const
 {
     return {
+        {id_role, "creatureId"},
         {column_role, "column"},
         {row_role, "row"},
         {name_role, "creatureName"},
