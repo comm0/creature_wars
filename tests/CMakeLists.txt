@@ -31,3 +31,19 @@ add_test(
     NAME game_event_dispatcher_tests
     COMMAND game_event_dispatcher_tests
 )
+
+add_executable(game_map_tests
+    game_map_test.cpp
+)
+
+target_link_libraries(game_map_tests
+    PRIVATE
+        creature_wars_core
+        creature_wars_warnings
+        GTest::gtest_main
+)
+
+add_test(
+    NAME game_map_tests
+    COMMAND game_map_tests
+)

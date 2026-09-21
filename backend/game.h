@@ -10,6 +10,7 @@
 
 #include "creatures.h"
 #include "game_event_dispatcher.h"
+#include "game_map.h"
 
 class game_t
 {
@@ -37,6 +38,7 @@ private:
 
     game_event_dispatcher_t dispatcher_;
     creatures_t creatures_;
+    game_map_t game_map_;
     std::function<void()> heartbeat_handler_;
     std::function<void(std::uint64_t, position_t)> creature_position_handler_;
 

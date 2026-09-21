@@ -1,0 +1,43 @@
+#include <gtest/gtest.h>
+
+#include "creature.h"
+#include "game_map.h"
+
+TEST(game_map_t_test, does_not_place_creature_on_occupied_position)
+{
+    game_map_t game_map;
+    creature_t first_creature{1000, {0, 0}};
+    creature_t second_creature{1001, {0, 0}};
+
+    EXPECT_TRUE(game_map.place_creature(first_creature, {4, 5}));
+    EXPECT_FALSE(game_map.place_creature(second_creature, {4, 5}));
+    EXPECT_EQ(second_creature.position(), (position_t{0, 0}));
+}
+
+TEST(game_map_t_test, does_not_move_creature_to_occupied_position)
+{
+    game_map_t game_map;
+    creature_t first_creature{1000, {0, 0}};
+    creature_t second_creature{1001, {0, 0}};
+
+    ASSERT_TRUE(game_map.place_creature(first_creature, {4, 5}));
+    ASSERT_TRUE(game_map.place_creature(second_creature, {5, 5}));
+
+    EXPECT_FALSE(game_map.move_creature(first_creature, {5, 5}));
+    EXPECT_EQ(first_creature.position(), (position_t{4, 5}));
+    EXPECT_TRUE(game_map.is_position_occupied({4, 5}));
+    EXPECT_TRUE(game_map.is_position_occupied({5, 5}));
+}
+
+TEST(game_map_t_test, moves_creature_to_free_position)
+{
+    game_map_t game_map;
+    creature_t creature{1000, {0, 0}};
+
+    ASSERT_TRUE(game_map.place_creature(creature, {4, 5}));
+
+    EXPECT_TRUE(game_map.move_creature(creature, {5, 5}));
+    EXPECT_EQ(creature.position(), (position_t{5, 5}));
+    EXPECT_FALSE(game_map.is_position_occupied({4, 5}));
+    EXPECT_TRUE(game_map.is_position_occupied({5, 5}));
+}

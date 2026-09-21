@@ -10,23 +10,6 @@ namespace
 {
 std::mt19937 random_generator{std::random_device{}()};
 
-position_t random_position()
-{
-    auto column_distribution = std::uniform_int_distribution<int>(
-        0,
-        game_constants::map_column_count - 1
-    );
-    auto row_distribution = std::uniform_int_distribution<int>(
-        0,
-        game_constants::map_row_count - 1
-    );
-
-    return {
-        column_distribution(random_generator),
-        row_distribution(random_generator)
-    };
-}
-
 position_t destination_position(position_t position_p, direction_t direction_p)
 {
     switch (direction_p) {
@@ -47,13 +30,6 @@ position_t destination_position(position_t position_p, direction_t direction_p)
     return position_p;
 }
 
-bool is_position_inside_map(position_t position_p)
-{
-    return position_p.column_ >= 0
-        && position_p.column_ < game_constants::map_column_count
-        && position_p.row_ >= 0
-        && position_p.row_ < game_constants::map_row_count;
-}
 }
 
 /*!
@@ -65,7 +41,7 @@ bool is_position_inside_map(position_t position_p)
 /*! Creates a stopped game. */
 game_t::game_t()
 {
-    creatures_.create();
+
 }
 
 game_t::~game_t()
@@ -198,7 +174,23 @@ void game_t::spawn_creature()
         return;
     }
 
-    const auto& creature = creatures_.create(random_position());
+    auto position_distribution = std::uniform_int_distribution<std::size_t>(
+        0,
+        game_map_t::position_count - 1
+    );
+    const auto position = game_map_.find_free_position(
+        position_distribution(random_generator)
+    );
+
+    if (!position.has_value()) {
+        return;
+    }
+
+    auto& creature = creatures_.create(*position);
+
+    if (!game_map_.place_creature(creature, *position)) {
+        throw std::logic_error("Could not place a creature on a free position.");
+    }
 
     if (creature_position_handler_) {
         creature_position_handler_(creature.id(), creature.position());
@@ -231,11 +223,9 @@ void game_t::request_move(std::uint64_t id_p, direction_t direction_p)
 
     const auto destination = destination_position(creature->position(), direction_p);
 
-    if (!is_position_inside_map(destination)) {
+    if (!game_map_.move_creature(*creature, destination)) {
         return;
     }
-
-    creature->move_to(destination);
 
     if (creature_position_handler_) {
         creature_position_handler_(creature->id(), creature->position());

@@ -43,6 +43,8 @@ set(CoreFiles
     backend/creatures.h
     backend/creatures.cpp
     backend/game_constants.h
+    backend/game_map.h
+    backend/game_map.cpp
     backend/game.h
     backend/game.cpp
     backend/game_event_dispatcher.h
