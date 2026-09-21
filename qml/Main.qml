@@ -13,5 +13,7 @@ GameWindow {
 
     GameScene {
         id: gameScene
+
+        gameBackend: gameWindow.gameBackend
     }
 }

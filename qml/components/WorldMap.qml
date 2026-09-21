@@ -3,10 +3,11 @@ import QtQuick 2.15
 Item {
     id: root
 
-    property int columns: 40
-    property int rows: 20
+    required property int columns
+    required property int rows
     property int tileSize: 16
     property bool gridVisible: true
+    property var creatureModel
 
     width: columns * tileSize
     height: rows * tileSize
@@ -26,6 +27,38 @@ Item {
                 color: "#4f824b"
                 border.width: root.gridVisible ? 1 : 0
                 border.color: "#315a35"
+            }
+        }
+    }
+
+    Repeater {
+        model: root.creatureModel
+
+        delegate: Rectangle {
+            required property int column
+            required property int row
+
+            x: column * root.tileSize + 2
+            y: row * root.tileSize + 2
+            width: root.tileSize - 4
+            height: root.tileSize - 4
+            radius: width / 2
+            color: "#d9a441"
+            border.width: 1
+            border.color: "#6f4c16"
+
+            Behavior on x {
+                NumberAnimation {
+                    duration: 700
+                    easing.type: Easing.Linear
+                }
+            }
+
+            Behavior on y {
+                NumberAnimation {
+                    duration: 700
+                    easing.type: Easing.Linear
+                }
             }
         }
     }

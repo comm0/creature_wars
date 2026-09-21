@@ -1,0 +1,217 @@
+#include "game.h"
+
+#include "game_constants.h"
+
+#include <stdexcept>
+#include <utility>
+
+namespace
+{
+position_t destination_position(position_t position_p, direction_t direction_p)
+{
+    switch (direction_p) {
+    case direction_t::north:
+        --position_p.row_;
+        break;
+    case direction_t::east:
+        ++position_p.column_;
+        break;
+    case direction_t::south:
+        ++position_p.row_;
+        break;
+    case direction_t::west:
+        --position_p.column_;
+        break;
+    }
+
+    return position_p;
+}
+
+bool is_position_inside_map(position_t position_p)
+{
+    return position_p.column_ >= 0
+        && position_p.column_ < game_constants::map_column_count
+        && position_p.row_ >= 0
+        && position_p.row_ < game_constants::map_row_count;
+}
+}
+
+/*!
+    \class game_t
+    \inmodule CreatureWars
+    \brief Owns the game thread and serializes all game actions.
+*/
+
+/*! Creates a stopped game. */
+game_t::game_t()
+{
+    creatures_.create();
+}
+
+game_t::~game_t()
+{
+    stop();
+}
+
+/*! Starts the game thread with \a heartbeat_handler_p and \a creature_position_handler_p. */
+void game_t::start(
+    std::function<void()> heartbeat_handler_p,
+    std::function<void(std::uint64_t, position_t)> creature_position_handler_p
+)
+{
+    {
+        std::lock_guard<std::mutex> lock(actions_mutex_);
+
+        if (thread_running_) {
+            throw std::logic_error("Game is already running.");
+        }
+
+        heartbeat_handler_ = std::move(heartbeat_handler_p);
+        creature_position_handler_ = std::move(creature_position_handler_p);
+        thread_running_ = true;
+    }
+
+    try {
+        thread_ = std::jthread([this](std::stop_token stop_token_p) {
+            run(stop_token_p);
+        });
+    } catch (...) {
+        std::lock_guard<std::mutex> lock(actions_mutex_);
+        thread_running_ = false;
+        throw;
+    }
+}
+
+/*! Stops the game thread after its current action. */
+void game_t::stop()
+{
+    {
+        std::lock_guard<std::mutex> lock(actions_mutex_);
+
+        if (!thread_running_) {
+            return;
+        }
+
+        thread_running_ = false;
+    }
+
+    thread_.request_stop();
+    actions_available_.notify_one();
+    thread_.join();
+
+    {
+        std::lock_guard<std::mutex> lock(actions_mutex_);
+        actions_.clear();
+    }
+}
+
+/*! Queues \a event_p for the game thread. */
+void game_t::post(std::function<void()> event_p)
+{
+    if (!event_p) {
+        throw std::invalid_argument("Game event must be callable.");
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(actions_mutex_);
+
+        if (!thread_running_) {
+            throw std::logic_error("Game is not running.");
+        }
+
+        actions_.push_back(std::move(event_p));
+    }
+
+    actions_available_.notify_one();
+}
+
+void game_t::run(std::stop_token stop_token_p)
+{
+    auto next_tick = std::chrono::steady_clock::now() + game_constants::tick_interval;
+    publish_creature_positions();
+
+    while (!stop_token_p.stop_requested()) {
+        {
+            std::unique_lock lock(actions_mutex_);
+            actions_available_.wait_until(lock, next_tick, [this, &stop_token_p]() {
+                return stop_token_p.stop_requested() || !actions_.empty();
+            });
+        }
+
+        if (stop_token_p.stop_requested()) {
+            break;
+        }
+
+        collect_actions();
+
+        const auto now = std::chrono::steady_clock::now();
+
+        if (now >= next_tick) {
+            dispatcher_.enqueue([this]() { dispatch_tick(); });
+            next_tick = now + game_constants::tick_interval;
+        }
+
+        dispatcher_.dispatch_pending();
+    }
+}
+
+void game_t::collect_actions()
+{
+    std::deque<std::function<void()>> collected_actions;
+
+    {
+        std::lock_guard<std::mutex> lock(actions_mutex_);
+        collected_actions.swap(actions_);
+    }
+
+    while (!collected_actions.empty()) {
+        dispatcher_.enqueue(std::move(collected_actions.front()));
+        collected_actions.pop_front();
+    }
+}
+
+void game_t::dispatch_tick()
+{
+    creatures_.on_think(*this);
+
+    if (heartbeat_handler_) {
+        heartbeat_handler_();
+    }
+}
+
+void game_t::request_move(std::uint64_t id_p, direction_t direction_p)
+{
+    if (std::this_thread::get_id() != thread_.get_id()) {
+        post([this, id_p, direction_p]() {
+            request_move(id_p, direction_p);
+        });
+        return;
+    }
+
+    auto* creature = creatures_.find(id_p);
+
+    if (creature == nullptr) {
+        return;
+    }
+
+    const auto destination = destination_position(creature->position(), direction_p);
+
+    if (!is_position_inside_map(destination)) {
+        return;
+    }
+
+    creature->move_to(destination);
+
+    if (creature_position_handler_) {
+        creature_position_handler_(creature->id(), creature->position());
+    }
+}
+
+void game_t::publish_creature_positions()
+{
+    if (!creature_position_handler_) {
+        return;
+    }
+
+    creatures_.publish_positions(creature_position_handler_);
+}

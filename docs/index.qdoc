@@ -1,0 +1,15 @@
+/*!
+    \module CreatureWars
+    \title Creature Wars
+    \brief Backend API for Creature Wars.
+*/
+
+/*!
+    \page index.html
+    \title Creature Wars
+
+    \list
+        \li \l game_t
+        \li \l game_event_dispatcher_t
+    \endlist
+*/

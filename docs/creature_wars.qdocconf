@@ -1,0 +1,14 @@
+project = CreatureWars
+description = Creature Wars documentation
+version = 0.1
+moduleheader = game.h
+includepaths = ../backend
+
+outputformats = HTML
+outputdir = html
+
+headerdirs = ../backend
+sourcedirs = . ../backend
+
+headers.fileextensions = "*.h"
+sources.fileextensions = "*.cpp *.qdoc"

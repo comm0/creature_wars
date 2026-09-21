@@ -6,6 +6,8 @@ import "../components"
 Scene {
     id: gameScene
 
+    required property var gameBackend
+
     width: 640
     height: 360
     scaleMode: "letterbox"
@@ -20,9 +22,10 @@ Scene {
 
         x: 0
         y: 0
-        columns: 40
-        rows: 20
+        columns: gameScene.gameBackend.mapColumnCount
+        rows: gameScene.gameBackend.mapRowCount
         tileSize: 16
+        creatureModel: gameScene.gameBackend.creaturesModel
     }
 
     Rectangle {
@@ -39,13 +42,70 @@ Scene {
             color: "#405348"
         }
 
-        CheckBox {
-            anchors.centerIn: parent
-            text: qsTr("Show grid")
-            checked: true
-            palette.windowText: "#e8eee9"
+        Rectangle {
+            id: heartbeatIndicator
 
-            onToggled: worldMap.gridVisible = checked
+            anchors.left: parent.left
+            anchors.leftMargin: 16
+            anchors.verticalCenter: parent.verticalCenter
+            width: 10
+            height: 10
+            radius: width / 2
+            color: "#7ddd98"
+            opacity: 0.35
+        }
+
+        Row {
+            anchors.centerIn: parent
+            spacing: 16
+
+            CheckBox {
+                text: qsTr("Show grid")
+                checked: true
+                palette.windowText: "#e8eee9"
+
+                onToggled: worldMap.gridVisible = checked
+            }
+
+            Button {
+                text: qsTr("Start")
+                enabled: !gameScene.gameBackend.running
+
+                onClicked: gameScene.gameBackend.start()
+            }
+
+            Button {
+                text: qsTr("Stop")
+                enabled: gameScene.gameBackend.running
+
+                onClicked: gameScene.gameBackend.stop()
+            }
+        }
+    }
+
+    SequentialAnimation {
+        id: heartbeatAnimation
+
+        NumberAnimation {
+            target: heartbeatIndicator
+            property: "opacity"
+            to: 1
+            duration: 120
+        }
+
+        NumberAnimation {
+            target: heartbeatIndicator
+            property: "opacity"
+            to: 0.35
+            duration: 500
+        }
+    }
+
+    Connections {
+        target: gameScene.gameBackend
+
+        function onHeartbeat() {
+            heartbeatAnimation.restart()
         }
     }
 }
