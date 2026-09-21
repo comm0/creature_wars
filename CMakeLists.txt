@@ -63,6 +63,7 @@ set(CoreFiles
     backend/game_constants.h
     backend/game_map.h
     backend/game_map.cpp
+    backend/game_observer.h
     backend/game.h
     backend/game.cpp
     backend/game_event_dispatcher.h
@@ -128,6 +129,8 @@ if(CREATURE_WARS_BUILD_APP)
         backend/CreaturesModel.cpp
         backend/GameBackend.h
         backend/GameBackend.cpp
+        backend/GameObserver.h
+        backend/GameObserver.cpp
     )
 
     qt_add_executable(appCreatureWars

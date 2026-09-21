@@ -52,11 +52,8 @@ game_t::~game_t()
     stop();
 }
 
-/*! Starts the game thread with \a heartbeat_handler_p and \a creature_update_handler_p. */
-void game_t::start(
-    std::function<void()> heartbeat_handler_p,
-    std::function<void(const creature_t&)> creature_update_handler_p
-)
+/*! Starts the game thread and reports state changes to \a observer_p. */
+void game_t::start(igame_observer_t& observer_p)
 {
     {
         std::lock_guard<std::mutex> lock(actions_mutex_);
@@ -65,8 +62,7 @@ void game_t::start(
             throw std::logic_error("Game is already running.");
         }
 
-        heartbeat_handler_ = std::move(heartbeat_handler_p);
-        creature_update_handler_ = std::move(creature_update_handler_p);
+        observer_ = &observer_p;
         thread_running_ = true;
     }
 
@@ -76,6 +72,7 @@ void game_t::start(
         });
     } catch (...) {
         std::lock_guard<std::mutex> lock(actions_mutex_);
+        observer_ = nullptr;
         thread_running_ = false;
         throw;
     }
@@ -101,6 +98,7 @@ void game_t::stop()
     {
         std::lock_guard<std::mutex> lock(actions_mutex_);
         actions_.clear();
+        observer_ = nullptr;
     }
 }
 
@@ -127,7 +125,7 @@ void game_t::post(std::function<void()> event_p)
 void game_t::run(const std::stop_token& stop_token_p)
 {
     auto next_tick = std::chrono::steady_clock::now() + game_constants::tick_interval;
-    publish_creature_positions();
+    publish_creatures();
 
     while (!stop_token_p.stop_requested()) {
         {
@@ -211,9 +209,7 @@ void game_t::spawn_creature(std::string group_p)
         throw std::logic_error("Could not place a creature on a free position.");
     }
 
-    if (creature_update_handler_) {
-        creature_update_handler_(creature);
-    }
+    observer_->on_creature_created(creature);
 }
 
 void game_t::dispatch_tick()
@@ -224,9 +220,7 @@ void game_t::dispatch_tick()
 
     creatures_.on_think(*this);
 
-    if (heartbeat_handler_) {
-        heartbeat_handler_();
-    }
+    observer_->on_game_tick();
 
 #ifndef NDEBUG
     update_debug_monitor(tick_start);
@@ -267,22 +261,23 @@ void game_t::request_move(std::uint64_t id_p, direction_t direction_p)
         return;
     }
 
-    const auto destination = destination_position(creature->position(), direction_p);
+    const auto previous_position = creature->position();
+    const auto destination = destination_position(previous_position, direction_p);
 
     if (!game_map_.move_creature(*creature, destination)) {
         return;
     }
 
-    if (creature_update_handler_) {
-        creature_update_handler_(*creature);
-    }
+    observer_->on_creature_moved(
+        creature->id(),
+        previous_position,
+        creature->position()
+    );
 }
 
-void game_t::publish_creature_positions()
+void game_t::publish_creatures()
 {
-    if (!creature_update_handler_) {
-        return;
-    }
-
-    creatures_.publish_creatures(creature_update_handler_);
+    creatures_.publish_creatures([this](const creature_t& creature_p) {
+        observer_->on_creature_created(creature_p);
+    });
 }

@@ -73,7 +73,7 @@ QHash<int, QByteArray> CreaturesModel::roleNames() const
     };
 }
 
-void CreaturesModel::upsert_creature(
+void CreaturesModel::update_or_insert_creature(
     std::uint64_t id_p,
     position_t position_p,
     QString name_p,
@@ -136,4 +136,67 @@ void CreaturesModel::upsert_creature(
         attack_range_role,
         vision_range_role
     });
+}
+
+void CreaturesModel::update_creature_position(
+    std::uint64_t id_p,
+    position_t position_p
+)
+{
+    const auto creature = std::find_if(
+        creatures_.begin(),
+        creatures_.end(),
+        [id_p](const auto& entry_p) {
+            return entry_p.id_ == id_p;
+        }
+    );
+
+    if (creature == creatures_.end() || creature->position_ == position_p) {
+        return;
+    }
+
+    creature->position_ = position_p;
+    const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
+    const auto model_index = createIndex(row, 0);
+    emit dataChanged(model_index, model_index, {column_role, row_role});
+}
+
+void CreaturesModel::update_creature_health(std::uint64_t id_p, int health_p)
+{
+    const auto creature = std::find_if(
+        creatures_.begin(),
+        creatures_.end(),
+        [id_p](const auto& entry_p) {
+            return entry_p.id_ == id_p;
+        }
+    );
+
+    if (creature == creatures_.end() || creature->health_ == health_p) {
+        return;
+    }
+
+    creature->health_ = health_p;
+    const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
+    const auto model_index = createIndex(row, 0);
+    emit dataChanged(model_index, model_index, {health_role});
+}
+
+void CreaturesModel::remove_creature(std::uint64_t id_p)
+{
+    const auto creature = std::find_if(
+        creatures_.begin(),
+        creatures_.end(),
+        [id_p](const auto& entry_p) {
+            return entry_p.id_ == id_p;
+        }
+    );
+
+    if (creature == creatures_.end()) {
+        return;
+    }
+
+    const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
+    beginRemoveRows({}, row, row);
+    creatures_.erase(creature);
+    endRemoveRows();
 }

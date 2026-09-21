@@ -1,7 +1,6 @@
 #pragma once
 
 #include <condition_variable>
-#include <cstdint>
 #include <deque>
 #include <functional>
 #include <mutex>
@@ -17,6 +16,7 @@
 #include "creature_type_registry.h"
 #include "game_event_dispatcher.h"
 #include "game_map.h"
+#include "game_observer.h"
 
 class game_t
 {
@@ -27,10 +27,7 @@ public:
     game_t(const game_t&) = delete;
     game_t& operator=(const game_t&) = delete;
 
-    void start(
-        std::function<void()> heartbeat_handler_p,
-        std::function<void(const creature_t&)> creature_update_handler_p
-    );
+    void start(igame_observer_t& observer_p);
     void stop();
     void post(std::function<void()> event_p);
     void spawn_creature(std::string group_p);
@@ -40,7 +37,7 @@ private:
     void run(const std::stop_token& stop_token_p);
     void collect_actions();
     void dispatch_tick();
-    void publish_creature_positions();
+    void publish_creatures();
 
 #ifndef NDEBUG
     void update_debug_monitor(
@@ -52,8 +49,7 @@ private:
     creature_type_registry_t creature_type_registry_;
     creatures_t creatures_;
     game_map_t game_map_;
-    std::function<void()> heartbeat_handler_;
-    std::function<void(const creature_t&)> creature_update_handler_;
+    igame_observer_t* observer_ = nullptr;
 
     std::mutex actions_mutex_;
     std::condition_variable actions_available_;

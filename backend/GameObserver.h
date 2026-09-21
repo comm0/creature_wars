@@ -1,0 +1,50 @@
+#pragma once
+
+#include <QColor>
+#include <QObject>
+#include <QString>
+
+#include "game_observer.h"
+
+class GameObserver : public QObject, public igame_observer_t
+{
+    Q_OBJECT
+
+public:
+    explicit GameObserver(QObject* parent_p = nullptr);
+
+    void on_game_tick() override;
+    void on_creature_created(const creature_t& creature_p) override;
+    void on_creature_moved(
+        std::uint64_t id_p,
+        position_t previous_position_p,
+        position_t position_p
+    ) override;
+    void on_creature_health_changed(
+        std::uint64_t id_p,
+        int health_p
+    ) override;
+    void on_creature_removed(std::uint64_t id_p) override;
+
+signals:
+    void gameTick();
+    void creatureCreated(
+        std::uint64_t id_p,
+        position_t position_p,
+        QString name_p,
+        QString group_p,
+        QColor color_p,
+        QColor marker_color_p,
+        int health_p,
+        int attack_p,
+        int attack_range_p,
+        int vision_range_p
+    );
+    void creatureMoved(
+        std::uint64_t id_p,
+        position_t previous_position_p,
+        position_t position_p
+    );
+    void creatureHealthChanged(std::uint64_t id_p, int health_p);
+    void creatureRemoved(std::uint64_t id_p);
+};

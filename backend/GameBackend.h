@@ -3,6 +3,7 @@
 #include <QObject>
 
 #include "CreaturesModel.h"
+#include "GameObserver.h"
 #include "game.h"
 
 class GameBackend : public QObject
@@ -44,7 +45,12 @@ private:
         int attack_range_p,
         int vision_range_p
     );
+    void receive_creature_position(
+        std::uint64_t id_p,
+        position_t position_p
+    );
 
+    GameObserver game_observer_;
     game_t game_;
     CreaturesModel creatures_model_;
     bool game_running_ = false;

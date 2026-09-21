@@ -5,7 +5,6 @@
 #include <QColor>
 #include <QFile>
 #include <QIODevice>
-#include <QMetaObject>
 #include <QString>
 
 #include <stdexcept>
@@ -28,8 +27,51 @@ std::string load_creature_types()
 
 GameBackend::GameBackend(QObject* parent_p)
     : QObject(parent_p)
+    , game_observer_(this)
     , game_(load_creature_types())
 {
+    connect(
+        &game_observer_,
+        &GameObserver::gameTick,
+        this,
+        &GameBackend::heartbeat
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::creatureCreated,
+        this,
+        &GameBackend::receive_creature
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::creatureMoved,
+        this,
+        [this](
+            std::uint64_t id_p,
+            position_t previous_position_p,
+            position_t position_p
+        ) {
+            static_cast<void>(previous_position_p);
+            receive_creature_position(id_p, position_p);
+        }
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::creatureHealthChanged,
+        this,
+        [this](std::uint64_t id_p, int health_p) {
+            creatures_model_.update_creature_health(id_p, health_p);
+        }
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::creatureRemoved,
+        this,
+        [this](std::uint64_t id_p) {
+            creatures_model_.remove_creature(id_p);
+        }
+    );
+
     start();
 }
 
@@ -64,60 +106,7 @@ void GameBackend::start()
         return;
     }
 
-    game_.start(
-        [this]() {
-            QMetaObject::invokeMethod(
-                this,
-                [this]() { emit heartbeat(); },
-                Qt::QueuedConnection
-            );
-        },
-        [this](const creature_t& creature_p) {
-            const auto id = creature_p.id();
-            const auto position = creature_p.position();
-            auto name = QString::fromStdString(creature_p.type().name());
-            auto group = QString::fromStdString(creature_p.type().group());
-            const auto color = QColor::fromRgb(creature_p.type().color());
-            const auto marker_color = creature_p.type().marker_color().has_value()
-                ? QColor::fromRgb(*creature_p.type().marker_color())
-                : QColor(0, 0, 0, 0);
-            const auto health = creature_p.health();
-            const auto attack = creature_p.type().attack();
-            const auto attack_range = creature_p.type().attack_range();
-            const auto vision_range = creature_p.type().vision_range();
-
-            QMetaObject::invokeMethod(
-                this,
-                [
-                    this,
-                    id,
-                    position,
-                    name = std::move(name),
-                    group = std::move(group),
-                    color,
-                    marker_color,
-                    health,
-                    attack,
-                    attack_range,
-                    vision_range
-                ]() mutable {
-                    receive_creature(
-                        id,
-                        position,
-                        std::move(name),
-                        std::move(group),
-                        color,
-                        marker_color,
-                        health,
-                        attack,
-                        attack_range,
-                        vision_range
-                    );
-                },
-                Qt::QueuedConnection
-            );
-        }
-    );
+    game_.start(game_observer_);
 
     game_running_ = true;
     emit runningChanged();
@@ -165,7 +154,7 @@ void GameBackend::receive_creature(
     int vision_range_p
 )
 {
-    creatures_model_.upsert_creature(
+    creatures_model_.update_or_insert_creature(
         id_p,
         position_p,
         std::move(name_p),
@@ -177,4 +166,12 @@ void GameBackend::receive_creature(
         attack_range_p,
         vision_range_p
     );
+}
+
+void GameBackend::receive_creature_position(
+    std::uint64_t id_p,
+    position_t position_p
+)
+{
+    creatures_model_.update_creature_position(id_p, position_p);
 }

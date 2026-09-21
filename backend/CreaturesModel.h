@@ -33,7 +33,7 @@ public:
     QVariant data(const QModelIndex& index_p, int role_p) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-    void upsert_creature(
+    void update_or_insert_creature(
         std::uint64_t id_p,
         position_t position_p,
         QString name_p,
@@ -45,6 +45,12 @@ public:
         int attack_range_p,
         int vision_range_p
     );
+    void update_creature_position(
+        std::uint64_t id_p,
+        position_t position_p
+    );
+    void update_creature_health(std::uint64_t id_p, int health_p);
+    void remove_creature(std::uint64_t id_p);
 
 private:
     struct creature_entry_t
