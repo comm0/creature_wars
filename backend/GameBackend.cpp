@@ -75,6 +75,15 @@ void GameBackend::stop()
     emit runningChanged();
 }
 
+void GameBackend::spawnCreature()
+{
+    if (!game_running_) {
+        return;
+    }
+
+    game_.spawn_creature();
+}
+
 void GameBackend::receive_creature_position(std::uint64_t id_p, position_t position_p)
 {
     creatures_model_.upsert_creature(id_p, position_p);

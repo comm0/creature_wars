@@ -26,6 +26,7 @@ public:
     );
     void stop();
     void post(std::function<void()> event_p);
+    void spawn_creature();
     void request_move(std::uint64_t id_p, direction_t direction_p);
 
 private:

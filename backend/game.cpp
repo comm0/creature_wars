@@ -2,11 +2,31 @@
 
 #include "game_constants.h"
 
+#include <random>
 #include <stdexcept>
 #include <utility>
 
 namespace
 {
+std::mt19937 random_generator{std::random_device{}()};
+
+position_t random_position()
+{
+    auto column_distribution = std::uniform_int_distribution<int>(
+        0,
+        game_constants::map_column_count - 1
+    );
+    auto row_distribution = std::uniform_int_distribution<int>(
+        0,
+        game_constants::map_row_count - 1
+    );
+
+    return {
+        column_distribution(random_generator),
+        row_distribution(random_generator)
+    };
+}
+
 position_t destination_position(position_t position_p, direction_t direction_p)
 {
     switch (direction_p) {
@@ -167,6 +187,21 @@ void game_t::collect_actions()
     while (!collected_actions.empty()) {
         dispatcher_.enqueue(std::move(collected_actions.front()));
         collected_actions.pop_front();
+    }
+}
+
+/*! Creates a creature at a random map position. */
+void game_t::spawn_creature()
+{
+    if (std::this_thread::get_id() != thread_.get_id()) {
+        post([this]() { spawn_creature(); });
+        return;
+    }
+
+    const auto& creature = creatures_.create(random_position());
+
+    if (creature_position_handler_) {
+        creature_position_handler_(creature.id(), creature.position());
     }
 }
 

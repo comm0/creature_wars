@@ -80,6 +80,13 @@ Scene {
 
                 onClicked: gameScene.gameBackend.stop()
             }
+
+            Button {
+                text: qsTr("Spawn creature")
+                enabled: gameScene.gameBackend.running
+
+                onClicked: gameScene.gameBackend.spawnCreature()
+            }
         }
     }
 
