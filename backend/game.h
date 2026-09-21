@@ -29,7 +29,7 @@ public:
     void request_move(std::uint64_t id_p, direction_t direction_p);
 
 private:
-    void run(std::stop_token stop_token_p);
+    void run(const std::stop_token& stop_token_p);
     void collect_actions();
     void dispatch_tick();
     void publish_creature_positions();

@@ -72,7 +72,7 @@ void game_t::start(
     }
 
     try {
-        thread_ = std::jthread([this](std::stop_token stop_token_p) {
+        thread_ = std::jthread([this](const std::stop_token& stop_token_p) {
             run(stop_token_p);
         });
     } catch (...) {
@@ -125,7 +125,7 @@ void game_t::post(std::function<void()> event_p)
     actions_available_.notify_one();
 }
 
-void game_t::run(std::stop_token stop_token_p)
+void game_t::run(const std::stop_token& stop_token_p)
 {
     auto next_tick = std::chrono::steady_clock::now() + game_constants::tick_interval;
     publish_creature_positions();

@@ -2,3 +2,6 @@ build/
 .qtcreator/
 CMakeLists.txt.user
 docs/html/
+scripts/ci.Dockerfile
+scripts/test_ci.ps1
+scripts/test_ci_job.sh
