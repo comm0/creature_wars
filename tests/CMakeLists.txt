@@ -48,6 +48,22 @@ add_test(
     COMMAND game_map_tests
 )
 
+add_executable(pathfinder_tests
+    pathfinder_test.cpp
+)
+
+target_link_libraries(pathfinder_tests
+    PRIVATE
+        creature_wars_core
+        creature_wars_warnings
+        GTest::gtest_main
+)
+
+add_test(
+    NAME pathfinder_tests
+    COMMAND pathfinder_tests
+)
+
 if(MINGW)
     get_filename_component(MingwRuntimeDirectory "${CMAKE_CXX_COMPILER}" DIRECTORY)
 
