@@ -36,6 +36,8 @@ Item {
         model: root.creatureModel
 
         delegate: Rectangle {
+            id: creatureDelegate
+
             required property int column
             required property int row
             required property string creatureName
@@ -91,8 +93,21 @@ Item {
             Rectangle {
                 id: creatureDetails
 
-                x: parent.width + 4
-                y: -height - 4
+                readonly property bool fitsLeft:
+                    creatureDelegate.x >= width + 4
+                readonly property bool fitsRight:
+                    root.width - creatureDelegate.x - creatureDelegate.width >= width + 4
+                readonly property bool fitsAbove:
+                    creatureDelegate.y >= height + 4
+                readonly property bool fitsBelow:
+                    root.height - creatureDelegate.y - creatureDelegate.height >= height + 4
+                readonly property bool placeLeft:
+                    fitsLeft || (!fitsRight && creatureDelegate.x > root.width / 2)
+                readonly property bool placeAbove:
+                    fitsAbove || (!fitsBelow && creatureDelegate.y > root.height / 2)
+
+                x: placeLeft ? -width - 4 : parent.width + 4
+                y: placeAbove ? -height - 4 : parent.height + 4
                 width: creatureDetailsText.implicitWidth + 12
                 height: creatureDetailsText.implicitHeight + 10
                 radius: 3
