@@ -29,14 +29,30 @@ public:
 
     void start(igame_observer_t& observer_p);
     void stop();
+    void request_spawn_creature(
+        std::string identifier_p,
+        position_t position_p
+    );
+    void request_walk_to(
+        std::uint64_t id_p,
+        position_t destination_p
+    );
+    bool move_creature_towards(
+        std::uint64_t id_p,
+        position_t destination_p
+    );
+    void notify_creature_state_changed(const creature_t& creature_p);
+
+private:
     void post(std::function<void()> event_p);
     void spawn_creature(
         std::string identifier_p,
         position_t position_p
     );
-    void request_move(std::uint64_t id_p, direction_t direction_p);
-
-private:
+    void set_creature_destination(
+        std::uint64_t id_p,
+        position_t destination_p
+    );
     void run(const std::stop_token& stop_token_p);
     void collect_actions();
     void dispatch_tick();

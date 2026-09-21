@@ -8,31 +8,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace
-{
-position_t destination_position(position_t position_p, direction_t direction_p)
-{
-    switch (direction_p) {
-    case direction_t::north:
-        --position_p.row_;
-        break;
-    case direction_t::east:
-        ++position_p.column_;
-        break;
-    case direction_t::south:
-        ++position_p.row_;
-        break;
-    case direction_t::west:
-        --position_p.column_;
-        break;
-    }
-
-    return position_p;
-}
-
-}
-
-/*!
+/*! 
     \class game_t
     \inmodule CreatureWars
     \brief Owns the game thread and serializes all game actions.
@@ -164,19 +140,22 @@ void game_t::collect_actions()
     }
 }
 
+void game_t::request_spawn_creature(
+    std::string identifier_p,
+    position_t position_p
+)
+{
+    post([this, identifier = std::move(identifier_p), position_p]() mutable {
+        spawn_creature(std::move(identifier), position_p);
+    });
+}
+
 /*! Creates a creature of the requested type at a map position. */
 void game_t::spawn_creature(
     std::string identifier_p,
     position_t position_p
 )
 {
-    if (std::this_thread::get_id() != thread_.get_id()) {
-        post([this, identifier = std::move(identifier_p), position_p]() mutable {
-            spawn_creature(std::move(identifier), position_p);
-        });
-        return;
-    }
-
     if (!game_map_.can_place_creature(position_p)) {
         return;
     }
@@ -225,32 +204,71 @@ void game_t::update_debug_monitor(
 }
 #endif
 
-void game_t::request_move(std::uint64_t id_p, direction_t direction_p)
+void game_t::request_walk_to(
+    std::uint64_t id_p,
+    position_t destination_p
+)
 {
-    if (std::this_thread::get_id() != thread_.get_id()) {
-        post([this, id_p, direction_p]() {
-            request_move(id_p, direction_p);
-        });
-        return;
-    }
+    post([this, id_p, destination_p]() {
+        set_creature_destination(id_p, destination_p);
+    });
+}
 
+void game_t::set_creature_destination(
+    std::uint64_t id_p,
+    position_t destination_p
+)
+{
+    auto* creature = creatures_.find(id_p);
+
+    if (creature != nullptr && creature->walk_to(destination_p)) {
+        observer_->on_creature_state_changed(
+            creature->id(),
+            creature->state()
+        );
+    }
+}
+
+bool game_t::move_creature_towards(
+    std::uint64_t id_p,
+    position_t destination_p
+)
+{
     auto* creature = creatures_.find(id_p);
 
     if (creature == nullptr) {
-        return;
+        return false;
+    }
+
+    const auto next_position = game_map_.next_step_towards(
+        *creature,
+        destination_p
+    );
+
+    if (!next_position.has_value()) {
+        return false;
     }
 
     const auto previous_position = creature->position();
-    const auto destination = destination_position(previous_position, direction_p);
 
-    if (!game_map_.move_creature(*creature, destination)) {
-        return;
+    if (!game_map_.move_creature(*creature, *next_position)) {
+        return true;
     }
 
     observer_->on_creature_moved(
         creature->id(),
         previous_position,
         creature->position()
+    );
+
+    return true;
+}
+
+void game_t::notify_creature_state_changed(const creature_t& creature_p)
+{
+    observer_->on_creature_state_changed(
+        creature_p.id(),
+        creature_p.state()
     );
 }
 

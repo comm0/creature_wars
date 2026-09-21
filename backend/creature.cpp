@@ -2,11 +2,9 @@
 
 #include "game.h"
 
-#include <random>
-
 namespace
 {
-std::mt19937 random_generator{std::random_device{}()};
+constexpr int blocked_path_retry_count = 10;
 }
 
 creature_t::creature_t(
@@ -23,11 +21,28 @@ creature_t::creature_t(
 
 void creature_t::on_think(game_t& game_p)
 {
-    game_p.request_move(id_, choose_random_direction());
-}
+    if (!destination_.has_value()) {
+        return;
+    }
 
-direction_t creature_t::choose_random_direction()
-{
-    auto direction_distribution = std::uniform_int_distribution<int>(0, 3);
-    return static_cast<direction_t>(direction_distribution(random_generator));
+    if (position_ == *destination_) {
+        destination_.reset();
+        blocked_path_retry_count_ = 0;
+        game_p.notify_creature_state_changed(*this);
+        return;
+    }
+
+    if (game_p.move_creature_towards(id_, *destination_)) {
+        blocked_path_retry_count_ = 0;
+        return;
+    }
+
+    if (blocked_path_retry_count_ < blocked_path_retry_count) {
+        ++blocked_path_retry_count_;
+        return;
+    }
+
+    destination_.reset();
+    blocked_path_retry_count_ = 0;
+    game_p.notify_creature_state_changed(*this);
 }

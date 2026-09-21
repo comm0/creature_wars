@@ -13,8 +13,10 @@ Item {
     property int contextColumn: 0
     property int contextRow: 0
     property var selectedCreatureIds: []
+    property int idleDotCount: 1
 
     signal spawnRequested(string identifier, int column, int row)
+    signal walkRequested(var creatureId, int column, int row)
 
     function isCreatureSelected(creatureId) {
         return selectedCreatureIds.indexOf(creatureId) !== -1
@@ -63,6 +65,14 @@ Item {
     height: rows * tileSize
     clip: true
 
+    Timer {
+        interval: 400
+        running: true
+        repeat: true
+
+        onTriggered: root.idleDotCount = root.idleDotCount % 3 + 1
+    }
+
     TapHandler {
         acceptedButtons: Qt.LeftButton
 
@@ -75,8 +85,19 @@ Item {
         acceptedButtons: Qt.RightButton
 
         onTapped: function(eventPoint) {
-            root.contextColumn = Math.floor(eventPoint.position.x / root.tileSize)
-            root.contextRow = Math.floor(eventPoint.position.y / root.tileSize)
+            const column = Math.floor(eventPoint.position.x / root.tileSize)
+            const row = Math.floor(eventPoint.position.y / root.tileSize)
+
+            if (root.selectedCreatureIds.length > 0) {
+                for (const creatureId of root.selectedCreatureIds) {
+                    root.walkRequested(creatureId, column, row)
+                }
+
+                return
+            }
+
+            root.contextColumn = column
+            root.contextRow = row
             spawnMenu.popup(eventPoint.position.x, eventPoint.position.y)
         }
     }
@@ -186,6 +207,12 @@ Item {
             required property int attack
             required property int attackRange
             required property int visionRange
+            required property string creatureState
+            property real movementSpeed: 1.0
+            readonly property int movementDuration: Math.max(
+                1,
+                Math.round(1000 / Math.max(movementSpeed, 0.01))
+            )
 
             x: column * root.tileSize + 2
             y: row * root.tileSize + 2
@@ -198,6 +225,21 @@ Item {
                 ? "#f4df5a"
                 : Qt.darker(creatureColor, 1.5)
             z: 2
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: creatureDelegate.y >= height + 2
+                    ? -height - 2
+                    : parent.height + 2
+                color: "#f1f4f2"
+                font.pixelSize: 9
+                style: Text.Outline
+                styleColor: "#111814"
+                text: creatureState === "walk"
+                    ? qsTr("walk")
+                    : [".", "..", "..."][root.idleDotCount - 1]
+                z: 11
+            }
 
             Rectangle {
                 anchors.centerIn: parent
@@ -283,14 +325,14 @@ Item {
 
             Behavior on x {
                 NumberAnimation {
-                    duration: 700
+                    duration: creatureDelegate.movementDuration
                     easing.type: Easing.Linear
                 }
             }
 
             Behavior on y {
                 NumberAnimation {
-                    duration: 700
+                    duration: creatureDelegate.movementDuration
                     easing.type: Easing.Linear
                 }
             }

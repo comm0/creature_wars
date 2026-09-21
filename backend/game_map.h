@@ -6,6 +6,7 @@
 
 #include "creature.h"
 #include "game_constants.h"
+#include "pathfinder.h"
 
 class game_map_t
 {
@@ -19,6 +20,10 @@ public:
 
     bool can_place_creature(position_t position_p) const noexcept;
     bool is_position_occupied(position_t position_p) const noexcept;
+    std::optional<position_t> next_step_towards(
+        const creature_t& creature_p,
+        position_t destination_p
+    );
 
 #ifndef NDEBUG
     std::size_t occupied_position_count() const noexcept
@@ -36,6 +41,10 @@ private:
     static std::size_t position_index(position_t position_p) noexcept;
 
     std::array<creature_t*, position_count> creatures_{};
+    pathfinder_t pathfinder_{
+        game_constants::map_column_count,
+        game_constants::map_row_count
+    };
 #ifndef NDEBUG
     std::size_t occupied_position_count_ = 0;
 #endif

@@ -65,6 +65,17 @@ GameBackend::GameBackend(QObject* parent_p)
     );
     connect(
         &game_observer_,
+        &GameObserver::creatureStateChanged,
+        this,
+        [this](std::uint64_t id_p, QString state_p) {
+            creatures_model_.update_creature_state(
+                id_p,
+                std::move(state_p)
+            );
+        }
+    );
+    connect(
+        &game_observer_,
         &GameObserver::creatureRemoved,
         this,
         [this](std::uint64_t id_p) {
@@ -133,8 +144,24 @@ void GameBackend::spawnCreature(
         return;
     }
 
-    game_.spawn_creature(
+    game_.request_spawn_creature(
         identifier_p.toStdString(),
+        position_t{column_p, row_p}
+    );
+}
+
+void GameBackend::walkCreature(
+    std::uint64_t creature_id_p,
+    int column_p,
+    int row_p
+)
+{
+    if (!game_running_) {
+        return;
+    }
+
+    game_.request_walk_to(
+        creature_id_p,
         position_t{column_p, row_p}
     );
 }

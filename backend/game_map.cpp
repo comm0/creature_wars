@@ -58,6 +58,33 @@ bool game_map_t::can_place_creature(position_t position_p) const noexcept
         && !is_position_occupied(position_p);
 }
 
+std::optional<position_t> game_map_t::next_step_towards(
+    const creature_t& creature_p,
+    position_t destination_p
+)
+{
+    const auto start_position = creature_p.position();
+
+    if (!is_position_inside(start_position)
+        || !is_position_inside(destination_p)) {
+        return std::nullopt;
+    }
+
+    const auto start_index = position_index(start_position);
+
+    if (creatures_[start_index] != &creature_p) {
+        return std::nullopt;
+    }
+
+    return pathfinder_.find_next_step(
+        start_position,
+        destination_p,
+        [this](position_t position_p) {
+            return can_place_creature(position_p);
+        }
+    );
+}
+
 std::optional<position_t> game_map_t::find_free_position(
     std::size_t first_position_index_p
 ) const noexcept

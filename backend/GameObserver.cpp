@@ -95,6 +95,24 @@ void GameObserver::on_creature_health_changed(
     );
 }
 
+void GameObserver::on_creature_state_changed(
+    std::uint64_t id_p,
+    creature_state_t state_p
+)
+{
+    const auto state = state_p == creature_state_t::walking
+        ? QStringLiteral("walk")
+        : QStringLiteral("idle");
+
+    QMetaObject::invokeMethod(
+        this,
+        [this, id_p, state]() {
+            emit creatureStateChanged(id_p, state);
+        },
+        Qt::QueuedConnection
+    );
+}
+
 void GameObserver::on_creature_removed(std::uint64_t id_p)
 {
     QMetaObject::invokeMethod(

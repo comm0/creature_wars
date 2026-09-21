@@ -54,6 +54,8 @@ QVariant CreaturesModel::data(const QModelIndex& index_p, int role_p) const
         return creature.attack_range_;
     case vision_range_role:
         return creature.vision_range_;
+    case state_role:
+        return creature.state_;
     default:
         return {};
     }
@@ -72,7 +74,8 @@ QHash<int, QByteArray> CreaturesModel::roleNames() const
         {health_role, "health"},
         {attack_role, "attack"},
         {attack_range_role, "attackRange"},
-        {vision_range_role, "visionRange"}
+        {vision_range_role, "visionRange"},
+        {state_role, "creatureState"}
     };
 }
 
@@ -110,7 +113,8 @@ void CreaturesModel::update_or_insert_creature(
             health_p,
             attack_p,
             attack_range_p,
-            vision_range_p
+            vision_range_p,
+            QStringLiteral("idle")
         });
         endInsertRows();
         return;
@@ -182,6 +186,29 @@ void CreaturesModel::update_creature_health(std::uint64_t id_p, int health_p)
     const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
     const auto model_index = createIndex(row, 0);
     emit dataChanged(model_index, model_index, {health_role});
+}
+
+void CreaturesModel::update_creature_state(
+    std::uint64_t id_p,
+    QString state_p
+)
+{
+    const auto creature = std::find_if(
+        creatures_.begin(),
+        creatures_.end(),
+        [id_p](const auto& entry_p) {
+            return entry_p.id_ == id_p;
+        }
+    );
+
+    if (creature == creatures_.end() || creature->state_ == state_p) {
+        return;
+    }
+
+    creature->state_ = std::move(state_p);
+    const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
+    const auto model_index = createIndex(row, 0);
+    emit dataChanged(model_index, model_index, {state_role});
 }
 
 void CreaturesModel::remove_creature(std::uint64_t id_p)

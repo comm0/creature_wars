@@ -63,6 +63,8 @@ set(CoreFiles
     backend/game_constants.h
     backend/game_map.h
     backend/game_map.cpp
+    backend/pathfinder.h
+    backend/pathfinder.cpp
     backend/game_observer.h
     backend/game.h
     backend/game.cpp

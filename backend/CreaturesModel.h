@@ -25,7 +25,8 @@ public:
         health_role,
         attack_role,
         attack_range_role,
-        vision_range_role
+        vision_range_role,
+        state_role
     };
 
     explicit CreaturesModel(QObject* parent_p = nullptr);
@@ -51,6 +52,7 @@ public:
         position_t position_p
     );
     void update_creature_health(std::uint64_t id_p, int health_p);
+    void update_creature_state(std::uint64_t id_p, QString state_p);
     void remove_creature(std::uint64_t id_p);
 
 private:
@@ -66,6 +68,7 @@ private:
         int attack_;
         int attack_range_;
         int vision_range_;
+        QString state_;
     };
 
     std::vector<creature_entry_t> creatures_;

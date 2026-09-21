@@ -30,6 +30,11 @@ public:
         int column_p,
         int row_p
     );
+    Q_INVOKABLE void walkCreature(
+        std::uint64_t creature_id_p,
+        int column_p,
+        int row_p
+    );
 
 signals:
     void runningChanged();
