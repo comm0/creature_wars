@@ -6,6 +6,7 @@
 
 #include "game_event_dispatcher.h"
 
+// Verifies that dispatching an empty queue is safe (e.g. no queued player actions).
 TEST(game_event_dispatcher_t_test, dispatches_no_events)
 {
     game_event_dispatcher_t dispatcher;
@@ -13,6 +14,7 @@ TEST(game_event_dispatcher_t_test, dispatches_no_events)
     EXPECT_NO_THROW(dispatcher.dispatch_pending());
 }
 
+// Verifies that events run in their arrival order (e.g. move before attack).
 TEST(game_event_dispatcher_t_test, dispatches_events_in_fifo_order)
 {
     game_event_dispatcher_t dispatcher;
@@ -27,6 +29,7 @@ TEST(game_event_dispatcher_t_test, dispatches_events_in_fifo_order)
     EXPECT_EQ(execution_order, (std::vector<int>{1, 2, 3}));
 }
 
+// Verifies that an event cannot run more than once (e.g. one spawn request).
 TEST(game_event_dispatcher_t_test, dispatches_each_event_once)
 {
     game_event_dispatcher_t dispatcher;
@@ -40,6 +43,7 @@ TEST(game_event_dispatcher_t_test, dispatches_each_event_once)
     EXPECT_EQ(execution_count, 1);
 }
 
+// Verifies that newly queued events wait behind existing events (e.g. a follow-up action).
 TEST(game_event_dispatcher_t_test, dispatches_new_events_at_the_end_of_the_queue)
 {
     game_event_dispatcher_t dispatcher;
@@ -56,6 +60,7 @@ TEST(game_event_dispatcher_t_test, dispatches_new_events_at_the_end_of_the_queue
     EXPECT_EQ(execution_order, (std::vector<int>{1, 2, 3}));
 }
 
+// Verifies that nested dispatch calls do not interrupt the active dispatch (e.g. an event requests dispatch).
 TEST(game_event_dispatcher_t_test, ignores_reentrant_dispatch)
 {
     game_event_dispatcher_t dispatcher;
@@ -74,6 +79,7 @@ TEST(game_event_dispatcher_t_test, ignores_reentrant_dispatch)
     EXPECT_EQ(execution_order, (std::vector<int>{1, 2, 3, 4}));
 }
 
+// Verifies that empty callbacks are rejected.
 TEST(game_event_dispatcher_t_test, rejects_empty_events)
 {
     game_event_dispatcher_t dispatcher;
@@ -82,6 +88,7 @@ TEST(game_event_dispatcher_t_test, rejects_empty_events)
     EXPECT_THROW(dispatcher.enqueue(empty_event), std::invalid_argument);
 }
 
+// Verifies that the queue remains usable after an event throws (e.g. an invalid action fails).
 TEST(game_event_dispatcher_t_test, remains_usable_after_an_event_throws)
 {
     game_event_dispatcher_t dispatcher;
