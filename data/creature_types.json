@@ -1,0 +1,68 @@
+{
+  "creatureTypes": [
+    {
+      "id": "minotaur",
+      "name": "Minotaur",
+      "group": "minotaurs",
+      "color": "#5a3825",
+      "health": 5,
+      "attack": 2,
+      "attackRange": 1,
+      "visionRange": 5
+    },
+    {
+      "id": "minotaur_guard",
+      "name": "Minotaur Guard",
+      "group": "minotaurs",
+      "color": "#5a3825",
+      "markerColor": "#3284ff",
+      "health": 10,
+      "attack": 4,
+      "attackRange": 1,
+      "visionRange": 5
+    },
+    {
+      "id": "minotaur_archer",
+      "name": "Minotaur Archer",
+      "group": "minotaurs",
+      "color": "#5a3825",
+      "markerColor": "#e13b3b",
+      "health": 5,
+      "attack": 2,
+      "attackRange": 3,
+      "visionRange": 5
+    },
+    {
+      "id": "orc",
+      "name": "Orc",
+      "group": "orcs",
+      "color": "#245b32",
+      "health": 4,
+      "attack": 3,
+      "attackRange": 1,
+      "visionRange": 5
+    },
+    {
+      "id": "orc_warrior",
+      "name": "Orc Warrior",
+      "group": "orcs",
+      "color": "#245b32",
+      "markerColor": "#3284ff",
+      "health": 8,
+      "attack": 5,
+      "attackRange": 1,
+      "visionRange": 5
+    },
+    {
+      "id": "orc_spearman",
+      "name": "Orc Spearman",
+      "group": "orcs",
+      "color": "#245b32",
+      "markerColor": "#e13b3b",
+      "health": 4,
+      "attack": 3,
+      "attackRange": 2,
+      "visionRange": 5
+    }
+  ]
+}

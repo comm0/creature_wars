@@ -82,10 +82,17 @@ Scene {
             }
 
             Button {
-                text: qsTr("Spawn creature")
+                text: qsTr("Spawn Minotaur")
                 enabled: gameScene.gameBackend.running
 
-                onClicked: gameScene.gameBackend.spawnCreature()
+                onClicked: gameScene.gameBackend.spawnMinotaur()
+            }
+
+            Button {
+                text: qsTr("Spawn Orc")
+                enabled: gameScene.gameBackend.running
+
+                onClicked: gameScene.gameBackend.spawnOrc()
             }
         }
     }

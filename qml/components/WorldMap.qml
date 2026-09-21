@@ -11,6 +11,7 @@ Item {
 
     width: columns * tileSize
     height: rows * tileSize
+    clip: true
 
     Grid {
         anchors.fill: parent
@@ -37,15 +38,93 @@ Item {
         delegate: Rectangle {
             required property int column
             required property int row
+            required property string creatureName
+            required property string creatureGroup
+            required property color creatureColor
+            required property color markerColor
+            required property int health
+            required property int attack
+            required property int attackRange
+            required property int visionRange
 
             x: column * root.tileSize + 2
             y: row * root.tileSize + 2
             width: root.tileSize - 4
             height: root.tileSize - 4
             radius: width / 2
-            color: "#d9a441"
+            color: creatureColor
             border.width: 1
-            border.color: "#6f4c16"
+            border.color: Qt.darker(creatureColor, 1.5)
+            z: 2
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: (visionRange * 2 + 1) * root.tileSize
+                height: width
+                color: "transparent"
+                border.width: 1
+                border.color: "#e8d878"
+                visible: opacity > 0
+                opacity: creatureHover.hovered ? 1 : 0
+                z: -1
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 150
+                    }
+                }
+            }
+
+            HoverHandler {
+                id: creatureHover
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: parent.width * 0.35
+                height: width
+                radius: width / 2
+                color: markerColor
+                visible: markerColor.a > 0
+            }
+
+            Rectangle {
+                id: creatureDetails
+
+                x: parent.width + 4
+                y: -height - 4
+                width: creatureDetailsText.implicitWidth + 12
+                height: creatureDetailsText.implicitHeight + 10
+                radius: 3
+                color: "#e6111814"
+                border.width: 1
+                border.color: "#758579"
+                visible: opacity > 0
+                opacity: creatureHover.hovered ? 1 : 0
+                z: 10
+
+                Text {
+                    id: creatureDetailsText
+
+                    anchors.centerIn: parent
+                    color: "#f1f4f2"
+                    font.pixelSize: 10
+                    text: qsTr(
+                        "Name: %1\nGroup: %2\nHP: %3\nATK: %4\nATK range: %5\nVision range: %6"
+                    ).arg(creatureName)
+                        .arg(creatureGroup)
+                        .arg(health)
+                        .arg(attack)
+                        .arg(attackRange)
+                        .arg(visionRange)
+                }
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 120
+                    }
+                }
+            }
 
             Behavior on x {
                 NumberAnimation {

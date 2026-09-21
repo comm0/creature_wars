@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "creature_type.h"
+
 struct position_t
 {
     int column_ = 0;
@@ -25,6 +27,7 @@ class creature_t
 public:
     creature_t(
         std::uint64_t id_p,
+        const creature_type_t& type_p,
         position_t position_p
     );
 
@@ -45,9 +48,21 @@ public:
         return position_;
     }
 
+    const creature_type_t& type() const noexcept
+    {
+        return type_;
+    }
+
+    int health() const noexcept
+    {
+        return health_;
+    }
+
 private:
     direction_t choose_random_direction();
 
     std::uint64_t id_;
+    const creature_type_t& type_;
     position_t position_;
+    int health_;
 };

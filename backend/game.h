@@ -6,6 +6,7 @@
 #include <functional>
 #include <mutex>
 #include <stop_token>
+#include <string>
 #include <thread>
 
 #ifndef NDEBUG
@@ -13,13 +14,14 @@
 #endif
 
 #include "creatures.h"
+#include "creature_type_registry.h"
 #include "game_event_dispatcher.h"
 #include "game_map.h"
 
 class game_t
 {
 public:
-    game_t();
+    explicit game_t(std::string creature_types_json_p);
     ~game_t();
 
     game_t(const game_t&) = delete;
@@ -27,11 +29,11 @@ public:
 
     void start(
         std::function<void()> heartbeat_handler_p,
-        std::function<void(std::uint64_t, position_t)> creature_position_handler_p
+        std::function<void(const creature_t&)> creature_update_handler_p
     );
     void stop();
     void post(std::function<void()> event_p);
-    void spawn_creature();
+    void spawn_creature(std::string group_p);
     void request_move(std::uint64_t id_p, direction_t direction_p);
 
 private:
@@ -47,10 +49,11 @@ private:
 #endif
 
     game_event_dispatcher_t dispatcher_;
+    creature_type_registry_t creature_type_registry_;
     creatures_t creatures_;
     game_map_t game_map_;
     std::function<void()> heartbeat_handler_;
-    std::function<void(std::uint64_t, position_t)> creature_position_handler_;
+    std::function<void(const creature_t&)> creature_update_handler_;
 
     std::mutex actions_mutex_;
     std::condition_variable actions_available_;

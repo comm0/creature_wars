@@ -12,7 +12,19 @@ option(CREATURE_WARS_ENABLE_CLANG_TIDY "Run clang-tidy while building project ta
 option(CREATURE_WARS_ENABLE_CPPCHECK "Run cppcheck while building project targets." OFF)
 
 include(CTest)
+include(FetchContent)
 find_package(Threads REQUIRED)
+
+set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.3
+    GIT_SHALLOW TRUE
+)
+
+FetchContent_MakeAvailable(nlohmann_json)
 
 add_library(creature_wars_warnings INTERFACE)
 
@@ -42,6 +54,10 @@ set(CoreFiles
     backend/debug_console.cpp
     backend/creature.h
     backend/creature.cpp
+    backend/creature_type.h
+    backend/creature_type.cpp
+    backend/creature_type_registry.h
+    backend/creature_type_registry.cpp
     backend/creatures.h
     backend/creatures.cpp
     backend/game_constants.h
@@ -58,7 +74,9 @@ add_library(creature_wars_core STATIC ${CoreFiles})
 target_include_directories(creature_wars_core PUBLIC backend)
 target_link_libraries(creature_wars_core
     PUBLIC Threads::Threads
-    PRIVATE creature_wars_warnings
+    PRIVATE
+        creature_wars_warnings
+        nlohmann_json::nlohmann_json
 )
 
 if(WIN32)
@@ -116,6 +134,11 @@ if(CREATURE_WARS_BUILD_APP)
         main.cpp
         ${ApplicationFiles}
         ${QmlFiles}
+    )
+
+    qt_add_resources(appCreatureWars creature_wars_data
+        PREFIX "/"
+        FILES data/creature_types.json
     )
 
     felgo_configure_executable(appCreatureWars)

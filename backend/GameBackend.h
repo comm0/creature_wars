@@ -24,14 +24,26 @@ public:
 
     Q_INVOKABLE void start();
     Q_INVOKABLE void stop();
-    Q_INVOKABLE void spawnCreature();
+    Q_INVOKABLE void spawnMinotaur();
+    Q_INVOKABLE void spawnOrc();
 
 signals:
     void runningChanged();
     void heartbeat();
 
 private:
-    void receive_creature_position(std::uint64_t id_p, position_t position_p);
+    void receive_creature(
+        std::uint64_t id_p,
+        position_t position_p,
+        QString name_p,
+        QString group_p,
+        QColor color_p,
+        QColor marker_color_p,
+        int health_p,
+        int attack_p,
+        int attack_range_p,
+        int vision_range_p
+    );
 
     game_t game_;
     CreaturesModel creatures_model_;

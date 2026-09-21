@@ -2,12 +2,15 @@
 
 std::uint64_t creatures_t::next_uid_ = 1000;
 
-creature_t& creatures_t::create(position_t position_p)
+creature_t& creatures_t::create(
+    const creature_type_t& type_p,
+    position_t position_p
+)
 {
     const auto id = next_uid_++;
 
     creatures_.push_back(
-        std::make_unique<creature_t>(id, position_p)
+        std::make_unique<creature_t>(id, type_p, position_p)
     );
 
     return *creatures_.back();
@@ -33,13 +36,13 @@ void creatures_t::on_think(game_t& game_p)
     }
 }
 
-void creatures_t::publish_positions(
-    const std::function<void(std::uint64_t, position_t)>& position_handler_p
+void creatures_t::publish_creatures(
+    const std::function<void(const creature_t&)>& creature_handler_p
 ) const
 {
     for (const auto& creature : creatures_) {
         if (creature != nullptr) {
-            position_handler_p(creature->id(), creature->position());
+            creature_handler_p(*creature);
         }
     }
 }

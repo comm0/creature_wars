@@ -11,10 +11,13 @@ std::mt19937 random_generator{std::random_device{}()};
 
 creature_t::creature_t(
     std::uint64_t id_p,
+    const creature_type_t& type_p,
     position_t position_p
 )
     : id_(id_p)
+    , type_(type_p)
     , position_(position_p)
+    , health_(type_p.health())
 {
 }
 

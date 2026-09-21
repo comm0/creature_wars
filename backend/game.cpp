@@ -42,9 +42,9 @@ position_t destination_position(position_t position_p, direction_t direction_p)
 */
 
 /*! Creates a stopped game. */
-game_t::game_t()
+game_t::game_t(std::string creature_types_json_p)
+    : creature_type_registry_(creature_types_json_p)
 {
-
 }
 
 game_t::~game_t()
@@ -52,10 +52,10 @@ game_t::~game_t()
     stop();
 }
 
-/*! Starts the game thread with \a heartbeat_handler_p and \a creature_position_handler_p. */
+/*! Starts the game thread with \a heartbeat_handler_p and \a creature_update_handler_p. */
 void game_t::start(
     std::function<void()> heartbeat_handler_p,
-    std::function<void(std::uint64_t, position_t)> creature_position_handler_p
+    std::function<void(const creature_t&)> creature_update_handler_p
 )
 {
     {
@@ -66,7 +66,7 @@ void game_t::start(
         }
 
         heartbeat_handler_ = std::move(heartbeat_handler_p);
-        creature_position_handler_ = std::move(creature_position_handler_p);
+        creature_update_handler_ = std::move(creature_update_handler_p);
         thread_running_ = true;
     }
 
@@ -170,10 +170,18 @@ void game_t::collect_actions()
 }
 
 /*! Creates a creature at a random map position. */
-void game_t::spawn_creature()
+void game_t::spawn_creature(std::string group_p)
 {
     if (std::this_thread::get_id() != thread_.get_id()) {
-        post([this]() { spawn_creature(); });
+        post([this, group = std::move(group_p)]() mutable {
+            spawn_creature(std::move(group));
+        });
+        return;
+    }
+
+    const auto group_size = creature_type_registry_.group_size(group_p);
+
+    if (group_size == 0) {
         return;
     }
 
@@ -189,14 +197,22 @@ void game_t::spawn_creature()
         return;
     }
 
-    auto& creature = creatures_.create(*position);
+    auto type_distribution = std::uniform_int_distribution<std::size_t>(
+        0,
+        group_size - 1
+    );
+    const auto& creature_type = creature_type_registry_.get_from_group(
+        group_p,
+        type_distribution(random_generator)
+    );
+    auto& creature = creatures_.create(creature_type, *position);
 
     if (!game_map_.place_creature(creature, *position)) {
         throw std::logic_error("Could not place a creature on a free position.");
     }
 
-    if (creature_position_handler_) {
-        creature_position_handler_(creature.id(), creature.position());
+    if (creature_update_handler_) {
+        creature_update_handler_(creature);
     }
 }
 
@@ -257,16 +273,16 @@ void game_t::request_move(std::uint64_t id_p, direction_t direction_p)
         return;
     }
 
-    if (creature_position_handler_) {
-        creature_position_handler_(creature->id(), creature->position());
+    if (creature_update_handler_) {
+        creature_update_handler_(*creature);
     }
 }
 
 void game_t::publish_creature_positions()
 {
-    if (!creature_position_handler_) {
+    if (!creature_update_handler_) {
         return;
     }
 
-    creatures_.publish_positions(creature_position_handler_);
+    creatures_.publish_creatures(creature_update_handler_);
 }

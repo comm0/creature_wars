@@ -10,7 +10,10 @@
 class creatures_t
 {
 public:
-    creature_t& create(position_t position_p = {});
+    creature_t& create(
+        const creature_type_t& type_p,
+        position_t position_p = {}
+    );
 
     creature_t* find(std::uint64_t id_p) noexcept;
 
@@ -23,8 +26,8 @@ public:
 
     void on_think(game_t& game_p);
 
-    void publish_positions(
-        const std::function<void(std::uint64_t, position_t)>& position_handler_p
+    void publish_creatures(
+        const std::function<void(const creature_t&)>& creature_handler_p
     ) const;
 
 private:
