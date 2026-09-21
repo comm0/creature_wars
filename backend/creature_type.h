@@ -10,6 +10,7 @@ struct creature_attributes_t
     int attack_;
     int attack_range_;
     int vision_range_;
+    double speed_;
 };
 
 class creature_type_t
@@ -67,6 +68,11 @@ public:
     int vision_range() const noexcept
     {
         return attributes_.vision_range_;
+    }
+
+    double speed() const noexcept
+    {
+        return attributes_.speed_;
     }
 
 private:

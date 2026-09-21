@@ -54,6 +54,8 @@ QVariant CreaturesModel::data(const QModelIndex& index_p, int role_p) const
         return creature.attack_range_;
     case vision_range_role:
         return creature.vision_range_;
+    case speed_role:
+        return creature.speed_;
     case state_role:
         return creature.state_;
     default:
@@ -75,6 +77,7 @@ QHash<int, QByteArray> CreaturesModel::roleNames() const
         {attack_role, "attack"},
         {attack_range_role, "attackRange"},
         {vision_range_role, "visionRange"},
+        {speed_role, "movementSpeed"},
         {state_role, "creatureState"}
     };
 }
@@ -89,7 +92,8 @@ void CreaturesModel::update_or_insert_creature(
     int health_p,
     int attack_p,
     int attack_range_p,
-    int vision_range_p
+    int vision_range_p,
+    double speed_p
 )
 {
     const auto creature = std::find_if(
@@ -114,6 +118,7 @@ void CreaturesModel::update_or_insert_creature(
             attack_p,
             attack_range_p,
             vision_range_p,
+            speed_p,
             QStringLiteral("idle")
         });
         endInsertRows();
@@ -129,6 +134,7 @@ void CreaturesModel::update_or_insert_creature(
     creature->attack_ = attack_p;
     creature->attack_range_ = attack_range_p;
     creature->vision_range_ = vision_range_p;
+    creature->speed_ = speed_p;
     const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
     const auto model_index = createIndex(row, 0);
     emit dataChanged(model_index, model_index, {
@@ -141,7 +147,8 @@ void CreaturesModel::update_or_insert_creature(
         health_role,
         attack_role,
         attack_range_role,
-        vision_range_role
+        vision_range_role,
+        speed_role
     });
 }
 

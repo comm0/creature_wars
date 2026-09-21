@@ -8,7 +8,8 @@
       "health": 5,
       "attack": 2,
       "attackRange": 1,
-      "visionRange": 5
+      "visionRange": 5,
+      "speed": 1.0
     },
     {
       "id": "minotaur_guard",
@@ -19,7 +20,8 @@
       "health": 10,
       "attack": 4,
       "attackRange": 1,
-      "visionRange": 5
+      "visionRange": 5,
+      "speed": 0.75
     },
     {
       "id": "minotaur_archer",
@@ -30,7 +32,8 @@
       "health": 5,
       "attack": 2,
       "attackRange": 3,
-      "visionRange": 5
+      "visionRange": 5,
+      "speed": 1.25
     },
     {
       "id": "orc",
@@ -40,7 +43,8 @@
       "health": 4,
       "attack": 3,
       "attackRange": 1,
-      "visionRange": 5
+      "visionRange": 5,
+      "speed": 1.5
     },
     {
       "id": "orc_warrior",
@@ -51,7 +55,8 @@
       "health": 8,
       "attack": 5,
       "attackRange": 1,
-      "visionRange": 5
+      "visionRange": 5,
+      "speed": 0.8
     },
     {
       "id": "orc_spearman",
@@ -62,7 +67,8 @@
       "health": 4,
       "attack": 3,
       "attackRange": 2,
-      "visionRange": 5
+      "visionRange": 5,
+      "speed": 1.2
     }
   ]
 }

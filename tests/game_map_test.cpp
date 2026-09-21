@@ -13,7 +13,7 @@ const creature_type_t& test_creature_type()
         "none",
         0x000000,
         std::nullopt,
-        creature_attributes_t{1, 1, 1, 1}
+        creature_attributes_t{1, 1, 1, 1, 1.0}
     };
 
     return creature_type;

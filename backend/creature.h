@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <optional>
 
@@ -31,11 +32,16 @@ public:
     );
 
     void on_think(game_t& game_p);
+    void update_movement(
+        game_t& game_p,
+        std::chrono::steady_clock::time_point now_p
+    );
 
     bool walk_to(position_t destination_p) noexcept
     {
         const auto state_changed = !destination_.has_value();
         destination_ = destination_p;
+        next_movement_time_ = std::chrono::steady_clock::now();
         blocked_path_retry_count_ = 0;
         return state_changed;
     }
@@ -72,11 +78,21 @@ public:
             : creature_state_t::idle;
     }
 
+    std::optional<std::chrono::steady_clock::time_point> next_movement_time()
+        const noexcept
+    {
+        return next_movement_time_;
+    }
+
 private:
+    void finish_walking(game_t& game_p);
+    std::chrono::steady_clock::duration movement_interval() const;
+
     std::uint64_t id_;
     const creature_type_t& type_;
     position_t position_;
     std::optional<position_t> destination_;
+    std::optional<std::chrono::steady_clock::time_point> next_movement_time_;
     int blocked_path_retry_count_ = 0;
     int health_;
 };

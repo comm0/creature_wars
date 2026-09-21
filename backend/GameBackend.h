@@ -51,7 +51,8 @@ private:
         int health_p,
         int attack_p,
         int attack_range_p,
-        int vision_range_p
+        int vision_range_p,
+        double speed_p
     );
     void receive_creature_position(
         std::uint64_t id_p,

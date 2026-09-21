@@ -101,11 +101,23 @@ void game_t::run(const std::stop_token& stop_token_p)
     publish_creatures();
 
     while (!stop_token_p.stop_requested()) {
+        auto next_wake_time = next_tick;
+        const auto next_movement_time = creatures_.next_movement_time();
+
+        if (next_movement_time.has_value()
+            && *next_movement_time < next_wake_time) {
+            next_wake_time = *next_movement_time;
+        }
+
         {
             std::unique_lock lock(actions_mutex_);
-            actions_available_.wait_until(lock, next_tick, [this, &stop_token_p]() {
-                return stop_token_p.stop_requested() || !actions_.empty();
-            });
+            actions_available_.wait_until(
+                lock,
+                next_wake_time,
+                [this, &stop_token_p]() {
+                    return stop_token_p.stop_requested() || !actions_.empty();
+                }
+            );
         }
 
         if (stop_token_p.stop_requested()) {
@@ -122,6 +134,17 @@ void game_t::run(const std::stop_token& stop_token_p)
         }
 
         dispatcher_.dispatch_pending();
+
+        const auto movement_time = std::chrono::steady_clock::now();
+        const auto next_due_movement = creatures_.next_movement_time();
+
+        if (next_due_movement.has_value()
+            && *next_due_movement <= movement_time) {
+            dispatcher_.enqueue([this, movement_time]() {
+                dispatch_movement(movement_time);
+            });
+            dispatcher_.dispatch_pending();
+        }
     }
 }
 
@@ -183,6 +206,13 @@ void game_t::dispatch_tick()
 #ifndef NDEBUG
     update_debug_monitor(tick_start);
 #endif
+}
+
+void game_t::dispatch_movement(
+    std::chrono::steady_clock::time_point now_p
+)
+{
+    creatures_.update_movement(*this, now_p);
 }
 
 #ifndef NDEBUG

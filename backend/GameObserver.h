@@ -42,7 +42,8 @@ signals:
         int health_p,
         int attack_p,
         int attack_range_p,
-        int vision_range_p
+        int vision_range_p,
+        double speed_p
     );
     void creatureMoved(
         std::uint64_t id_p,

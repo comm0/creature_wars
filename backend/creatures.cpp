@@ -36,6 +36,42 @@ void creatures_t::on_think(game_t& game_p)
     }
 }
 
+void creatures_t::update_movement(
+    game_t& game_p,
+    std::chrono::steady_clock::time_point now_p
+)
+{
+    for (const auto& creature : creatures_) {
+        if (creature != nullptr) {
+            creature->update_movement(game_p, now_p);
+        }
+    }
+}
+
+std::optional<std::chrono::steady_clock::time_point>
+creatures_t::next_movement_time() const noexcept
+{
+    std::optional<std::chrono::steady_clock::time_point> next_time;
+
+    for (const auto& creature : creatures_) {
+        if (creature == nullptr) {
+            continue;
+        }
+
+        const auto creature_time = creature->next_movement_time();
+
+        if (!creature_time.has_value()) {
+            continue;
+        }
+
+        if (!next_time.has_value() || *creature_time < *next_time) {
+            next_time = *creature_time;
+        }
+    }
+
+    return next_time;
+}
+
 void creatures_t::publish_creatures(
     const std::function<void(const creature_t&)>& creature_handler_p
 ) const

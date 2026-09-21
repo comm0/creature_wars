@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <condition_variable>
 #include <deque>
 #include <functional>
@@ -7,10 +8,6 @@
 #include <stop_token>
 #include <string>
 #include <thread>
-
-#ifndef NDEBUG
-#include <chrono>
-#endif
 
 #include "creatures.h"
 #include "creature_type_registry.h"
@@ -56,6 +53,7 @@ private:
     void run(const std::stop_token& stop_token_p);
     void collect_actions();
     void dispatch_tick();
+    void dispatch_movement(std::chrono::steady_clock::time_point now_p);
     void publish_creatures();
 
 #ifndef NDEBUG

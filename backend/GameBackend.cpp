@@ -176,7 +176,8 @@ void GameBackend::receive_creature(
     int health_p,
     int attack_p,
     int attack_range_p,
-    int vision_range_p
+    int vision_range_p,
+    double speed_p
 )
 {
     creatures_model_.update_or_insert_creature(
@@ -189,7 +190,8 @@ void GameBackend::receive_creature(
         health_p,
         attack_p,
         attack_range_p,
-        vision_range_p
+        vision_range_p,
+        speed_p
     );
 }
 

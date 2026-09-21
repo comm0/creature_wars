@@ -271,8 +271,8 @@ Item {
             required property int attack
             required property int attackRange
             required property int visionRange
+            required property real movementSpeed
             required property string creatureState
-            property real movementSpeed: 1.0
             readonly property int movementDuration: Math.max(
                 1,
                 Math.round(1000 / Math.max(movementSpeed, 0.01))
@@ -371,13 +371,14 @@ Item {
                     color: "#f1f4f2"
                     font.pixelSize: 10
                     text: qsTr(
-                        "Name: %1\nGroup: %2\nHP: %3\nATK: %4\nATK range: %5\nVision range: %6"
+                        "Name: %1\nGroup: %2\nHP: %3\nATK: %4\nATK range: %5\nVision range: %6\nSpeed: %7"
                     ).arg(creatureName)
                         .arg(creatureGroup)
                         .arg(health)
                         .arg(attack)
                         .arg(attackRange)
                         .arg(visionRange)
+                        .arg(movementSpeed)
                 }
 
                 Behavior on opacity {

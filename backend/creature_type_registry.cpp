@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <charconv>
+#include <cmath>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -73,6 +74,7 @@ creature_type_registry_t::creature_type_registry_t(
         const auto attack = definition.at("attack").get<int>();
         const auto attack_range = definition.at("attackRange").get<int>();
         const auto vision_range = definition.at("visionRange").get<int>();
+        const auto speed = definition.at("speed").get<double>();
 
         if (identifier.empty() || name.empty()) {
             throw std::invalid_argument("Creature id and name must not be empty.");
@@ -86,6 +88,10 @@ creature_type_registry_t::creature_type_registry_t(
         require_non_negative(attack, "attack");
         require_non_negative(attack_range, "attackRange");
         require_non_negative(vision_range, "visionRange");
+
+        if (!std::isfinite(speed) || speed <= 0.0) {
+            throw std::invalid_argument("Creature speed must be positive.");
+        }
 
         const auto duplicate = std::find_if(
             creature_types_.begin(),
@@ -109,7 +115,8 @@ creature_type_registry_t::creature_type_registry_t(
                 health,
                 attack,
                 attack_range,
-                vision_range
+                vision_range,
+                speed
             }
         );
     }

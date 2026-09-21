@@ -33,6 +33,7 @@ void GameObserver::on_creature_created(const creature_t& creature_p)
     const auto attack = creature_p.type().attack();
     const auto attack_range = creature_p.type().attack_range();
     const auto vision_range = creature_p.type().vision_range();
+    const auto speed = creature_p.type().speed();
 
     QMetaObject::invokeMethod(
         this,
@@ -47,7 +48,8 @@ void GameObserver::on_creature_created(const creature_t& creature_p)
             health,
             attack,
             attack_range,
-            vision_range
+            vision_range,
+            speed
         ]() mutable {
             emit creatureCreated(
                 id,
@@ -59,7 +61,8 @@ void GameObserver::on_creature_created(const creature_t& creature_p)
                 health,
                 attack,
                 attack_range,
-                vision_range
+                vision_range,
+                speed
             );
         },
         Qt::QueuedConnection

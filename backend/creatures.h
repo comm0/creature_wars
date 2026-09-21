@@ -1,8 +1,10 @@
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "creature.h"
@@ -25,6 +27,12 @@ public:
 #endif
 
     void on_think(game_t& game_p);
+    void update_movement(
+        game_t& game_p,
+        std::chrono::steady_clock::time_point now_p
+    );
+    std::optional<std::chrono::steady_clock::time_point> next_movement_time()
+        const noexcept;
 
     void publish_creatures(
         const std::function<void(const creature_t&)>& creature_handler_p
