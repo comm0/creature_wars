@@ -106,7 +106,7 @@ if(CREATURE_WARS_ENABLE_CPPCHECK)
 
     set_target_properties(creature_wars_core PROPERTIES
         CXX_CPPCHECK
-            "${CPPCHECK_EXECUTABLE};--enable=warning,performance,portability;--std=c++20;--suppress=missingIncludeSystem;--error-exitcode=1"
+            "${CPPCHECK_EXECUTABLE};--enable=warning,performance,portability;--std=c++20;--suppress=missingIncludeSystem;--suppress=syntaxError:*/nlohmann/*;--error-exitcode=1"
     )
 endif()
 

@@ -105,10 +105,12 @@ creature_type_registry_t::creature_type_registry_t(
             std::move(group),
             color,
             marker_color,
-            health,
-            attack,
-            attack_range,
-            vision_range
+            creature_attributes_t{
+                health,
+                attack,
+                attack_range,
+                vision_range
+            }
         );
     }
 }

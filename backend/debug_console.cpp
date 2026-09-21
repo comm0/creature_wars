@@ -119,7 +119,12 @@ void debug_console::initialize()
     }
 
     FILE* error_stream = nullptr;
-    freopen_s(&error_stream, "CONOUT$", "w", stderr);
+    const auto error = freopen_s(&error_stream, "CONOUT$", "w", stderr);
+
+    if (error != 0) {
+        return;
+    }
+
     std::cerr.clear();
     SetConsoleTitleW(L"Creature Wars Debug");
 #endif

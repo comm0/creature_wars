@@ -21,7 +21,7 @@
 class game_t
 {
 public:
-    explicit game_t(std::string creature_types_json_p);
+    explicit game_t(const std::string& creature_types_json_p);
     ~game_t();
 
     game_t(const game_t&) = delete;

@@ -4,6 +4,14 @@
 #include <optional>
 #include <string>
 
+struct creature_attributes_t
+{
+    int health_;
+    int attack_;
+    int attack_range_;
+    int vision_range_;
+};
+
 class creature_type_t
 {
 public:
@@ -13,10 +21,7 @@ public:
         std::string group_p,
         std::uint32_t color_p,
         std::optional<std::uint32_t> marker_color_p,
-        int health_p,
-        int attack_p,
-        int attack_range_p,
-        int vision_range_p
+        creature_attributes_t attributes_p
     );
 
     const std::string& identifier() const noexcept
@@ -46,22 +51,22 @@ public:
 
     int health() const noexcept
     {
-        return health_;
+        return attributes_.health_;
     }
 
     int attack() const noexcept
     {
-        return attack_;
+        return attributes_.attack_;
     }
 
     int attack_range() const noexcept
     {
-        return attack_range_;
+        return attributes_.attack_range_;
     }
 
     int vision_range() const noexcept
     {
-        return vision_range_;
+        return attributes_.vision_range_;
     }
 
 private:
@@ -70,8 +75,5 @@ private:
     std::string group_;
     std::uint32_t color_;
     std::optional<std::uint32_t> marker_color_;
-    int health_;
-    int attack_;
-    int attack_range_;
-    int vision_range_;
+    creature_attributes_t attributes_;
 };

@@ -42,7 +42,7 @@ position_t destination_position(position_t position_p, direction_t direction_p)
 */
 
 /*! Creates a stopped game. */
-game_t::game_t(std::string creature_types_json_p)
+game_t::game_t(const std::string& creature_types_json_p)
     : creature_type_registry_(creature_types_json_p)
 {
 }
