@@ -89,6 +89,10 @@ Item {
             const row = Math.floor(eventPoint.position.y / root.tileSize)
 
             if (root.selectedCreatureIds.length > 0) {
+                moveTargetMarker.x = column * root.tileSize
+                moveTargetMarker.y = row * root.tileSize
+                moveTargetAnimation.restart()
+
                 for (const creatureId of root.selectedCreatureIds) {
                     root.walkRequested(creatureId, column, row)
                 }
@@ -139,6 +143,66 @@ Item {
             if (active) {
                 currentX = centroid.position.x
                 currentY = centroid.position.y
+            }
+        }
+    }
+
+    Item {
+        id: moveTargetMarker
+
+        width: root.tileSize
+        height: root.tileSize
+        opacity: 0
+        z: 19
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: parent.width * 0.75
+            height: 2
+            radius: 1
+            rotation: 45
+            color: "#f4df5a"
+        }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: parent.width * 0.75
+            height: 2
+            radius: 1
+            rotation: -45
+            color: "#f4df5a"
+        }
+    }
+
+    SequentialAnimation {
+        id: moveTargetAnimation
+
+        PropertyAction {
+            target: moveTargetMarker
+            property: "opacity"
+            value: 1
+        }
+
+        PropertyAction {
+            target: moveTargetMarker
+            property: "scale"
+            value: 0.55
+        }
+
+        ParallelAnimation {
+            NumberAnimation {
+                target: moveTargetMarker
+                property: "opacity"
+                to: 0
+                duration: 450
+            }
+
+            NumberAnimation {
+                target: moveTargetMarker
+                property: "scale"
+                to: 1.35
+                duration: 450
+                easing.type: Easing.OutCubic
             }
         }
     }
