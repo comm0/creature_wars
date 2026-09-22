@@ -28,6 +28,10 @@ public:
         std::uint64_t id_p,
         creature_state_t state_p
     ) override;
+    void on_creature_spotted(
+        std::uint64_t observer_id_p,
+        std::uint64_t spotted_id_p
+    ) override;
     void on_creature_removed(std::uint64_t id_p) override;
 
 signals:
@@ -52,5 +56,9 @@ signals:
     );
     void creatureHealthChanged(std::uint64_t id_p, int health_p);
     void creatureStateChanged(std::uint64_t id_p, QString state_p);
+    void creatureSpotted(
+        std::uint64_t observer_id_p,
+        std::uint64_t spotted_id_p
+    );
     void creatureRemoved(std::uint64_t id_p);
 };

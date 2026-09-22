@@ -18,6 +18,7 @@ public:
     );
 
     creature_t* find(std::uint64_t id_p) noexcept;
+    const creature_t* find(std::uint64_t id_p) const noexcept;
 
 #ifndef NDEBUG
     std::size_t size() const noexcept

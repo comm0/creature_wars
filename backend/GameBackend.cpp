@@ -76,6 +76,15 @@ GameBackend::GameBackend(QObject* parent_p)
     );
     connect(
         &game_observer_,
+        &GameObserver::creatureSpotted,
+        this,
+        [this](std::uint64_t observer_id_p, std::uint64_t spotted_id_p) {
+            static_cast<void>(spotted_id_p);
+            creatures_model_.notify_creature_spotted(observer_id_p);
+        }
+    );
+    connect(
+        &game_observer_,
         &GameObserver::creatureRemoved,
         this,
         [this](std::uint64_t id_p) {
@@ -101,6 +110,26 @@ bool GameBackend::running() const
     return game_running_;
 }
 
+bool GameBackend::aggressive() const
+{
+    return aggressive_;
+}
+
+void GameBackend::setAggressive(bool aggressive_p)
+{
+    if (aggressive_ == aggressive_p) {
+        return;
+    }
+
+    aggressive_ = aggressive_p;
+
+    if (game_running_) {
+        game_.request_set_aggressive(aggressive_p);
+    }
+
+    emit aggressiveChanged();
+}
+
 int GameBackend::mapColumnCount() const
 {
     return game_constants::map_column_count;
@@ -118,6 +147,7 @@ void GameBackend::start()
     }
 
     game_.start(game_observer_);
+    game_.request_set_aggressive(aggressive_);
 
     game_running_ = true;
     emit runningChanged();

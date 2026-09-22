@@ -27,7 +27,8 @@ public:
         attack_range_role,
         vision_range_role,
         speed_role,
-        state_role
+        state_role,
+        alert_revision_role
     };
 
     explicit CreaturesModel(QObject* parent_p = nullptr);
@@ -55,6 +56,7 @@ public:
     );
     void update_creature_health(std::uint64_t id_p, int health_p);
     void update_creature_state(std::uint64_t id_p, QString state_p);
+    void notify_creature_spotted(std::uint64_t id_p);
     void remove_creature(std::uint64_t id_p);
 
 private:
@@ -72,6 +74,7 @@ private:
         int vision_range_;
         double speed_;
         QString state_;
+        int alert_revision_;
     };
 
     std::vector<creature_entry_t> creatures_;

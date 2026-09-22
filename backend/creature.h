@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdint>
 #include <optional>
+#include <unordered_set>
 
 #include "creature_type.h"
 
@@ -37,13 +38,17 @@ public:
         std::chrono::steady_clock::time_point now_p
     );
 
-    bool walk_to(position_t destination_p) noexcept
+    void request_walk(position_t destination_p) noexcept
     {
-        const auto state_changed = !destination_.has_value();
-        destination_ = destination_p;
-        next_movement_time_ = std::chrono::steady_clock::now();
-        blocked_path_retry_count_ = 0;
-        return state_changed;
+        const auto destination_changed = !manual_destination_.has_value()
+            || *manual_destination_ != destination_p;
+        manual_destination_ = destination_p;
+
+        if (active_movement_goal_ == movement_goal_t::manual
+            && destination_changed) {
+            next_movement_time_ = std::chrono::steady_clock::now();
+            blocked_path_retry_count_ = 0;
+        }
     }
 
     void move_to(position_t position_p) noexcept
@@ -73,7 +78,7 @@ public:
 
     creature_state_t state() const noexcept
     {
-        return destination_.has_value()
+        return active_movement_goal_ != movement_goal_t::none
             ? creature_state_t::walking
             : creature_state_t::idle;
     }
@@ -84,15 +89,52 @@ public:
         return next_movement_time_;
     }
 
+    bool add_visible_creature(std::uint64_t id_p)
+    {
+        if (blocked_target_id_ == id_p) {
+            blocked_target_id_.reset();
+            blocked_target_position_.reset();
+        }
+
+        return visible_creature_ids_.insert(id_p).second;
+    }
+
+    void remove_visible_creature(std::uint64_t id_p)
+    {
+        visible_creature_ids_.erase(id_p);
+    }
+
+    const std::unordered_set<std::uint64_t>& visible_creature_ids() const noexcept
+    {
+        return visible_creature_ids_;
+    }
+
 private:
-    void finish_walking(game_t& game_p);
+    enum class movement_goal_t
+    {
+        none,
+        manual,
+        target
+    };
+
+    void activate_manual_movement(game_t& game_p);
+    void activate_target_movement(game_t& game_p, const creature_t& target_p);
+    void stop_movement(game_t& game_p);
+    void finish_manual_movement(game_t& game_p);
+    void block_target(position_t target_position_p, game_t& game_p);
+    bool target_was_blocked(const creature_t& target_p) const noexcept;
     std::chrono::steady_clock::duration movement_interval() const;
 
     std::uint64_t id_;
     const creature_type_t& type_;
     position_t position_;
-    std::optional<position_t> destination_;
+    std::optional<position_t> manual_destination_;
+    std::optional<std::uint64_t> target_id_;
+    std::optional<std::uint64_t> blocked_target_id_;
+    std::optional<position_t> blocked_target_position_;
     std::optional<std::chrono::steady_clock::time_point> next_movement_time_;
+    std::unordered_set<std::uint64_t> visible_creature_ids_;
+    movement_goal_t active_movement_goal_ = movement_goal_t::none;
     int blocked_path_retry_count_ = 0;
     int health_;
 };

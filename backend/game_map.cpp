@@ -52,6 +52,15 @@ bool game_map_t::is_position_occupied(position_t position_p) const noexcept
         && creatures_[position_index(position_p)] != nullptr;
 }
 
+creature_t* game_map_t::creature_at(position_t position_p) const noexcept
+{
+    if (!is_position_inside(position_p)) {
+        return nullptr;
+    }
+
+    return creatures_[position_index(position_p)];
+}
+
 bool game_map_t::can_place_creature(position_t position_p) const noexcept
 {
     return is_position_inside(position_p)

@@ -273,6 +273,7 @@ Item {
             required property int visionRange
             required property real movementSpeed
             required property string creatureState
+            required property int alertRevision
             readonly property int movementDuration: Math.max(
                 1,
                 Math.round(1000 / Math.max(movementSpeed, 0.01))
@@ -291,6 +292,8 @@ Item {
             z: 2
 
             Text {
+                id: creatureStateText
+
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: creatureDelegate.y >= height + 2
                     ? -height - 2
@@ -299,10 +302,55 @@ Item {
                 font.pixelSize: 9
                 style: Text.Outline
                 styleColor: "#111814"
+                opacity: creatureAlert.opacity > 0 ? 0 : 1
                 text: creatureState === "walk"
                     ? qsTr("walk")
                     : [".", "..", "..."][root.idleDotCount - 1]
                 z: 11
+            }
+
+            Text {
+                id: creatureAlert
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: creatureDelegate.y >= height + 2
+                    ? -height - 2
+                    : parent.height + 2
+                color: "#ffdc4f"
+                font.bold: true
+                font.pixelSize: 13
+                opacity: 0
+                style: Text.Outline
+                styleColor: "#111814"
+                text: "!"
+                z: 12
+            }
+
+            SequentialAnimation {
+                id: creatureAlertAnimation
+
+                PropertyAction {
+                    target: creatureAlert
+                    property: "opacity"
+                    value: 1
+                }
+
+                PauseAnimation {
+                    duration: 500
+                }
+
+                NumberAnimation {
+                    target: creatureAlert
+                    property: "opacity"
+                    to: 0
+                    duration: 250
+                }
+            }
+
+            onAlertRevisionChanged: {
+                if (alertRevision > 0) {
+                    creatureAlertAnimation.restart()
+                }
             }
 
             Rectangle {

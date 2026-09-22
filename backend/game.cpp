@@ -5,8 +5,22 @@
 #endif
 #include "game_constants.h"
 
+#include <algorithm>
+#include <cstdlib>
+#include <limits>
 #include <stdexcept>
 #include <utility>
+
+namespace
+{
+int position_distance(position_t left_p, position_t right_p) noexcept
+{
+    return std::max(
+        std::abs(left_p.column_ - right_p.column_),
+        std::abs(left_p.row_ - right_p.row_)
+    );
+}
+}
 
 /*! 
     \class game_t
@@ -191,6 +205,14 @@ void game_t::spawn_creature(
     }
 
     observer_->on_creature_created(creature);
+    visibility_system_.add_creature(
+        creature,
+        game_map_,
+        creatures_,
+        [this](std::uint64_t observer_id_p, std::uint64_t spotted_id_p) {
+            observer_->on_creature_spotted(observer_id_p, spotted_id_p);
+        }
+    );
 }
 
 void game_t::dispatch_tick()
@@ -244,6 +266,13 @@ void game_t::request_walk_to(
     });
 }
 
+void game_t::request_set_aggressive(bool aggressive_p)
+{
+    post([this, aggressive_p]() {
+        set_aggressive(aggressive_p);
+    });
+}
+
 void game_t::set_creature_destination(
     std::uint64_t id_p,
     position_t destination_p
@@ -251,12 +280,77 @@ void game_t::set_creature_destination(
 {
     auto* creature = creatures_.find(id_p);
 
-    if (creature != nullptr && creature->walk_to(destination_p)) {
-        observer_->on_creature_state_changed(
-            creature->id(),
-            creature->state()
-        );
+    if (creature != nullptr) {
+        creature->request_walk(destination_p);
+        creature->on_think(*this);
     }
+}
+
+void game_t::set_aggressive(bool aggressive_p)
+{
+    if (aggressive_ == aggressive_p) {
+        return;
+    }
+
+    aggressive_ = aggressive_p;
+    creatures_.on_think(*this);
+}
+
+const creature_t* game_t::find_nearest_visible_enemy(
+    const creature_t& creature_p
+) const noexcept
+{
+    const creature_t* nearest_enemy = nullptr;
+    auto nearest_distance = std::numeric_limits<int>::max();
+
+    for (const auto visible_id : creature_p.visible_creature_ids()) {
+        const auto* visible_creature = creatures_.find(visible_id);
+
+        if (visible_creature == nullptr
+            || visible_creature->type().group() == creature_p.type().group()) {
+            continue;
+        }
+
+        const auto distance = position_distance(
+            creature_p.position(),
+            visible_creature->position()
+        );
+
+        if (distance < nearest_distance) {
+            nearest_enemy = visible_creature;
+            nearest_distance = distance;
+        }
+    }
+
+    return nearest_enemy;
+}
+
+const creature_t* game_t::find_followed_enemy(
+    const creature_t& creature_p,
+    std::uint64_t target_id_p
+) const noexcept
+{
+    if (!creature_p.visible_creature_ids().contains(target_id_p)) {
+        return nullptr;
+    }
+
+    const auto* target = creatures_.find(target_id_p);
+
+    if (target == nullptr
+        || target->type().group() == creature_p.type().group()) {
+        return nullptr;
+    }
+
+    return target;
+}
+
+bool game_t::is_in_attack_range(
+    const creature_t& creature_p,
+    const creature_t& target_p
+) const noexcept
+{
+    return position_distance(creature_p.position(), target_p.position())
+        <= creature_p.type().attack_range();
 }
 
 bool game_t::move_creature_towards(
@@ -289,6 +383,15 @@ bool game_t::move_creature_towards(
         creature->id(),
         previous_position,
         creature->position()
+    );
+    visibility_system_.move_creature(
+        *creature,
+        previous_position,
+        game_map_,
+        creatures_,
+        [this](std::uint64_t observer_id_p, std::uint64_t spotted_id_p) {
+            observer_->on_creature_spotted(observer_id_p, spotted_id_p);
+        }
     );
 
     return true;

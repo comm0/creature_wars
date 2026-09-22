@@ -20,6 +20,7 @@ public:
 
     bool can_place_creature(position_t position_p) const noexcept;
     bool is_position_occupied(position_t position_p) const noexcept;
+    creature_t* creature_at(position_t position_p) const noexcept;
     std::optional<position_t> next_step_towards(
         const creature_t& creature_p,
         position_t destination_p

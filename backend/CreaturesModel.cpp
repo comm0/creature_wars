@@ -58,6 +58,8 @@ QVariant CreaturesModel::data(const QModelIndex& index_p, int role_p) const
         return creature.speed_;
     case state_role:
         return creature.state_;
+    case alert_revision_role:
+        return creature.alert_revision_;
     default:
         return {};
     }
@@ -78,7 +80,8 @@ QHash<int, QByteArray> CreaturesModel::roleNames() const
         {attack_range_role, "attackRange"},
         {vision_range_role, "visionRange"},
         {speed_role, "movementSpeed"},
-        {state_role, "creatureState"}
+        {state_role, "creatureState"},
+        {alert_revision_role, "alertRevision"}
     };
 }
 
@@ -119,7 +122,8 @@ void CreaturesModel::update_or_insert_creature(
             attack_range_p,
             vision_range_p,
             speed_p,
-            QStringLiteral("idle")
+            QStringLiteral("idle"),
+            0
         });
         endInsertRows();
         return;
@@ -216,6 +220,26 @@ void CreaturesModel::update_creature_state(
     const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
     const auto model_index = createIndex(row, 0);
     emit dataChanged(model_index, model_index, {state_role});
+}
+
+void CreaturesModel::notify_creature_spotted(std::uint64_t id_p)
+{
+    const auto creature = std::find_if(
+        creatures_.begin(),
+        creatures_.end(),
+        [id_p](const auto& entry_p) {
+            return entry_p.id_ == id_p;
+        }
+    );
+
+    if (creature == creatures_.end()) {
+        return;
+    }
+
+    ++creature->alert_revision_;
+    const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
+    const auto model_index = createIndex(row, 0);
+    emit dataChanged(model_index, model_index, {alert_revision_role});
 }
 
 void CreaturesModel::remove_creature(std::uint64_t id_p)

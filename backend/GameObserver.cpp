@@ -116,6 +116,20 @@ void GameObserver::on_creature_state_changed(
     );
 }
 
+void GameObserver::on_creature_spotted(
+    std::uint64_t observer_id_p,
+    std::uint64_t spotted_id_p
+)
+{
+    QMetaObject::invokeMethod(
+        this,
+        [this, observer_id_p, spotted_id_p]() {
+            emit creatureSpotted(observer_id_p, spotted_id_p);
+        },
+        Qt::QueuedConnection
+    );
+}
+
 void GameObserver::on_creature_removed(std::uint64_t id_p)
 {
     QMetaObject::invokeMethod(

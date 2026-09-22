@@ -76,6 +76,14 @@ Scene {
                 onToggled: worldMap.gridVisible = checked
             }
 
+            CheckBox {
+                text: qsTr("Aggressive")
+                checked: gameScene.gameBackend.aggressive
+                palette.windowText: "#e8eee9"
+
+                onToggled: gameScene.gameBackend.aggressive = checked
+            }
+
             Button {
                 text: qsTr("Start")
                 enabled: !gameScene.gameBackend.running

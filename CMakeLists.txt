@@ -65,6 +65,8 @@ set(CoreFiles
     backend/game_map.cpp
     backend/pathfinder.h
     backend/pathfinder.cpp
+    backend/visibility_system.h
+    backend/visibility_system.cpp
     backend/game_observer.h
     backend/game.h
     backend/game.cpp

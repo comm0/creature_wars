@@ -27,6 +27,17 @@ creature_t* creatures_t::find(std::uint64_t id_p) noexcept
     return nullptr;
 }
 
+const creature_t* creatures_t::find(std::uint64_t id_p) const noexcept
+{
+    for (const auto& creature : creatures_) {
+        if (creature != nullptr && creature->id() == id_p) {
+            return creature.get();
+        }
+    }
+
+    return nullptr;
+}
+
 void creatures_t::on_think(game_t& game_p)
 {
     for (const auto& creature : creatures_) {

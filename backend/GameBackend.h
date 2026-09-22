@@ -11,6 +11,7 @@ class GameBackend : public QObject
     Q_OBJECT
     Q_PROPERTY(CreaturesModel* creaturesModel READ creaturesModel CONSTANT)
     Q_PROPERTY(bool running READ running NOTIFY runningChanged)
+    Q_PROPERTY(bool aggressive READ aggressive WRITE setAggressive NOTIFY aggressiveChanged)
     Q_PROPERTY(int mapColumnCount READ mapColumnCount CONSTANT)
     Q_PROPERTY(int mapRowCount READ mapRowCount CONSTANT)
 
@@ -20,6 +21,8 @@ public:
 
     CreaturesModel* creaturesModel();
     bool running() const;
+    bool aggressive() const;
+    void setAggressive(bool aggressive_p);
     int mapColumnCount() const;
     int mapRowCount() const;
 
@@ -38,6 +41,7 @@ public:
 
 signals:
     void runningChanged();
+    void aggressiveChanged();
     void heartbeat();
 
 private:
@@ -63,4 +67,5 @@ private:
     game_t game_;
     CreaturesModel creatures_model_;
     bool game_running_ = false;
+    bool aggressive_ = false;
 };

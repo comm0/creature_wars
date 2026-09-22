@@ -24,5 +24,9 @@ public:
         std::uint64_t id_p,
         creature_state_t state_p
     ) = 0;
+    virtual void on_creature_spotted(
+        std::uint64_t observer_id_p,
+        std::uint64_t spotted_id_p
+    ) = 0;
     virtual void on_creature_removed(std::uint64_t id_p) = 0;
 };
