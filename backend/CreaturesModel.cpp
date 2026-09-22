@@ -48,6 +48,8 @@ QVariant CreaturesModel::data(const QModelIndex& index_p, int role_p) const
         return creature.marker_color_;
     case health_role:
         return creature.health_;
+    case maximum_health_role:
+        return creature.maximum_health_;
     case attack_role:
         return creature.attack_;
     case attack_range_role:
@@ -76,6 +78,7 @@ QHash<int, QByteArray> CreaturesModel::roleNames() const
         {color_role, "creatureColor"},
         {marker_color_role, "markerColor"},
         {health_role, "health"},
+        {maximum_health_role, "maximumHealth"},
         {attack_role, "attack"},
         {attack_range_role, "attackRange"},
         {vision_range_role, "visionRange"},
@@ -93,6 +96,7 @@ void CreaturesModel::update_or_insert_creature(
     QColor color_p,
     QColor marker_color_p,
     int health_p,
+    int maximum_health_p,
     int attack_p,
     int attack_range_p,
     int vision_range_p,
@@ -118,6 +122,7 @@ void CreaturesModel::update_or_insert_creature(
             std::move(color_p),
             std::move(marker_color_p),
             health_p,
+            maximum_health_p,
             attack_p,
             attack_range_p,
             vision_range_p,
@@ -135,6 +140,7 @@ void CreaturesModel::update_or_insert_creature(
     creature->color_ = std::move(color_p);
     creature->marker_color_ = std::move(marker_color_p);
     creature->health_ = health_p;
+    creature->maximum_health_ = maximum_health_p;
     creature->attack_ = attack_p;
     creature->attack_range_ = attack_range_p;
     creature->vision_range_ = vision_range_p;
@@ -149,6 +155,7 @@ void CreaturesModel::update_or_insert_creature(
         color_role,
         marker_color_role,
         health_role,
+        maximum_health_role,
         attack_role,
         attack_range_role,
         vision_range_role,

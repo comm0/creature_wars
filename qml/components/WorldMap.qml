@@ -269,6 +269,7 @@ Item {
             required property color creatureColor
             required property color markerColor
             required property int health
+            required property int maximumHealth
             required property int attack
             required property int attackRange
             required property int visionRange
@@ -279,6 +280,13 @@ Item {
                 1,
                 Math.round(1000 / Math.max(movementSpeed, 0.01))
             )
+            readonly property real healthRatio: Math.max(
+                0,
+                Math.min(1, health / Math.max(maximumHealth, 1))
+            )
+            readonly property color healthColor: healthRatio > 0.8
+                ? "#46c95b"
+                : healthRatio >= 0.3 ? "#e2c94f" : "#d94a45"
 
             x: column * root.tileSize + 2
             y: row * root.tileSize + 2
@@ -296,9 +304,9 @@ Item {
                 id: creatureStateText
 
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: creatureDelegate.y >= height + 2
-                    ? -height - 2
-                    : parent.height + 2
+                y: creatureIdentity.placeAbove
+                    ? -creatureIdentity.height - height - 4
+                    : parent.height + creatureIdentity.height + 4
                 color: "#f1f4f2"
                 font.pixelSize: 9
                 style: Text.Outline
@@ -314,9 +322,9 @@ Item {
                 id: creatureAlert
 
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: creatureDelegate.y >= height + 2
-                    ? -height - 2
-                    : parent.height + 2
+                y: creatureIdentity.placeAbove
+                    ? -creatureIdentity.height - height - 4
+                    : parent.height + creatureIdentity.height + 4
                 color: "#ffdc4f"
                 font.bold: true
                 font.pixelSize: 13
@@ -351,6 +359,61 @@ Item {
             onAlertRevisionChanged: {
                 if (alertRevision > 0) {
                     creatureAlertAnimation.restart()
+                }
+            }
+
+            Item {
+                id: creatureIdentity
+
+                readonly property bool placeAbove:
+                    creatureDelegate.y >= height + 2
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: placeAbove ? -height - 2 : parent.height + 2
+                width: 56
+                height: 15
+                z: 10
+
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    width: Math.ceil(creatureNameText.implicitWidth) + 4
+                    height: 10
+                    radius: 2
+                    color: "#b8000000"
+
+                    Text {
+                        id: creatureNameText
+
+                        anchors.centerIn: parent
+                        color: creatureDelegate.healthColor
+                        font.pixelSize: 8
+                        font.weight: Font.DemiBold
+                        font.letterSpacing: -0.2
+                        renderType: Text.QtRendering
+                        text: creatureName
+                    }
+                }
+
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    width: 28
+                    height: 4
+                    radius: height / 2
+                    color: "#cc111511"
+                    border.width: 1
+                    border.color: "#cc000000"
+                    clip: true
+
+                    Rectangle {
+                        x: 1
+                        y: 1
+                        width: (parent.width - 2) * creatureDelegate.healthRatio
+                        height: parent.height - 2
+                        radius: height / 2
+                        color: creatureDelegate.healthColor
+                    }
                 }
             }
 
@@ -397,9 +460,9 @@ Item {
 
                 x: placeLeft ? -width - 4 : parent.width + 4
                 y: placeAbove ? -height - 4 : parent.height + 4
-                width: creatureDetailsText.implicitWidth + 12
-                height: creatureDetailsText.implicitHeight + 10
-                radius: 3
+                width: creatureDetailsText.implicitWidth + 8
+                height: creatureDetailsText.implicitHeight + 6
+                radius: 2
                 color: "#e6111814"
                 border.width: 1
                 border.color: "#758579"
@@ -412,13 +475,10 @@ Item {
 
                     anchors.centerIn: parent
                     color: "#f1f4f2"
-                    font.pixelSize: 10
+                    font.pixelSize: 8
                     text: qsTr(
-                        "Name: %1\nGroup: %2\nHP: %3\nATK: %4\nATK range: %5\nVision range: %6\nSpeed: %7"
-                    ).arg(creatureName)
-                        .arg(creatureGroup)
-                        .arg(health)
-                        .arg(attack)
+                        "ATK: %1  Range: %2\nVision: %3  Speed: %4"
+                    ).arg(attack)
                         .arg(attackRange)
                         .arg(visionRange)
                         .arg(movementSpeed)

@@ -30,6 +30,7 @@ void GameObserver::on_creature_created(const creature_t& creature_p)
         ? QColor::fromRgb(*marker_color_value)
         : QColor(0, 0, 0, 0);
     const auto health = creature_p.health();
+    const auto maximum_health = creature_p.type().health();
     const auto attack = creature_p.type().attack();
     const auto attack_range = creature_p.type().attack_range();
     const auto vision_range = creature_p.type().vision_range();
@@ -46,6 +47,7 @@ void GameObserver::on_creature_created(const creature_t& creature_p)
             color,
             marker_color,
             health,
+            maximum_health,
             attack,
             attack_range,
             vision_range,
@@ -59,6 +61,7 @@ void GameObserver::on_creature_created(const creature_t& creature_p)
                 color,
                 marker_color,
                 health,
+                maximum_health,
                 attack,
                 attack_range,
                 vision_range,

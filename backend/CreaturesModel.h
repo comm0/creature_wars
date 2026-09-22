@@ -23,6 +23,7 @@ public:
         color_role,
         marker_color_role,
         health_role,
+        maximum_health_role,
         attack_role,
         attack_range_role,
         vision_range_role,
@@ -45,6 +46,7 @@ public:
         QColor color_p,
         QColor marker_color_p,
         int health_p,
+        int maximum_health_p,
         int attack_p,
         int attack_range_p,
         int vision_range_p,
@@ -69,6 +71,7 @@ private:
         QColor color_;
         QColor marker_color_;
         int health_;
+        int maximum_health_;
         int attack_;
         int attack_range_;
         int vision_range_;

@@ -53,6 +53,7 @@ private:
         QColor color_p,
         QColor marker_color_p,
         int health_p,
+        int maximum_health_p,
         int attack_p,
         int attack_range_p,
         int vision_range_p,
