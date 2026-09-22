@@ -91,6 +91,6 @@ private:
     std::condition_variable actions_available_;
     std::deque<std::function<void()>> actions_;
     bool thread_running_ = false;
-    bool aggressive_ = false;
+    bool aggressive_ = true;
     std::jthread thread_;
 };

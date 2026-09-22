@@ -68,5 +68,5 @@ private:
     game_t game_;
     CreaturesModel creatures_model_;
     bool game_running_ = false;
-    bool aggressive_ = false;
+    bool aggressive_ = true;
 };
