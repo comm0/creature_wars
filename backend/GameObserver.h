@@ -25,6 +25,7 @@ public:
         int health_p
     ) override;
     void on_creature_attack_performed(std::uint64_t id_p) override;
+    void on_creature_walk_requested(std::uint64_t id_p) override;
     void on_creature_state_changed(
         std::uint64_t id_p,
         creature_state_t state_p
@@ -58,6 +59,7 @@ signals:
     );
     void creatureHealthChanged(std::uint64_t id_p, int health_p);
     void creatureAttackPerformed(std::uint64_t id_p);
+    void creatureWalkRequested(std::uint64_t id_p);
     void creatureStateChanged(std::uint64_t id_p, QString state_p);
     void creatureSpotted(
         std::uint64_t observer_id_p,

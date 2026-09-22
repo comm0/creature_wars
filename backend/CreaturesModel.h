@@ -32,7 +32,8 @@ public:
         alert_revision_role,
         damage_amount_role,
         damage_revision_role,
-        attack_revision_role
+        attack_revision_role,
+        walk_command_revision_role
     };
 
     explicit CreaturesModel(QObject* parent_p = nullptr);
@@ -63,6 +64,7 @@ public:
     void update_creature_state(std::uint64_t id_p, QString state_p);
     void notify_creature_spotted(std::uint64_t id_p);
     void notify_creature_attack(std::uint64_t id_p);
+    void notify_creature_walk_command(std::uint64_t id_p);
     void remove_creature(std::uint64_t id_p);
 
 private:
@@ -85,6 +87,7 @@ private:
         int damage_amount_;
         int damage_revision_;
         int attack_revision_;
+        int walk_command_revision_;
     };
 
     std::vector<creature_entry_t> creatures_;

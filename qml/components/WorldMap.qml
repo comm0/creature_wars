@@ -289,6 +289,9 @@ Item {
             required property int damageAmount
             required property int damageRevision
             required property int attackRevision
+            required property int walkCommandRevision
+            property bool alertVisible: false
+            property bool goVisible: false
             readonly property real effectiveMovementSpeed:
                 creatureState === "idle"
                     ? movementSpeed * 0.5
@@ -392,65 +395,33 @@ Item {
                 }
             }
 
-            Text {
-                id: creatureStateText
+            Timer {
+                id: creatureAlertTimer
 
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: creatureIdentity.placeAbove
-                    ? -creatureIdentity.height - height - 4
-                    : parent.height + creatureIdentity.height + 4
-                color: "#f1f4f2"
-                font.pixelSize: 9
-                style: Text.Outline
-                styleColor: "#111814"
-                opacity: creatureAlert.opacity > 0 ? 0 : 1
-                text: creatureState === "walk"
-                    ? qsTr("walk")
-                    : [".", "..", "..."][root.idleDotCount - 1]
-                z: 11
+                interval: 750
+
+                onTriggered: creatureDelegate.alertVisible = false
             }
 
-            Text {
-                id: creatureAlert
+            Timer {
+                id: creatureGoTimer
 
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: creatureIdentity.placeAbove
-                    ? -creatureIdentity.height - height - 4
-                    : parent.height + creatureIdentity.height + 4
-                color: "#ffdc4f"
-                font.bold: true
-                font.pixelSize: 13
-                opacity: 0
-                style: Text.Outline
-                styleColor: "#111814"
-                text: "!"
-                z: 12
-            }
+                interval: 600
 
-            SequentialAnimation {
-                id: creatureAlertAnimation
-
-                PropertyAction {
-                    target: creatureAlert
-                    property: "opacity"
-                    value: 1
-                }
-
-                PauseAnimation {
-                    duration: 500
-                }
-
-                NumberAnimation {
-                    target: creatureAlert
-                    property: "opacity"
-                    to: 0
-                    duration: 250
-                }
+                onTriggered: creatureDelegate.goVisible = false
             }
 
             onAlertRevisionChanged: {
                 if (alertRevision > 0) {
-                    creatureAlertAnimation.restart()
+                    alertVisible = true
+                    creatureAlertTimer.restart()
+                }
+            }
+
+            onWalkCommandRevisionChanged: {
+                if (walkCommandRevision > 0) {
+                    goVisible = true
+                    creatureGoTimer.restart()
                 }
             }
 
@@ -481,28 +452,43 @@ Item {
                 Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    width: Math.ceil(creatureNameText.implicitWidth) + 4
+                    width: Math.ceil(creatureStatusText.implicitWidth) + 4
                     height: 10
                     radius: 2
-                    color: "#b8000000"
+                    color: creatureHover.hovered ? "#b8000000" : "transparent"
+                    visible: creatureStatusText.text.length > 0
 
                     Text {
-                        id: creatureNameText
+                        id: creatureStatusText
 
                         anchors.centerIn: parent
-                        color: creatureDelegate.healthColor
+                        color: creatureHover.hovered
+                            ? creatureDelegate.healthColor
+                            : creatureDelegate.alertVisible
+                                ? "#ffdc4f"
+                                : "#f1f4f2"
                         font.pixelSize: 8
                         font.weight: Font.DemiBold
                         font.letterSpacing: -0.2
                         renderType: Text.QtRendering
-                        text: creatureName
+                        style: Text.Outline
+                        styleColor: "#000000"
+                        text: creatureHover.hovered
+                            ? creatureName
+                            : creatureDelegate.alertVisible
+                                ? "!"
+                                : creatureDelegate.goVisible
+                                    ? qsTr("Go")
+                                    : creatureState === "idle"
+                                        ? [".", "..", "..."][root.idleDotCount - 1]
+                                        : ""
                     }
                 }
 
                 Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    width: 28
+                    width: 20
                     height: 4
                     radius: height / 2
                     color: "#cc111511"

@@ -110,6 +110,15 @@ void GameObserver::on_creature_attack_performed(std::uint64_t id_p)
     );
 }
 
+void GameObserver::on_creature_walk_requested(std::uint64_t id_p)
+{
+    QMetaObject::invokeMethod(
+        this,
+        [this, id_p]() { emit creatureWalkRequested(id_p); },
+        Qt::QueuedConnection
+    );
+}
+
 void GameObserver::on_creature_state_changed(
     std::uint64_t id_p,
     creature_state_t state_p

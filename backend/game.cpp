@@ -284,6 +284,7 @@ void game_t::set_creature_destination(
 
     if (creature != nullptr) {
         creature->request_walk(destination_p);
+        observer_->on_creature_walk_requested(id_p);
         creature->on_think(*this);
     }
 }

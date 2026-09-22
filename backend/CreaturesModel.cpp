@@ -68,6 +68,8 @@ QVariant CreaturesModel::data(const QModelIndex& index_p, int role_p) const
         return creature.damage_revision_;
     case attack_revision_role:
         return creature.attack_revision_;
+    case walk_command_revision_role:
+        return creature.walk_command_revision_;
     default:
         return {};
     }
@@ -93,7 +95,8 @@ QHash<int, QByteArray> CreaturesModel::roleNames() const
         {alert_revision_role, "alertRevision"},
         {damage_amount_role, "damageAmount"},
         {damage_revision_role, "damageRevision"},
-        {attack_revision_role, "attackRevision"}
+        {attack_revision_role, "attackRevision"},
+        {walk_command_revision_role, "walkCommandRevision"}
     };
 }
 
@@ -137,6 +140,7 @@ void CreaturesModel::update_or_insert_creature(
             vision_range_p,
             speed_p,
             QStringLiteral("idle"),
+            0,
             0,
             0,
             0,
@@ -290,6 +294,26 @@ void CreaturesModel::notify_creature_attack(std::uint64_t id_p)
     const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
     const auto model_index = createIndex(row, 0);
     emit dataChanged(model_index, model_index, {attack_revision_role});
+}
+
+void CreaturesModel::notify_creature_walk_command(std::uint64_t id_p)
+{
+    const auto creature = std::find_if(
+        creatures_.begin(),
+        creatures_.end(),
+        [id_p](const auto& entry_p) {
+            return entry_p.id_ == id_p;
+        }
+    );
+
+    if (creature == creatures_.end()) {
+        return;
+    }
+
+    ++creature->walk_command_revision_;
+    const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
+    const auto model_index = createIndex(row, 0);
+    emit dataChanged(model_index, model_index, {walk_command_revision_role});
 }
 
 void CreaturesModel::remove_creature(std::uint64_t id_p)
