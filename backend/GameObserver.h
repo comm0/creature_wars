@@ -17,8 +17,8 @@ public:
     void on_creature_created(const creature_t& creature_p) override;
     void on_creature_moved(
         std::uint64_t id_p,
-        position_t previous_position_p,
-        position_t position_p
+        position_t position_p,
+        direction_t direction_p
     ) override;
     void on_creature_health_changed(
         std::uint64_t id_p,
@@ -54,8 +54,8 @@ signals:
     );
     void creatureMoved(
         std::uint64_t id_p,
-        position_t previous_position_p,
-        position_t position_p
+        position_t position_p,
+        QString direction_p
     );
     void creatureHealthChanged(std::uint64_t id_p, int health_p);
     void creatureAttackPerformed(std::uint64_t id_p);

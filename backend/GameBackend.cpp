@@ -48,11 +48,14 @@ GameBackend::GameBackend(QObject* parent_p)
         this,
         [this](
             std::uint64_t id_p,
-            position_t previous_position_p,
-            position_t position_p
+            position_t position_p,
+            QString direction_p
         ) {
-            static_cast<void>(previous_position_p);
-            receive_creature_position(id_p, position_p);
+            receive_creature_position(
+                id_p,
+                position_p,
+                std::move(direction_p)
+            );
         }
     );
     connect(
@@ -246,8 +249,13 @@ void GameBackend::receive_creature(
 
 void GameBackend::receive_creature_position(
     std::uint64_t id_p,
-    position_t position_p
+    position_t position_p,
+    QString direction_p
 )
 {
-    creatures_model_.update_creature_position(id_p, position_p);
+    creatures_model_.update_creature_position(
+        id_p,
+        position_p,
+        std::move(direction_p)
+    );
 }

@@ -417,8 +417,8 @@ bool game_t::move_creature(
 
     observer_->on_creature_moved(
         creature_p.id(),
-        previous_position,
-        creature_p.position()
+        creature_p.position(),
+        creature_p.direction()
     );
     visibility_system_.move_creature(
         creature_p,

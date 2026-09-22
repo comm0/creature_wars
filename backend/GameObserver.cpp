@@ -4,6 +4,25 @@
 
 #include <utility>
 
+namespace
+{
+QString direction_name(direction_t direction_p)
+{
+    switch (direction_p) {
+    case direction_t::north:
+        return QStringLiteral("north");
+    case direction_t::east:
+        return QStringLiteral("east");
+    case direction_t::south:
+        return QStringLiteral("south");
+    case direction_t::west:
+        return QStringLiteral("west");
+    }
+
+    return QStringLiteral("south");
+}
+}
+
 GameObserver::GameObserver(QObject* parent_p)
     : QObject(parent_p)
 {
@@ -74,14 +93,16 @@ void GameObserver::on_creature_created(const creature_t& creature_p)
 
 void GameObserver::on_creature_moved(
     std::uint64_t id_p,
-    position_t previous_position_p,
-    position_t position_p
+    position_t position_p,
+    direction_t direction_p
 )
 {
+    auto direction = direction_name(direction_p);
+
     QMetaObject::invokeMethod(
         this,
-        [this, id_p, previous_position_p, position_p]() {
-            emit creatureMoved(id_p, previous_position_p, position_p);
+        [this, id_p, position_p, direction = std::move(direction)]() {
+            emit creatureMoved(id_p, position_p, direction);
         },
         Qt::QueuedConnection
     );

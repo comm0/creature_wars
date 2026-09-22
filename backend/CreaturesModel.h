@@ -28,6 +28,7 @@ public:
         attack_range_role,
         vision_range_role,
         speed_role,
+        direction_role,
         state_role,
         alert_revision_role,
         damage_amount_role,
@@ -58,7 +59,8 @@ public:
     );
     void update_creature_position(
         std::uint64_t id_p,
-        position_t position_p
+        position_t position_p,
+        QString direction_p
     );
     void update_creature_health(std::uint64_t id_p, int health_p);
     void update_creature_state(std::uint64_t id_p, QString state_p);
@@ -82,6 +84,7 @@ private:
         int attack_range_;
         int vision_range_;
         double speed_;
+        QString direction_;
         QString state_;
         int alert_revision_;
         int damage_amount_;

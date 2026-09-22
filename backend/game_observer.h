@@ -13,8 +13,8 @@ public:
     virtual void on_creature_created(const creature_t& creature_p) = 0;
     virtual void on_creature_moved(
         std::uint64_t id_p,
-        position_t previous_position_p,
-        position_t position_p
+        position_t position_p,
+        direction_t direction_p
     ) = 0;
     virtual void on_creature_health_changed(
         std::uint64_t id_p,

@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <optional>
 #include <unordered_set>
 
@@ -19,6 +20,14 @@ enum class creature_state_t
 {
     idle,
     walking
+};
+
+enum class direction_t
+{
+    north,
+    east,
+    south,
+    west
 };
 
 class game_t;
@@ -57,6 +66,20 @@ public:
 
     void move_to(position_t position_p) noexcept
     {
+        const auto column_change = position_p.column_ - position_.column_;
+        const auto row_change = position_p.row_ - position_.row_;
+
+        if (std::abs(column_change) >= std::abs(row_change)
+            && column_change != 0) {
+            direction_ = column_change > 0
+                ? direction_t::east
+                : direction_t::west;
+        } else if (row_change != 0) {
+            direction_ = row_change > 0
+                ? direction_t::south
+                : direction_t::north;
+        }
+
         position_ = position_p;
     }
 
@@ -68,6 +91,11 @@ public:
     position_t position() const noexcept
     {
         return position_;
+    }
+
+    direction_t direction() const noexcept
+    {
+        return direction_;
     }
 
     const creature_type_t& type() const noexcept
@@ -151,6 +179,7 @@ private:
     std::optional<std::chrono::steady_clock::time_point> next_movement_time_;
     std::unordered_set<std::uint64_t> visible_creature_ids_;
     movement_goal_t active_movement_goal_ = movement_goal_t::none;
+    direction_t direction_ = direction_t::south;
     std::chrono::milliseconds attack_elapsed_{0};
     int blocked_path_retry_count_ = 0;
     int health_;

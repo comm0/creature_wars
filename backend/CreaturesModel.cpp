@@ -58,6 +58,8 @@ QVariant CreaturesModel::data(const QModelIndex& index_p, int role_p) const
         return creature.vision_range_;
     case speed_role:
         return creature.speed_;
+    case direction_role:
+        return creature.direction_;
     case state_role:
         return creature.state_;
     case alert_revision_role:
@@ -91,6 +93,7 @@ QHash<int, QByteArray> CreaturesModel::roleNames() const
         {attack_range_role, "attackRange"},
         {vision_range_role, "visionRange"},
         {speed_role, "movementSpeed"},
+        {direction_role, "creatureDirection"},
         {state_role, "creatureState"},
         {alert_revision_role, "alertRevision"},
         {damage_amount_role, "damageAmount"},
@@ -139,6 +142,7 @@ void CreaturesModel::update_or_insert_creature(
             attack_range_p,
             vision_range_p,
             speed_p,
+            QStringLiteral("south"),
             QStringLiteral("idle"),
             0,
             0,
@@ -181,7 +185,8 @@ void CreaturesModel::update_or_insert_creature(
 
 void CreaturesModel::update_creature_position(
     std::uint64_t id_p,
-    position_t position_p
+    position_t position_p,
+    QString direction_p
 )
 {
     const auto creature = std::find_if(
@@ -197,11 +202,13 @@ void CreaturesModel::update_creature_position(
     }
 
     creature->position_ = position_p;
+    creature->direction_ = std::move(direction_p);
     const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
     const auto model_index = createIndex(row, 0);
     emit dataChanged(model_index, model_index, {
         column_role,
-        row_role
+        row_role,
+        direction_role
     });
 }
 

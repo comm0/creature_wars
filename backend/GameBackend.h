@@ -62,7 +62,8 @@ private:
     );
     void receive_creature_position(
         std::uint64_t id_p,
-        position_t position_p
+        position_t position_p,
+        QString direction_p
     );
 
     GameObserver game_observer_;
