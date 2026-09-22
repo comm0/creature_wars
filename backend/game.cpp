@@ -422,6 +422,7 @@ bool game_t::check_creature_attack(
 
     const auto previous_health = target->health();
     target->drain_health(attacker->type().attack());
+    observer_->on_creature_attack_performed(attacker->id());
 
     if (target->health() != previous_health) {
         observer_->on_creature_health_changed(target->id(), target->health());

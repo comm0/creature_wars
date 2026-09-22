@@ -268,7 +268,7 @@ Item {
 
         model: root.creatureModel
 
-        delegate: Rectangle {
+        delegate: Item {
             id: creatureDelegate
 
             required property var creatureId
@@ -286,6 +286,9 @@ Item {
             required property real movementSpeed
             required property string creatureState
             required property int alertRevision
+            required property int damageAmount
+            required property int damageRevision
+            required property int attackRevision
             readonly property int movementDuration: Math.max(
                 1,
                 Math.round(1000 / Math.max(movementSpeed, 0.01))
@@ -302,13 +305,88 @@ Item {
             y: row * root.tileSize + 2
             width: root.tileSize - 4
             height: root.tileSize - 4
-            radius: width / 2
-            color: creatureColor
-            border.width: root.isCreatureSelected(creatureId) ? 2 : 1
-            border.color: root.isCreatureSelected(creatureId)
-                ? "#f4df5a"
-                : Qt.darker(creatureColor, 1.5)
             z: 2
+
+            Rectangle {
+                id: creatureBody
+
+                anchors.fill: parent
+                radius: width / 2
+                color: creatureColor
+                border.width: root.isCreatureSelected(creatureId) ? 2 : 1
+                border.color: root.isCreatureSelected(creatureId)
+                    ? "#f4df5a"
+                    : Qt.darker(creatureColor, 1.5)
+
+                transform: Translate {
+                    id: creatureAttackTranslation
+                }
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: parent.width * 0.35
+                    height: width
+                    radius: width / 2
+                    color: markerColor
+                    visible: markerColor.a > 0
+                }
+            }
+
+            SequentialAnimation {
+                id: creatureAttackAnimation
+
+                NumberAnimation {
+                    target: creatureAttackTranslation
+                    property: "y"
+                    to: -3
+                    duration: 80
+                    easing.type: Easing.OutCubic
+                }
+
+                NumberAnimation {
+                    target: creatureAttackTranslation
+                    property: "y"
+                    to: 0
+                    duration: 110
+                    easing.type: Easing.InCubic
+                }
+            }
+
+            Text {
+                id: creatureDamageText
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                color: "#f04444"
+                font.bold: true
+                font.pixelSize: 10
+                opacity: 0
+                style: Text.Outline
+                styleColor: "#000000"
+                text: damageAmount > 0 ? "-" + damageAmount : ""
+                z: 14
+            }
+
+            ParallelAnimation {
+                id: creatureDamageAnimation
+
+                NumberAnimation {
+                    target: creatureDamageText
+                    property: "y"
+                    from: creatureDelegate.height / 2
+                        - creatureDamageText.height / 2
+                    to: -root.tileSize
+                    duration: 900
+                    easing.type: Easing.OutCubic
+                }
+
+                NumberAnimation {
+                    target: creatureDamageText
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 900
+                }
+            }
 
             Text {
                 id: creatureStateText
@@ -369,6 +447,18 @@ Item {
             onAlertRevisionChanged: {
                 if (alertRevision > 0) {
                     creatureAlertAnimation.restart()
+                }
+            }
+
+            onDamageRevisionChanged: {
+                if (damageRevision > 0) {
+                    creatureDamageAnimation.restart()
+                }
+            }
+
+            onAttackRevisionChanged: {
+                if (attackRevision > 0) {
+                    creatureAttackAnimation.restart()
                 }
             }
 
@@ -441,15 +531,6 @@ Item {
 
             HoverHandler {
                 id: creatureHover
-            }
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: parent.width * 0.35
-                height: width
-                radius: width / 2
-                color: markerColor
-                visible: markerColor.a > 0
             }
 
             Rectangle {

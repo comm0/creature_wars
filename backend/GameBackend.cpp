@@ -65,6 +65,14 @@ GameBackend::GameBackend(QObject* parent_p)
     );
     connect(
         &game_observer_,
+        &GameObserver::creatureAttackPerformed,
+        this,
+        [this](std::uint64_t id_p) {
+            creatures_model_.notify_creature_attack(id_p);
+        }
+    );
+    connect(
+        &game_observer_,
         &GameObserver::creatureStateChanged,
         this,
         [this](std::uint64_t id_p, QString state_p) {

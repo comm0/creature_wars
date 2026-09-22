@@ -20,6 +20,7 @@ public:
         std::uint64_t id_p,
         int health_p
     ) = 0;
+    virtual void on_creature_attack_performed(std::uint64_t id_p) = 0;
     virtual void on_creature_state_changed(
         std::uint64_t id_p,
         creature_state_t state_p

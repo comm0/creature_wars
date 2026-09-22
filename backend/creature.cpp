@@ -87,7 +87,10 @@ void creature_t::on_attacking(
         return;
     }
 
-    attack_elapsed_ += interval_p;
+    attack_elapsed_ = std::min(
+        game_constants::attack_interval,
+        attack_elapsed_ + interval_p
+    );
 
     if (attack_elapsed_ < game_constants::attack_interval
         || !game_p.is_in_attack_range(*this, *target)) {
