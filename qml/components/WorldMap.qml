@@ -289,9 +289,13 @@ Item {
             required property int damageAmount
             required property int damageRevision
             required property int attackRevision
+            readonly property real effectiveMovementSpeed:
+                creatureState === "idle"
+                    ? movementSpeed * 0.5
+                    : movementSpeed
             readonly property int movementDuration: Math.max(
                 1,
-                Math.round(1000 / Math.max(movementSpeed, 0.01))
+                Math.round(1000 / Math.max(effectiveMovementSpeed, 0.01))
             )
             readonly property real healthRatio: Math.max(
                 0,

@@ -56,6 +56,10 @@ public:
         std::uint64_t id_p,
         position_t destination_p
     );
+    bool move_creature_idle(
+        std::uint64_t id_p,
+        position_t idle_starting_position_p
+    );
     bool check_creature_attack(
         std::uint64_t attacker_id_p,
         std::uint64_t target_id_p
@@ -78,6 +82,11 @@ private:
     void dispatch_tick();
     void dispatch_movement(std::chrono::steady_clock::time_point now_p);
     void remove_dead_creatures();
+    bool move_creature(creature_t& creature_p, position_t position_p);
+    void notify_creature_spotted(
+        std::uint64_t observer_id_p,
+        std::uint64_t spotted_id_p
+    );
     void publish_creatures();
 
 #ifndef NDEBUG

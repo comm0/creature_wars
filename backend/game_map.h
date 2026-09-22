@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <optional>
+#include <random>
 
 #include "creature.h"
 #include "game_constants.h"
@@ -26,6 +27,10 @@ public:
         const creature_t& creature_p,
         position_t destination_p
     );
+    std::optional<position_t> next_idle_step(
+        const creature_t& creature_p,
+        position_t idle_starting_position_p
+    );
 
 #ifndef NDEBUG
     std::size_t occupied_position_count() const noexcept
@@ -47,6 +52,7 @@ private:
         game_constants::map_column_count,
         game_constants::map_row_count
     };
+    std::mt19937 random_generator_{std::random_device{}()};
 #ifndef NDEBUG
     std::size_t occupied_position_count_ = 0;
 #endif

@@ -210,7 +210,7 @@ void game_t::spawn_creature(
         game_map_,
         creatures_,
         [this](std::uint64_t observer_id_p, std::uint64_t spotted_id_p) {
-            observer_->on_creature_spotted(observer_id_p, spotted_id_p);
+            notify_creature_spotted(observer_id_p, spotted_id_p);
         }
     );
 }
@@ -377,28 +377,77 @@ bool game_t::move_creature_towards(
         return false;
     }
 
-    const auto previous_position = creature->position();
+    return move_creature(*creature, *next_position);
+}
 
-    if (!game_map_.move_creature(*creature, *next_position)) {
+bool game_t::move_creature_idle(
+    std::uint64_t id_p,
+    position_t idle_starting_position_p
+)
+{
+    auto* creature = creatures_.find(id_p);
+
+    if (creature == nullptr) {
+        return false;
+    }
+
+    const auto next_position = game_map_.next_idle_step(
+        *creature,
+        idle_starting_position_p
+    );
+
+    if (!next_position.has_value()) {
+        return false;
+    }
+
+    return move_creature(*creature, *next_position);
+}
+
+bool game_t::move_creature(
+    creature_t& creature_p,
+    position_t position_p
+)
+{
+    const auto previous_position = creature_p.position();
+
+    if (!game_map_.move_creature(creature_p, position_p)) {
         return true;
     }
 
     observer_->on_creature_moved(
-        creature->id(),
+        creature_p.id(),
         previous_position,
-        creature->position()
+        creature_p.position()
     );
     visibility_system_.move_creature(
-        *creature,
+        creature_p,
         previous_position,
         game_map_,
         creatures_,
         [this](std::uint64_t observer_id_p, std::uint64_t spotted_id_p) {
-            observer_->on_creature_spotted(observer_id_p, spotted_id_p);
+            notify_creature_spotted(observer_id_p, spotted_id_p);
         }
     );
 
     return true;
+}
+
+void game_t::notify_creature_spotted(
+    std::uint64_t observer_id_p,
+    std::uint64_t spotted_id_p
+)
+{
+    const auto* observing_creature = creatures_.find(observer_id_p);
+    const auto* spotted_creature = creatures_.find(spotted_id_p);
+
+    if (observing_creature == nullptr
+        || spotted_creature == nullptr
+        || observing_creature->type().group()
+            == spotted_creature->type().group()) {
+        return;
+    }
+
+    observer_->on_creature_spotted(observer_id_p, spotted_id_p);
 }
 
 bool game_t::check_creature_attack(

@@ -89,7 +89,8 @@ public:
 
     creature_state_t state() const noexcept
     {
-        return active_movement_goal_ != movement_goal_t::none
+        return active_movement_goal_ == movement_goal_t::manual
+                || active_movement_goal_ == movement_goal_t::target
             ? creature_state_t::walking
             : creature_state_t::idle;
     }
@@ -125,11 +126,13 @@ private:
     {
         none,
         manual,
-        target
+        target,
+        idle
     };
 
     void activate_manual_movement(game_t& game_p);
     void activate_target_movement(game_t& game_p, const creature_t& target_p);
+    void activate_idle_movement(game_t& game_p);
     void stop_movement(game_t& game_p);
     void finish_manual_movement(game_t& game_p);
     void block_target(position_t target_position_p, game_t& game_p);
@@ -141,6 +144,7 @@ private:
     const creature_type_t& type_;
     position_t position_;
     std::optional<position_t> manual_destination_;
+    std::optional<position_t> idle_starting_position_;
     std::optional<std::uint64_t> target_id_;
     std::optional<std::uint64_t> blocked_target_id_;
     std::optional<position_t> blocked_target_position_;

@@ -4,6 +4,22 @@
 #include "debug_console.h"
 #endif
 
+#include <algorithm>
+#include <cstdlib>
+
+namespace
+{
+constexpr int guaranteed_idle_return_distance = 3;
+
+int position_distance(position_t left_p, position_t right_p) noexcept
+{
+    return std::max(
+        std::abs(left_p.column_ - right_p.column_),
+        std::abs(left_p.row_ - right_p.row_)
+    );
+}
+}
+
 bool game_map_t::place_creature(
     creature_t& creature_p,
     position_t position_p
@@ -111,6 +127,63 @@ std::optional<position_t> game_map_t::next_step_towards(
             return can_place_creature(position_p);
         }
     );
+}
+
+std::optional<position_t> game_map_t::next_idle_step(
+    const creature_t& creature_p,
+    position_t idle_starting_position_p
+)
+{
+    const auto position = creature_p.position();
+    const auto distance = position_distance(position, idle_starting_position_p);
+    const auto return_probability = std::min(
+        1.0,
+        static_cast<double>(distance) / guaranteed_idle_return_distance
+    );
+    auto return_to_start = std::bernoulli_distribution(return_probability);
+
+    if (return_to_start(random_generator_)) {
+        const auto return_step = next_step_towards(
+            creature_p,
+            idle_starting_position_p
+        );
+
+        if (return_step.has_value()) {
+            return return_step;
+        }
+    }
+
+    constexpr std::array<position_t, 4> offsets{
+        position_t{0, -1},
+        position_t{1, 0},
+        position_t{0, 1},
+        position_t{-1, 0}
+    };
+    std::array<position_t, offsets.size()> available_positions{};
+    std::size_t available_position_count = 0;
+
+    for (const auto offset : offsets) {
+        const position_t next_position{
+            position.column_ + offset.column_,
+            position.row_ + offset.row_
+        };
+
+        if (can_place_creature(next_position)) {
+            available_positions[available_position_count] = next_position;
+            ++available_position_count;
+        }
+    }
+
+    if (available_position_count == 0) {
+        return std::nullopt;
+    }
+
+    auto position_index_distribution = std::uniform_int_distribution<std::size_t>(
+        0,
+        available_position_count - 1
+    );
+
+    return available_positions[position_index_distribution(random_generator_)];
 }
 
 std::optional<position_t> game_map_t::find_free_position(
