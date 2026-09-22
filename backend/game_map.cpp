@@ -142,17 +142,6 @@ std::optional<position_t> game_map_t::next_idle_step(
     );
     auto return_to_start = std::bernoulli_distribution(return_probability);
 
-    if (return_to_start(random_generator_)) {
-        const auto return_step = next_step_towards(
-            creature_p,
-            idle_starting_position_p
-        );
-
-        if (return_step.has_value()) {
-            return return_step;
-        }
-    }
-
     constexpr std::array<position_t, 4> offsets{
         position_t{0, -1},
         position_t{1, 0},
@@ -176,6 +165,47 @@ std::optional<position_t> game_map_t::next_idle_step(
 
     if (available_position_count == 0) {
         return std::nullopt;
+    }
+
+    if (return_to_start(random_generator_)) {
+        std::array<position_t, offsets.size()> closest_positions{};
+        std::size_t closest_position_count = 0;
+        auto closest_distance = position_distance(
+            available_positions[0],
+            idle_starting_position_p
+        );
+
+        for (
+            std::size_t index = 0;
+            index < available_position_count;
+            ++index
+        ) {
+            const auto next_distance = position_distance(
+                available_positions[index],
+                idle_starting_position_p
+            );
+
+            if (next_distance < closest_distance) {
+                closest_distance = next_distance;
+                closest_position_count = 0;
+            }
+
+            if (next_distance == closest_distance) {
+                closest_positions[closest_position_count] =
+                    available_positions[index];
+                ++closest_position_count;
+            }
+        }
+
+        auto closest_position_distribution =
+            std::uniform_int_distribution<std::size_t>(
+                0,
+                closest_position_count - 1
+            );
+
+        return closest_positions[
+            closest_position_distribution(random_generator_)
+        ];
     }
 
     auto position_index_distribution = std::uniform_int_distribution<std::size_t>(

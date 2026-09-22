@@ -10,6 +10,9 @@
 
 namespace
 {
+constexpr std::size_t straight_step_cost = 10;
+constexpr std::size_t diagonal_step_cost = 14;
+
 struct path_node_t
 {
     std::size_t index_;
@@ -76,11 +79,15 @@ std::optional<position_t> pathfinder_t::find_next_step(
     auto best_index = start_index;
     auto best_distance = distance(start_p, destination_p);
 
-    constexpr std::array<position_t, 4> base_offsets{
+    constexpr std::array<position_t, 8> base_offsets{
         position_t{0, -1},
+        position_t{1, -1},
         position_t{1, 0},
+        position_t{1, 1},
         position_t{0, 1},
-        position_t{-1, 0}
+        position_t{-1, 1},
+        position_t{-1, 0},
+        position_t{-1, -1}
     };
 
     while (!open_positions.empty()) {
@@ -130,7 +137,11 @@ std::optional<position_t> pathfinder_t::find_next_step(
                 continue;
             }
 
-            const auto candidate_cost = path_costs[current_node.index_] + 1;
+            const auto step_cost = offset.column_ != 0 && offset.row_ != 0
+                ? diagonal_step_cost
+                : straight_step_cost;
+            const auto candidate_cost = path_costs[current_node.index_]
+                + step_cost;
 
             if (candidate_cost > path_costs[neighbour_index]
                 || (candidate_cost == path_costs[neighbour_index]
@@ -193,8 +204,21 @@ std::size_t pathfinder_t::distance(
     position_t destination_p
 ) noexcept
 {
-    return static_cast<std::size_t>(
+    const auto column_distance = static_cast<std::size_t>(
         std::abs(position_p.column_ - destination_p.column_)
-        + std::abs(position_p.row_ - destination_p.row_)
     );
+    const auto row_distance = static_cast<std::size_t>(
+        std::abs(position_p.row_ - destination_p.row_)
+    );
+    const auto diagonal_step_count = std::min(
+        column_distance,
+        row_distance
+    );
+    const auto straight_step_count = std::max(
+        column_distance,
+        row_distance
+    ) - diagonal_step_count;
+
+    return diagonal_step_count * diagonal_step_cost
+        + straight_step_count * straight_step_cost;
 }

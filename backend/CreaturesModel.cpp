@@ -199,7 +199,10 @@ void CreaturesModel::update_creature_position(
     creature->position_ = position_p;
     const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
     const auto model_index = createIndex(row, 0);
-    emit dataChanged(model_index, model_index, {column_role, row_role});
+    emit dataChanged(model_index, model_index, {
+        column_role,
+        row_role
+    });
 }
 
 void CreaturesModel::update_creature_health(std::uint64_t id_p, int health_p)

@@ -50,7 +50,7 @@ TEST(pathfinder_t_test, finds_route_around_obstacle)
     );
 
     ASSERT_TRUE(next_step.has_value());
-    EXPECT_EQ(*next_step, (position_t{0, 1}));
+    EXPECT_EQ(*next_step, (position_t{1, 1}));
 }
 
 // Verifies movement toward the closest free field (e.g. a destination occupied by another creature).
@@ -77,9 +77,13 @@ TEST(pathfinder_t_test, returns_no_step_when_route_is_blocked)
     pathfinder_t pathfinder{3, 3};
     const std::vector<position_t> blocked_positions{
         {1, 0},
+        {2, 0},
         {2, 1},
         {1, 2},
-        {0, 1}
+        {2, 2},
+        {0, 2},
+        {0, 1},
+        {0, 0}
     };
 
     const auto next_step = pathfinder.find_next_step(
@@ -93,8 +97,8 @@ TEST(pathfinder_t_test, returns_no_step_when_route_is_blocked)
     EXPECT_FALSE(next_step.has_value());
 }
 
-// Verifies that either shortest first step is valid (e.g. two equivalent open routes).
-TEST(pathfinder_t_test, accepts_equivalent_shortest_routes)
+// Verifies a diagonal shortest step (e.g. moving across an open square).
+TEST(pathfinder_t_test, finds_diagonal_next_step)
 {
     pathfinder_t pathfinder{2, 2};
 
@@ -105,10 +109,7 @@ TEST(pathfinder_t_test, accepts_equivalent_shortest_routes)
     );
 
     ASSERT_TRUE(next_step.has_value());
-    EXPECT_TRUE((
-        *next_step == position_t{1, 0}
-        || *next_step == position_t{0, 1}
-    ));
+    EXPECT_EQ(*next_step, (position_t{1, 1}));
 }
 
 // Verifies that an already reached destination requires no step.
