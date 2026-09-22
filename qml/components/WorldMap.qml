@@ -8,6 +8,7 @@ Item {
     required property int rows
     property int tileSize: 16
     property bool gridVisible: true
+    property bool visionRangesVisible: false
     property var creatureModel
     property bool spawnEnabled: true
     property int contextColumn: 0
@@ -355,20 +356,14 @@ Item {
 
             Rectangle {
                 anchors.centerIn: parent
-                width: (visionRange * 2 + 1) * root.tileSize
+                width: visionRange * 2 * root.tileSize
                 height: width
+                radius: width / 2
                 color: "transparent"
                 border.width: 1
-                border.color: "#e8d878"
-                visible: opacity > 0
-                opacity: creatureHover.hovered ? 1 : 0
+                border.color: "#33e8d878"
+                visible: root.visionRangesVisible
                 z: -1
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 150
-                    }
-                }
             }
 
             HoverHandler {

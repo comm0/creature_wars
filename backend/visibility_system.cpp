@@ -3,6 +3,7 @@
 #include "creatures.h"
 #include "game_constants.h"
 
+#include <cmath>
 #include <cstdlib>
 
 void visibility_system_t::add_creature(
@@ -88,11 +89,14 @@ void visibility_system_t::register_full_range(
     const auto range = observer_p.type().vision_range();
 
     for (auto row = position.row_ - range; row <= position.row_ + range; ++row) {
-        for (
-            auto column = position.column_ - range;
-            column <= position.column_ + range;
-            ++column
-        ) {
+        const auto column_extent = circle_extent(
+            range,
+            row - position.row_
+        );
+
+        for (auto column = position.column_ - column_extent;
+             column <= position.column_ + column_extent;
+             ++column) {
             add_observed_position(
                 observer_p,
                 {column, row},
@@ -139,14 +143,18 @@ void visibility_system_t::move_observer_range(
     }
 
     if (column_change != 0) {
-        const auto removed_column = column_change > 0
-            ? previous_position_p.column_ - range
-            : previous_position_p.column_ + range;
-        const auto added_column = column_change > 0
-            ? position.column_ + range
-            : position.column_ - range;
+        const auto direction = column_change > 0 ? 1 : -1;
 
         for (auto row = position.row_ - range; row <= position.row_ + range; ++row) {
+            const auto column_extent = circle_extent(
+                range,
+                row - position.row_
+            );
+            const auto removed_column = previous_position_p.column_
+                - direction * column_extent;
+            const auto added_column = position.column_
+                + direction * column_extent;
+
             remove_observed_position(
                 observer_p,
                 {removed_column, row},
@@ -163,18 +171,19 @@ void visibility_system_t::move_observer_range(
         return;
     }
 
-    const auto removed_row = row_change > 0
-        ? previous_position_p.row_ - range
-        : previous_position_p.row_ + range;
-    const auto added_row = row_change > 0
-        ? position.row_ + range
-        : position.row_ - range;
+    const auto direction = row_change > 0 ? 1 : -1;
 
-    for (
-        auto column = position.column_ - range;
-        column <= position.column_ + range;
-        ++column
-    ) {
+    for (auto column = position.column_ - range;
+         column <= position.column_ + range;
+         ++column) {
+        const auto row_extent = circle_extent(
+            range,
+            column - position.column_
+        );
+        const auto removed_row = previous_position_p.row_
+            - direction * row_extent;
+        const auto added_row = position.row_ + direction * row_extent;
+
         remove_observed_position(
             observer_p,
             {column, removed_row},
@@ -239,6 +248,16 @@ void visibility_system_t::spot_creature(
     }
 
     spotted_p(observer_p.id(), spotted_creature_p.id());
+}
+
+int visibility_system_t::circle_extent(int range_p, int offset_p) noexcept
+{
+    const auto range_squared = static_cast<double>(range_p)
+        * static_cast<double>(range_p);
+    const auto offset_squared = static_cast<double>(offset_p)
+        * static_cast<double>(offset_p);
+
+    return static_cast<int>(std::sqrt(range_squared - offset_squared));
 }
 
 bool visibility_system_t::is_position_inside(position_t position_p) noexcept

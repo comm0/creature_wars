@@ -27,6 +27,7 @@ Scene {
         tileSize: 16
         creatureModel: gameScene.gameBackend.creaturesModel
         spawnEnabled: gameScene.gameBackend.running
+        visionRangesVisible: showRangeCheckBox.checked
 
         onSpawnRequested: function(identifier, column, row) {
             gameScene.gameBackend.spawnCreature(identifier, column, row)
@@ -74,6 +75,14 @@ Scene {
                 palette.windowText: "#e8eee9"
 
                 onToggled: worldMap.gridVisible = checked
+            }
+
+            CheckBox {
+                id: showRangeCheckBox
+
+                text: qsTr("Show range")
+                checked: false
+                palette.windowText: "#e8eee9"
             }
 
             CheckBox {

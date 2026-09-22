@@ -54,6 +54,7 @@ private:
         creature_t& spotted_creature_p,
         const std::function<void(std::uint64_t, std::uint64_t)>& spotted_p
     );
+    static int circle_extent(int range_p, int offset_p) noexcept;
     static bool is_position_inside(position_t position_p) noexcept;
     static std::size_t position_index(position_t position_p) noexcept;
 
