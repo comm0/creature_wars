@@ -25,6 +25,10 @@ public:
         creatures_t& creatures_p,
         const std::function<void(std::uint64_t, std::uint64_t)>& spotted_p
     );
+    void remove_creature(
+        creature_t& creature_p,
+        creatures_t& creatures_p
+    );
 
 private:
     void register_full_range(

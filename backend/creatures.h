@@ -19,6 +19,7 @@ public:
 
     creature_t* find(std::uint64_t id_p) noexcept;
     const creature_t* find(std::uint64_t id_p) const noexcept;
+    bool remove(std::uint64_t id_p) noexcept;
 
 #ifndef NDEBUG
     std::size_t size() const noexcept
@@ -28,6 +29,10 @@ public:
 #endif
 
     void on_think(game_t& game_p);
+    void on_attacking(
+        game_t& game_p,
+        std::chrono::milliseconds interval_p
+    );
     void update_movement(
         game_t& game_p,
         std::chrono::steady_clock::time_point now_p

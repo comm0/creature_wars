@@ -62,6 +62,16 @@ Item {
         selectedCreatureIds = selectedIds
     }
 
+    function removeSelectedCreature(creatureId) {
+        const selectedIds = selectedCreatureIds.slice()
+        const index = selectedIds.indexOf(creatureId)
+
+        if (index !== -1) {
+            selectedIds.splice(index, 1)
+            selectedCreatureIds = selectedIds
+        }
+    }
+
     width: columns * tileSize
     height: rows * tileSize
     clip: true

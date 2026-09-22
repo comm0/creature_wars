@@ -222,6 +222,8 @@ void game_t::dispatch_tick()
 #endif
 
     creatures_.on_think(*this);
+    creatures_.on_attacking(*this, game_constants::tick_interval);
+    remove_dead_creatures();
 
     observer_->on_game_tick();
 
@@ -307,6 +309,7 @@ const creature_t* game_t::find_nearest_visible_enemy(
         const auto* visible_creature = creatures_.find(visible_id);
 
         if (visible_creature == nullptr
+            || visible_creature->is_dead()
             || visible_creature->type().group() == creature_p.type().group()) {
             continue;
         }
@@ -325,7 +328,7 @@ const creature_t* game_t::find_nearest_visible_enemy(
     return nearest_enemy;
 }
 
-const creature_t* game_t::find_followed_enemy(
+const creature_t* game_t::find_visible_enemy(
     const creature_t& creature_p,
     std::uint64_t target_id_p
 ) const noexcept
@@ -337,6 +340,7 @@ const creature_t* game_t::find_followed_enemy(
     const auto* target = creatures_.find(target_id_p);
 
     if (target == nullptr
+        || target->is_dead()
         || target->type().group() == creature_p.type().group()) {
         return nullptr;
     }
@@ -395,6 +399,60 @@ bool game_t::move_creature_towards(
     );
 
     return true;
+}
+
+bool game_t::check_creature_attack(
+    std::uint64_t attacker_id_p,
+    std::uint64_t target_id_p
+)
+{
+    auto* attacker = creatures_.find(attacker_id_p);
+    auto* target = creatures_.find(target_id_p);
+
+    if (attacker == nullptr
+        || target == nullptr
+        || attacker == target
+        || attacker->is_dead()
+        || target->is_dead()
+        || attacker->type().group() == target->type().group()
+        || !attacker->visible_creature_ids().contains(target_id_p)
+        || !is_in_attack_range(*attacker, *target)) {
+        return false;
+    }
+
+    const auto previous_health = target->health();
+    target->drain_health(attacker->type().attack());
+
+    if (target->health() != previous_health) {
+        observer_->on_creature_health_changed(target->id(), target->health());
+    }
+
+    if (target->is_dead()) {
+        dead_creature_ids_.push_back(target->id());
+    }
+
+    return true;
+}
+
+void game_t::remove_dead_creatures()
+{
+    for (const auto id : dead_creature_ids_) {
+        auto* creature = creatures_.find(id);
+
+        if (creature == nullptr || !creature->is_dead()) {
+            continue;
+        }
+
+        if (!game_map_.remove_creature(*creature)) {
+            continue;
+        }
+
+        visibility_system_.remove_creature(*creature, creatures_);
+        observer_->on_creature_removed(id);
+        creatures_.remove(id);
+    }
+
+    dead_creature_ids_.clear();
 }
 
 void game_t::notify_creature_state_changed(const creature_t& creature_p)

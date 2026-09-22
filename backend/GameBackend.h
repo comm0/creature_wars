@@ -43,6 +43,7 @@ signals:
     void runningChanged();
     void aggressiveChanged();
     void heartbeat();
+    void creatureRemoved(std::uint64_t id_p);
 
 private:
     void receive_creature(

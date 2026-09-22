@@ -33,6 +33,10 @@ public:
     );
 
     void on_think(game_t& game_p);
+    void on_attacking(
+        game_t& game_p,
+        std::chrono::milliseconds interval_p
+    );
     void update_movement(
         game_t& game_p,
         std::chrono::steady_clock::time_point now_p
@@ -75,6 +79,13 @@ public:
     {
         return health_;
     }
+
+    bool is_dead() const noexcept
+    {
+        return health_ == 0;
+    }
+
+    void drain_health(int damage_p) noexcept;
 
     creature_state_t state() const noexcept
     {
@@ -122,6 +133,7 @@ private:
     void stop_movement(game_t& game_p);
     void finish_manual_movement(game_t& game_p);
     void block_target(position_t target_position_p, game_t& game_p);
+    void clear_target(game_t& game_p);
     bool target_was_blocked(const creature_t& target_p) const noexcept;
     std::chrono::steady_clock::duration movement_interval() const;
 
@@ -135,6 +147,7 @@ private:
     std::optional<std::chrono::steady_clock::time_point> next_movement_time_;
     std::unordered_set<std::uint64_t> visible_creature_ids_;
     movement_goal_t active_movement_goal_ = movement_goal_t::none;
+    std::chrono::milliseconds attack_elapsed_{0};
     int blocked_path_retry_count_ = 0;
     int health_;
 };

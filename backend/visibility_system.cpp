@@ -79,6 +79,45 @@ void visibility_system_t::move_creature(
     );
 }
 
+void visibility_system_t::remove_creature(
+    creature_t& creature_p,
+    creatures_t& creatures_p
+)
+{
+    const auto position = creature_p.position();
+    const auto& current_observers = observers_by_position_[
+        position_index(position)
+    ];
+
+    for (const auto observer_id : current_observers) {
+        if (observer_id == creature_p.id()) {
+            continue;
+        }
+
+        auto* observer = creatures_p.find(observer_id);
+
+        if (observer != nullptr) {
+            observer->remove_visible_creature(creature_p.id());
+        }
+    }
+
+    const auto range = creature_p.type().vision_range();
+
+    for (auto row = position.row_ - range; row <= position.row_ + range; ++row) {
+        const auto column_extent = circle_extent(range, row - position.row_);
+
+        for (auto column = position.column_ - column_extent;
+             column <= position.column_ + column_extent;
+             ++column) {
+            if (is_position_inside({column, row})) {
+                observers_by_position_[position_index({column, row})].erase(
+                    creature_p.id()
+                );
+            }
+        }
+    }
+}
+
 void visibility_system_t::register_full_range(
     creature_t& observer_p,
     const game_map_t& game_map_p,

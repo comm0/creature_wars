@@ -3,6 +3,7 @@
 #include "game.h"
 #include "game_constants.h"
 
+#include <algorithm>
 #include <chrono>
 
 namespace
@@ -25,32 +26,82 @@ creature_t::creature_t(
 
 void creature_t::on_think(game_t& game_p)
 {
-    const auto* enemy = game_p.find_nearest_visible_enemy(*this);
-
-    if (game_p.aggressive() && enemy != nullptr) {
-        if (game_p.is_in_attack_range(*this, *enemy)
-            || target_was_blocked(*enemy)) {
-            stop_movement(game_p);
-            return;
-        }
-
-        activate_target_movement(game_p, *enemy);
+    if (is_dead()) {
         return;
     }
 
-    if (manual_destination_.has_value()) {
+    const auto* enemy = target_id_.has_value()
+        ? game_p.find_visible_enemy(*this, *target_id_)
+        : nullptr;
+
+    if (enemy == nullptr) {
+        clear_target(game_p);
+    }
+
+    if (!game_p.aggressive() && manual_destination_.has_value()) {
         activate_manual_movement(game_p);
         return;
     }
 
-    if (enemy != nullptr
-        && !game_p.is_in_attack_range(*this, *enemy)
-        && !target_was_blocked(*enemy)) {
-        activate_target_movement(game_p, *enemy);
+    if (enemy == nullptr) {
+        enemy = game_p.find_nearest_visible_enemy(*this);
+
+        if (enemy != nullptr) {
+            target_id_ = enemy->id();
+        }
+    }
+
+    if (enemy == nullptr) {
+        if (manual_destination_.has_value()) {
+            activate_manual_movement(game_p);
+        } else {
+            stop_movement(game_p);
+        }
+
         return;
     }
 
-    stop_movement(game_p);
+    if (game_p.is_in_attack_range(*this, *enemy)
+        || target_was_blocked(*enemy)) {
+        stop_movement(game_p);
+        return;
+    }
+
+    activate_target_movement(game_p, *enemy);
+}
+
+void creature_t::on_attacking(
+    game_t& game_p,
+    std::chrono::milliseconds interval_p
+)
+{
+    if (is_dead() || !target_id_.has_value()) {
+        attack_elapsed_ = std::chrono::milliseconds{0};
+        return;
+    }
+
+    const auto* target = game_p.find_visible_enemy(*this, *target_id_);
+
+    if (target == nullptr) {
+        clear_target(game_p);
+        return;
+    }
+
+    attack_elapsed_ += interval_p;
+
+    if (attack_elapsed_ < game_constants::attack_interval
+        || !game_p.is_in_attack_range(*this, *target)) {
+        return;
+    }
+
+    if (game_p.check_creature_attack(id_, target->id())) {
+        attack_elapsed_ = std::chrono::milliseconds{0};
+    }
+}
+
+void creature_t::drain_health(int damage_p) noexcept
+{
+    health_ = std::max(0, health_ - std::max(0, damage_p));
 }
 
 void creature_t::update_movement(
@@ -76,7 +127,7 @@ void creature_t::update_movement(
         }
     } else {
         const auto* target = target_id_.has_value()
-            ? game_p.find_followed_enemy(*this, *target_id_)
+            ? game_p.find_visible_enemy(*this, *target_id_)
             : nullptr;
 
         if (target == nullptr || game_p.is_in_attack_range(*this, *target)) {
@@ -116,7 +167,6 @@ void creature_t::activate_manual_movement(game_t& game_p)
 
     const auto previous_state = state();
     active_movement_goal_ = movement_goal_t::manual;
-    target_id_.reset();
     next_movement_time_ = std::chrono::steady_clock::now();
     blocked_path_retry_count_ = 0;
 
@@ -155,7 +205,6 @@ void creature_t::stop_movement(game_t& game_p)
     }
 
     active_movement_goal_ = movement_goal_t::none;
-    target_id_.reset();
     next_movement_time_.reset();
     blocked_path_retry_count_ = 0;
     game_p.notify_creature_state_changed(*this);
@@ -172,6 +221,16 @@ void creature_t::block_target(position_t target_position_p, game_t& game_p)
     blocked_target_id_ = target_id_;
     blocked_target_position_ = target_position_p;
     stop_movement(game_p);
+}
+
+void creature_t::clear_target(game_t& game_p)
+{
+    target_id_.reset();
+    attack_elapsed_ = std::chrono::milliseconds{0};
+
+    if (active_movement_goal_ == movement_goal_t::target) {
+        stop_movement(game_p);
+    }
 }
 
 bool creature_t::target_was_blocked(const creature_t& target_p) const noexcept

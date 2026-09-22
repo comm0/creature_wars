@@ -38,11 +38,35 @@ const creature_t* creatures_t::find(std::uint64_t id_p) const noexcept
     return nullptr;
 }
 
+bool creatures_t::remove(std::uint64_t id_p) noexcept
+{
+    for (auto creature = creatures_.begin(); creature != creatures_.end(); ++creature) {
+        if (*creature != nullptr && (*creature)->id() == id_p) {
+            creatures_.erase(creature);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void creatures_t::on_think(game_t& game_p)
 {
     for (const auto& creature : creatures_) {
         if (creature != nullptr) {
             creature->on_think(game_p);
+        }
+    }
+}
+
+void creatures_t::on_attacking(
+    game_t& game_p,
+    std::chrono::milliseconds interval_p
+)
+{
+    for (const auto& creature : creatures_) {
+        if (creature != nullptr) {
+            creature->on_attacking(game_p, interval_p);
         }
     }
 }

@@ -8,6 +8,7 @@
 #include <stop_token>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "creatures.h"
 #include "creature_type_registry.h"
@@ -43,7 +44,7 @@ public:
     const creature_t* find_nearest_visible_enemy(
         const creature_t& creature_p
     ) const noexcept;
-    const creature_t* find_followed_enemy(
+    const creature_t* find_visible_enemy(
         const creature_t& creature_p,
         std::uint64_t target_id_p
     ) const noexcept;
@@ -54,6 +55,10 @@ public:
     bool move_creature_towards(
         std::uint64_t id_p,
         position_t destination_p
+    );
+    bool check_creature_attack(
+        std::uint64_t attacker_id_p,
+        std::uint64_t target_id_p
     );
     void notify_creature_state_changed(const creature_t& creature_p);
 
@@ -72,6 +77,7 @@ private:
     void collect_actions();
     void dispatch_tick();
     void dispatch_movement(std::chrono::steady_clock::time_point now_p);
+    void remove_dead_creatures();
     void publish_creatures();
 
 #ifndef NDEBUG
@@ -90,6 +96,7 @@ private:
     std::mutex actions_mutex_;
     std::condition_variable actions_available_;
     std::deque<std::function<void()>> actions_;
+    std::vector<std::uint64_t> dead_creature_ids_;
     bool thread_running_ = false;
     bool aggressive_ = true;
     std::jthread thread_;

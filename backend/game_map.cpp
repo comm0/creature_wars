@@ -46,6 +46,25 @@ bool game_map_t::move_creature(
     return true;
 }
 
+bool game_map_t::remove_creature(creature_t& creature_p) noexcept
+{
+    const auto position = creature_p.position();
+
+    if (!is_position_inside(position)
+        || creatures_[position_index(position)] != &creature_p) {
+#ifndef NDEBUG
+        debug_console::print_warning("Could not remove creature from the game map.");
+#endif
+        return false;
+    }
+
+    creatures_[position_index(position)] = nullptr;
+#ifndef NDEBUG
+    --occupied_position_count_;
+#endif
+    return true;
+}
+
 bool game_map_t::is_position_occupied(position_t position_p) const noexcept
 {
     return is_position_inside(position_p)

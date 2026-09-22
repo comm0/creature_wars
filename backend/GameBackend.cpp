@@ -89,6 +89,7 @@ GameBackend::GameBackend(QObject* parent_p)
         this,
         [this](std::uint64_t id_p) {
             creatures_model_.remove_creature(id_p);
+            emit creatureRemoved(id_p);
         }
     );
 

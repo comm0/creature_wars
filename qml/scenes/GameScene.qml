@@ -134,5 +134,9 @@ Scene {
         function onHeartbeat() {
             heartbeatAnimation.restart()
         }
+
+        function onCreatureRemoved(creatureId) {
+            worldMap.removeSelectedCreature(creatureId)
+        }
     }
 }
