@@ -126,7 +126,13 @@ if(CREATURE_WARS_BUILD_APP)
     set(PRODUCT_STAGE "test")
     set(PRODUCT_LICENSE_KEY "")
 
-    file(GLOB_RECURSE QmlFiles RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} qml/*.qml qml/*.js)
+    file(
+        GLOB_RECURSE QmlFiles
+        CONFIGURE_DEPENDS
+        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+        qml/*.qml
+        qml/*.js
+    )
     file(
         GLOB_RECURSE AssetFiles
         CONFIGURE_DEPENDS
