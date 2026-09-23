@@ -138,6 +138,7 @@ if(CREATURE_WARS_BUILD_APP)
         CONFIGURE_DEPENDS
         RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
         assets/*.png
+        assets/*.json
     )
 
     set(ApplicationFiles

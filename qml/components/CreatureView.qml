@@ -102,111 +102,72 @@ Item {
             }
         }
 
-        GameSpriteSequence {
+        TexturePackerSpriteSequence {
             id: creatureSprite
+
+            readonly property string sheet:
+                "qrc:/assets/creatures/minotaur/minotaur.json"
+            readonly property real walkFrameRate:
+                1000 / Math.max(100, creatureView.movementDuration / 2)
 
             x: creatureView.visualLeft
             y: creatureView.visualTop
             width: creatureView.spriteSize
             height: creatureView.spriteSize
-            defaultSource: creatureView.hasSprite
-                ? "qrc:/assets/creatures/minotaur/+hd2/minotaur.png"
-                : ""
-            interpolate: false
             running: creatureView.hasSprite
                 && creatureView.spriteWalking
             visible: creatureView.hasSprite
 
-            GameSprite {
+            TexturePackerSprite {
                 name: "north_idle"
-                frameX: 0
-                frameY: 0
-                frameWidth: 32
-                frameHeight: 32
-                frameCount: 1
-                frameDuration: 1000
+                source: creatureSprite.sheet
+                frameNames: ["north_0.png"]
             }
 
-            GameSprite {
+            TexturePackerSprite {
                 name: "north_walk"
-                frameX: 32
-                frameY: 0
-                frameWidth: 32
-                frameHeight: 32
-                frameCount: 2
-                frameDuration: Math.max(
-                    100,
-                    creatureView.movementDuration / 2
-                )
+                source: creatureSprite.sheet
+                frameNames: ["north_1.png", "north_2.png"]
+                frameRate: creatureSprite.walkFrameRate
             }
 
-            GameSprite {
+            TexturePackerSprite {
                 name: "south_idle"
-                frameX: 0
-                frameY: 32
-                frameWidth: 32
-                frameHeight: 32
-                frameCount: 1
-                frameDuration: 1000
+                source: creatureSprite.sheet
+                frameNames: ["south_0.png"]
             }
 
-            GameSprite {
+            TexturePackerSprite {
                 name: "south_walk"
-                frameX: 32
-                frameY: 32
-                frameWidth: 32
-                frameHeight: 32
-                frameCount: 2
-                frameDuration: Math.max(
-                    100,
-                    creatureView.movementDuration / 2
-                )
+                source: creatureSprite.sheet
+                frameNames: ["south_1.png", "south_2.png"]
+                frameRate: creatureSprite.walkFrameRate
             }
 
-            GameSprite {
+            TexturePackerSprite {
                 name: "west_idle"
-                frameX: 0
-                frameY: 64
-                frameWidth: 32
-                frameHeight: 32
-                frameCount: 1
-                frameDuration: 1000
+                source: creatureSprite.sheet
+                frameNames: ["west_0.png"]
             }
 
-            GameSprite {
+            TexturePackerSprite {
                 name: "west_walk"
-                frameX: 32
-                frameY: 64
-                frameWidth: 32
-                frameHeight: 32
-                frameCount: 2
-                frameDuration: Math.max(
-                    100,
-                    creatureView.movementDuration / 2
-                )
+                source: creatureSprite.sheet
+                frameNames: ["west_1.png", "west_2.png"]
+                frameRate: creatureSprite.walkFrameRate
             }
 
-            GameSprite {
+            TexturePackerSprite {
                 name: "east_idle"
-                frameX: 0
-                frameY: 96
-                frameWidth: 32
-                frameHeight: 32
-                frameCount: 1
-                frameDuration: 1000
+                source: creatureSprite.sheet
+                frameNames: ["east_0.png"]
             }
 
-            GameSprite {
+            TexturePackerSprite {
                 name: "east_walk"
-                frameX: 32
-                frameY: 96
-                frameWidth: 32
-                frameHeight: 32
-                frameCount: 2
-                frameDuration: Math.max(
-                    100,
-                    creatureView.movementDuration / 2
-                )
+                source: creatureSprite.sheet
+                frameNames: ["east_1.png", "east_2.png"]
+                frameRate: creatureSprite.walkFrameRate
             }
         }
 
