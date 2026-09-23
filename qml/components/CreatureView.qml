@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import Felgo 4.0
 
 // One creature standing on a single map tile. The item itself covers exactly
@@ -326,8 +326,19 @@ Item {
         z: -1
     }
 
-    HoverHandler {
-        id: creatureHover
+    // Hover follows the drawn graphic, not the tile. Blocking lets only the
+    // front-most creature react where sprites overlap.
+    Item {
+        x: creatureView.visualLeft
+        y: creatureView.visualTop
+        width: creatureView.visualWidth
+        height: creatureView.visualHeight
+
+        HoverHandler {
+            id: creatureHover
+
+            blocking: true
+        }
     }
 
     Behavior on x {

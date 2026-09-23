@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 
 // Draws a solid outline around the opaque pixels of `source` (its silhouette,
 // not its bounding box). Place it as a sibling of `source`: by default it

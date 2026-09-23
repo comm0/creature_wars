@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
-import QtQuick 2.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 import Felgo 4.0
 
 Item {
@@ -26,20 +26,30 @@ Item {
         return selectedCreatureIds.indexOf(creatureId) !== -1
     }
 
+    // Front-most creature whose drawn graphic contains the point.
     function creatureAt(position) {
-        for (let index = creatureRepeater.count - 1; index >= 0; --index) {
+        let frontCreature = null
+
+        for (let index = 0; index < creatureRepeater.count; ++index) {
             const creature = creatureRepeater.itemAt(index) as CreatureView
 
-            if (creature !== null
-                    && position.x >= creature.x
-                    && position.x <= creature.x + creature.width
-                    && position.y >= creature.y
-                    && position.y <= creature.y + creature.height) {
-                return creature
+            if (creature === null) {
+                continue
+            }
+
+            const left = creature.x + creature.visualLeft
+            const top = creature.y + creature.visualTop
+
+            if (position.x >= left
+                    && position.x <= left + creature.visualWidth
+                    && position.y >= top
+                    && position.y <= top + creature.visualHeight
+                    && (frontCreature === null || creature.z > frontCreature.z)) {
+                frontCreature = creature
             }
         }
 
-        return null
+        return frontCreature
     }
 
     function selectAt(position) {

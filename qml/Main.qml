@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import Felgo 4.0
 import "scenes"
 

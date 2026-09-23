@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 
 // Rubber-band rectangle spanning two corner points given in parent coordinates.
 Rectangle {

@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 
 // Placed as a child of a creature item; picks the side that fits inside the
 // area of size areaWidth x areaHeight in which the creature item is positioned.
