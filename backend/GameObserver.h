@@ -41,6 +41,7 @@ signals:
     void creatureCreated(
         std::uint64_t id_p,
         position_t position_p,
+        QString identifier_p,
         QString name_p,
         QString group_p,
         QColor color_p,

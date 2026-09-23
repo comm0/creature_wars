@@ -127,6 +127,12 @@ if(CREATURE_WARS_BUILD_APP)
     set(PRODUCT_LICENSE_KEY "")
 
     file(GLOB_RECURSE QmlFiles RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} qml/*.qml qml/*.js)
+    file(
+        GLOB_RECURSE AssetFiles
+        CONFIGURE_DEPENDS
+        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+        assets/*.png
+    )
 
     set(ApplicationFiles
         backend/CreaturesModel.h
@@ -145,7 +151,9 @@ if(CREATURE_WARS_BUILD_APP)
 
     qt_add_resources(appCreatureWars creature_wars_data
         PREFIX "/"
-        FILES data/creature_types.json
+        FILES
+            data/creature_types.json
+            ${AssetFiles}
     )
 
     felgo_configure_executable(appCreatureWars)

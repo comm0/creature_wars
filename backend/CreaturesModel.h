@@ -16,6 +16,7 @@ public:
     enum role_t
     {
         id_role = Qt::UserRole + 1,
+        identifier_role,
         column_role,
         row_role,
         name_role,
@@ -46,6 +47,7 @@ public:
     void update_or_insert_creature(
         std::uint64_t id_p,
         position_t position_p,
+        QString identifier_p,
         QString name_p,
         QString group_p,
         QColor color_p,
@@ -74,6 +76,7 @@ private:
     {
         std::uint64_t id_;
         position_t position_;
+        QString identifier_;
         QString name_;
         QString group_;
         QColor color_;

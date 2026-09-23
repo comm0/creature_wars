@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import Felgo 4.0
 
 Item {
     id: root
@@ -272,6 +273,7 @@ Item {
             id: creatureDelegate
 
             required property var creatureId
+            required property string creatureTypeIdentifier
             required property int column
             required property int row
             required property string creatureName
@@ -284,6 +286,7 @@ Item {
             required property int attackRange
             required property int visionRange
             required property real movementSpeed
+            required property string creatureDirection
             required property string creatureState
             required property int alertRevision
             required property int damageAmount
@@ -292,6 +295,12 @@ Item {
             required property int walkCommandRevision
             property bool alertVisible: false
             property bool goVisible: false
+            readonly property bool hasSprite:
+                creatureTypeIdentifier === "minotaur"
+            readonly property bool spriteWalking:
+                xMovementAnimation.running || yMovementAnimation.running
+            readonly property string spriteAnimationName:
+                creatureDirection + (spriteWalking ? "_walk" : "_idle")
             readonly property real effectiveMovementSpeed:
                 creatureState === "idle"
                     ? movementSpeed * 0.5
@@ -319,8 +328,12 @@ Item {
 
                 anchors.fill: parent
                 radius: width / 2
-                color: creatureColor
-                border.width: root.isCreatureSelected(creatureId) ? 2 : 1
+                color: creatureDelegate.hasSprite
+                    ? "transparent"
+                    : creatureColor
+                border.width: root.isCreatureSelected(creatureId)
+                    ? 2
+                    : creatureDelegate.hasSprite ? 0 : 1
                 border.color: root.isCreatureSelected(creatureId)
                     ? "#f4df5a"
                     : Qt.darker(creatureColor, 1.5)
@@ -335,7 +348,126 @@ Item {
                     height: width
                     radius: width / 2
                     color: markerColor
-                    visible: markerColor.a > 0
+                    visible: !creatureDelegate.hasSprite && markerColor.a > 0
+                }
+
+                GameSpriteSequence {
+                    id: creatureSprite
+
+                    anchors.centerIn: parent
+                    width: 32
+                    height: 32
+                    defaultSource: creatureDelegate.hasSprite
+                        ? "qrc:/assets/creatures/minotaur/+hd2/minotaur.png"
+                        : ""
+                    interpolate: false
+                    running: creatureDelegate.hasSprite
+                        && creatureDelegate.spriteWalking
+                    visible: creatureDelegate.hasSprite
+
+                    GameSprite {
+                        name: "north_idle"
+                        frameX: 0
+                        frameY: 0
+                        frameWidth: 32
+                        frameHeight: 32
+                        frameCount: 1
+                        frameDuration: 1000
+                    }
+
+                    GameSprite {
+                        name: "north_walk"
+                        frameX: 32
+                        frameY: 0
+                        frameWidth: 32
+                        frameHeight: 32
+                        frameCount: 2
+                        frameDuration: Math.max(
+                            100,
+                            creatureDelegate.movementDuration / 2
+                        )
+                    }
+
+                    GameSprite {
+                        name: "south_idle"
+                        frameX: 0
+                        frameY: 32
+                        frameWidth: 32
+                        frameHeight: 32
+                        frameCount: 1
+                        frameDuration: 1000
+                    }
+
+                    GameSprite {
+                        name: "south_walk"
+                        frameX: 32
+                        frameY: 32
+                        frameWidth: 32
+                        frameHeight: 32
+                        frameCount: 2
+                        frameDuration: Math.max(
+                            100,
+                            creatureDelegate.movementDuration / 2
+                        )
+                    }
+
+                    GameSprite {
+                        name: "west_idle"
+                        frameX: 0
+                        frameY: 64
+                        frameWidth: 32
+                        frameHeight: 32
+                        frameCount: 1
+                        frameDuration: 1000
+                    }
+
+                    GameSprite {
+                        name: "west_walk"
+                        frameX: 32
+                        frameY: 64
+                        frameWidth: 32
+                        frameHeight: 32
+                        frameCount: 2
+                        frameDuration: Math.max(
+                            100,
+                            creatureDelegate.movementDuration / 2
+                        )
+                    }
+
+                    GameSprite {
+                        name: "east_idle"
+                        frameX: 0
+                        frameY: 96
+                        frameWidth: 32
+                        frameHeight: 32
+                        frameCount: 1
+                        frameDuration: 1000
+                    }
+
+                    GameSprite {
+                        name: "east_walk"
+                        frameX: 32
+                        frameY: 96
+                        frameWidth: 32
+                        frameHeight: 32
+                        frameCount: 2
+                        frameDuration: Math.max(
+                            100,
+                            creatureDelegate.movementDuration / 2
+                        )
+                    }
+                }
+            }
+
+            onSpriteAnimationNameChanged: {
+                if (hasSprite) {
+                    creatureSprite.jumpTo(spriteAnimationName)
+                }
+            }
+
+            Component.onCompleted: {
+                if (hasSprite) {
+                    creatureSprite.jumpTo(spriteAnimationName)
                 }
             }
 
@@ -574,6 +706,8 @@ Item {
 
             Behavior on x {
                 NumberAnimation {
+                    id: xMovementAnimation
+
                     duration: creatureDelegate.movementDuration
                     easing.type: Easing.Linear
                 }
@@ -581,6 +715,8 @@ Item {
 
             Behavior on y {
                 NumberAnimation {
+                    id: yMovementAnimation
+
                     duration: creatureDelegate.movementDuration
                     easing.type: Easing.Linear
                 }

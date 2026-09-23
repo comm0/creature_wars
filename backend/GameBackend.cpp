@@ -219,6 +219,7 @@ void GameBackend::walkCreature(
 void GameBackend::receive_creature(
     std::uint64_t id_p,
     position_t position_p,
+    QString identifier_p,
     QString name_p,
     QString group_p,
     QColor color_p,
@@ -234,6 +235,7 @@ void GameBackend::receive_creature(
     creatures_model_.update_or_insert_creature(
         id_p,
         position_p,
+        std::move(identifier_p),
         std::move(name_p),
         std::move(group_p),
         std::move(color_p),

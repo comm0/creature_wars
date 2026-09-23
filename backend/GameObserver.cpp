@@ -41,6 +41,7 @@ void GameObserver::on_creature_created(const creature_t& creature_p)
 {
     const auto id = creature_p.id();
     const auto position = creature_p.position();
+    auto identifier = QString::fromStdString(creature_p.type().identifier());
     auto name = QString::fromStdString(creature_p.type().name());
     auto group = QString::fromStdString(creature_p.type().group());
     const auto color = QColor::fromRgb(creature_p.type().color());
@@ -61,6 +62,7 @@ void GameObserver::on_creature_created(const creature_t& creature_p)
             this,
             id,
             position,
+            identifier = std::move(identifier),
             name = std::move(name),
             group = std::move(group),
             color,
@@ -75,6 +77,7 @@ void GameObserver::on_creature_created(const creature_t& creature_p)
             emit creatureCreated(
                 id,
                 position,
+                std::move(identifier),
                 std::move(name),
                 std::move(group),
                 color,

@@ -34,6 +34,8 @@ QVariant CreaturesModel::data(const QModelIndex& index_p, int role_p) const
     switch (role_p) {
     case id_role:
         return QVariant::fromValue(creature.id_);
+    case identifier_role:
+        return creature.identifier_;
     case column_role:
         return creature.position_.column_;
     case row_role:
@@ -81,6 +83,7 @@ QHash<int, QByteArray> CreaturesModel::roleNames() const
 {
     return {
         {id_role, "creatureId"},
+        {identifier_role, "creatureTypeIdentifier"},
         {column_role, "column"},
         {row_role, "row"},
         {name_role, "creatureName"},
@@ -106,6 +109,7 @@ QHash<int, QByteArray> CreaturesModel::roleNames() const
 void CreaturesModel::update_or_insert_creature(
     std::uint64_t id_p,
     position_t position_p,
+    QString identifier_p,
     QString name_p,
     QString group_p,
     QColor color_p,
@@ -132,6 +136,7 @@ void CreaturesModel::update_or_insert_creature(
         creatures_.push_back({
             id_p,
             position_p,
+            std::move(identifier_p),
             std::move(name_p),
             std::move(group_p),
             std::move(color_p),
@@ -155,6 +160,7 @@ void CreaturesModel::update_or_insert_creature(
     }
 
     creature->position_ = position_p;
+    creature->identifier_ = std::move(identifier_p);
     creature->name_ = std::move(name_p);
     creature->group_ = std::move(group_p);
     creature->color_ = std::move(color_p);
@@ -170,6 +176,7 @@ void CreaturesModel::update_or_insert_creature(
     emit dataChanged(model_index, model_index, {
         column_role,
         row_role,
+        identifier_role,
         name_role,
         group_role,
         color_role,
