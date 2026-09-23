@@ -88,12 +88,8 @@ Item {
             color: creatureView.hasSprite
                 ? "transparent"
                 : creatureView.creatureColor
-            border.width: creatureView.selected
-                ? 2
-                : creatureView.hasSprite ? 0 : 1
-            border.color: creatureView.selected
-                ? "#f4df5a"
-                : Qt.darker(creatureView.creatureColor, 1.5)
+            border.width: creatureView.hasSprite ? 0 : 1
+            border.color: Qt.darker(creatureView.creatureColor, 1.5)
 
             Rectangle {
                 anchors.centerIn: parent
@@ -212,6 +208,12 @@ Item {
                     creatureView.movementDuration / 2
                 )
             }
+        }
+
+        OutlineEffect {
+            source: creatureView.hasSprite ? creatureSprite : creatureBody
+            color: "#f4df5a"
+            visible: creatureView.selected
         }
     }
 

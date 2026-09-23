@@ -162,6 +162,14 @@ if(CREATURE_WARS_BUILD_APP)
             ${AssetFiles}
     )
 
+    find_package(Qt6 REQUIRED COMPONENTS ShaderTools)
+
+    qt_add_shaders(appCreatureWars creature_wars_shaders
+        PREFIX "/"
+        FILES
+            shaders/outline.frag
+    )
+
     felgo_configure_executable(appCreatureWars)
 
     deploy_resources("${QmlFiles}")
