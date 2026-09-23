@@ -1,6 +1,8 @@
 import QtQuick 2.15
 import Felgo 4.0
 
+// One creature standing on a single map tile. The item itself covers exactly
+// that tile (used for hit testing), the sprite may extend beyond it.
 Item {
     id: creatureView
 
@@ -32,11 +34,22 @@ Item {
     property int idleDotCount: 1
     property real areaWidth: 0
     property real areaHeight: 0
+    // Layer drawn above all creatures; names, health bars, damage numbers
+    // and tooltips live there so neighbouring sprites never cover them.
+    // It must share the coordinate system of this item's parent.
+    property Item overlayParent: parent
 
     property bool alertVisible: false
     property bool goVisible: false
     readonly property bool hasSprite:
         creatureTypeIdentifier === "minotaur"
+    readonly property int spriteSize: 32
+    // Tibia-style anchoring: the sprite's bottom-right corner sits on the
+    // tile's bottom-right corner, bigger sprites grow up and to the left.
+    readonly property real visualLeft: hasSprite ? tileSize - spriteSize : 0
+    readonly property real visualTop: hasSprite ? tileSize - spriteSize : 0
+    readonly property real visualWidth: hasSprite ? spriteSize : tileSize
+    readonly property real visualHeight: hasSprite ? spriteSize : tileSize
     readonly property bool spriteWalking:
         xMovementAnimation.running || yMovementAnimation.running
     readonly property string spriteAnimationName:
@@ -50,46 +63,56 @@ Item {
         Math.round(1000 / Math.max(effectiveMovementSpeed, 0.01))
     )
 
-    x: column * tileSize + 2
-    y: row * tileSize + 2
-    width: tileSize - 4
-    height: tileSize - 4
-    z: 2
+    x: column * tileSize
+    y: row * tileSize
+    width: tileSize
+    height: tileSize
+    // Painter's order: further south is drawn on top, east wins within a row.
+    z: y + x / Math.max(areaWidth, 1)
 
-    Rectangle {
-        id: creatureBody
+    Item {
+        id: creatureVisual
 
         anchors.fill: parent
-        radius: width / 2
-        color: creatureView.hasSprite
-            ? "transparent"
-            : creatureView.creatureColor
-        border.width: creatureView.selected
-            ? 2
-            : creatureView.hasSprite ? 0 : 1
-        border.color: creatureView.selected
-            ? "#f4df5a"
-            : Qt.darker(creatureView.creatureColor, 1.5)
 
         transform: Translate {
             id: creatureAttackTranslation
         }
 
         Rectangle {
-            anchors.centerIn: parent
-            width: parent.width * 0.35
-            height: width
+            id: creatureBody
+
+            anchors.fill: parent
+            anchors.margins: 2
             radius: width / 2
-            color: creatureView.markerColor
-            visible: !creatureView.hasSprite && creatureView.markerColor.a > 0
+            color: creatureView.hasSprite
+                ? "transparent"
+                : creatureView.creatureColor
+            border.width: creatureView.selected
+                ? 2
+                : creatureView.hasSprite ? 0 : 1
+            border.color: creatureView.selected
+                ? "#f4df5a"
+                : Qt.darker(creatureView.creatureColor, 1.5)
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: parent.width * 0.35
+                height: width
+                radius: width / 2
+                color: creatureView.markerColor
+                visible: !creatureView.hasSprite
+                    && creatureView.markerColor.a > 0
+            }
         }
 
         GameSpriteSequence {
             id: creatureSprite
 
-            anchors.centerIn: parent
-            width: 32
-            height: 32
+            x: creatureView.visualLeft
+            y: creatureView.visualTop
+            width: creatureView.spriteSize
+            height: creatureView.spriteSize
             defaultSource: creatureView.hasSprite
                 ? "qrc:/assets/creatures/minotaur/+hd2/minotaur.png"
                 : ""
@@ -224,31 +247,16 @@ Item {
         }
     }
 
-    Text {
-        id: creatureDamageText
-
-        anchors.horizontalCenter: parent.horizontalCenter
-        color: "#f04444"
-        font.bold: true
-        font.pixelSize: 10
-        opacity: 0
-        style: Text.Outline
-        styleColor: "#000000"
-        text: creatureView.damageAmount > 0
-            ? "-" + creatureView.damageAmount
-            : ""
-        z: 14
-    }
-
     ParallelAnimation {
         id: creatureDamageAnimation
 
         NumberAnimation {
             target: creatureDamageText
             property: "y"
-            from: creatureView.height / 2
+            from: creatureView.visualTop
+                + creatureView.visualHeight / 2
                 - creatureDamageText.height / 2
-            to: -creatureView.tileSize
+            to: creatureView.visualTop - creatureView.tileSize
             duration: 900
             easing.type: Easing.OutCubic
         }
@@ -304,64 +312,6 @@ Item {
         }
     }
 
-    Item {
-        id: creatureIdentity
-
-        readonly property bool placeAbove:
-            creatureView.y >= height + 2
-
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: placeAbove ? -height - 2 : parent.height + 2
-        width: 56
-        height: 15
-        z: 10
-
-        Rectangle {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            width: Math.ceil(creatureStatusText.implicitWidth) + 4
-            height: 10
-            radius: 2
-            color: creatureHover.hovered ? "#b8000000" : "transparent"
-            visible: creatureStatusText.text.length > 0
-
-            Text {
-                id: creatureStatusText
-
-                anchors.centerIn: parent
-                color: creatureHover.hovered
-                    ? creatureHealthBar.fillColor
-                    : creatureView.alertVisible
-                        ? "#ffdc4f"
-                        : "#f1f4f2"
-                font.pixelSize: 8
-                font.weight: Font.DemiBold
-                font.letterSpacing: -0.2
-                renderType: Text.QtRendering
-                style: Text.Outline
-                styleColor: "#000000"
-                text: creatureHover.hovered
-                    ? creatureView.creatureName
-                    : creatureView.alertVisible
-                        ? "!"
-                        : creatureView.goVisible
-                            ? qsTr("Go")
-                            : creatureView.creatureState === "idle"
-                                ? [".", "..", "..."][creatureView.idleDotCount - 1]
-                                : ""
-            }
-        }
-
-        HealthBar {
-            id: creatureHealthBar
-
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            health: creatureView.health
-            maximumHealth: creatureView.maximumHealth
-        }
-    }
-
     Rectangle {
         anchors.centerIn: parent
         width: creatureView.visionRange * 2 * creatureView.tileSize
@@ -376,16 +326,6 @@ Item {
 
     HoverHandler {
         id: creatureHover
-    }
-
-    CreatureTooltip {
-        shown: creatureHover.hovered
-        areaWidth: creatureView.areaWidth
-        areaHeight: creatureView.areaHeight
-        attack: creatureView.attack
-        attackRange: creatureView.attackRange
-        visionRange: creatureView.visionRange
-        movementSpeed: creatureView.movementSpeed
     }
 
     Behavior on x {
@@ -403,6 +343,108 @@ Item {
 
             duration: creatureView.movementDuration
             easing.type: Easing.Linear
+        }
+    }
+
+    // Reparented into overlayParent; follows this creature's tile.
+    Item {
+        id: creatureOverlay
+
+        parent: creatureView.overlayParent
+        x: creatureView.x
+        y: creatureView.y
+        width: creatureView.width
+        height: creatureView.height
+        z: creatureHover.hovered ? 1 : 0
+
+        Text {
+            id: creatureDamageText
+
+            x: creatureView.visualLeft
+                + creatureView.visualWidth / 2
+                - width / 2
+            color: "#f04444"
+            font.bold: true
+            font.pixelSize: 10
+            opacity: 0
+            style: Text.Outline
+            styleColor: "#000000"
+            text: creatureView.damageAmount > 0
+                ? "-" + creatureView.damageAmount
+                : ""
+            z: 1
+        }
+
+        Item {
+            id: creatureIdentity
+
+            readonly property bool placeAbove:
+                creatureView.y + creatureView.visualTop >= height + 2
+
+            x: creatureView.visualLeft
+                + creatureView.visualWidth / 2
+                - width / 2
+            y: placeAbove
+                ? creatureView.visualTop - height - 2
+                : creatureView.height + 2
+            width: 56
+            height: 15
+
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                width: Math.ceil(creatureStatusText.implicitWidth) + 4
+                height: 10
+                radius: 2
+                color: creatureHover.hovered ? "#b8000000" : "transparent"
+                visible: creatureStatusText.text.length > 0
+
+                Text {
+                    id: creatureStatusText
+
+                    anchors.centerIn: parent
+                    color: creatureHover.hovered
+                        ? creatureHealthBar.fillColor
+                        : creatureView.alertVisible
+                            ? "#ffdc4f"
+                            : "#f1f4f2"
+                    font.pixelSize: 8
+                    font.weight: Font.DemiBold
+                    font.letterSpacing: -0.2
+                    renderType: Text.QtRendering
+                    style: Text.Outline
+                    styleColor: "#000000"
+                    text: creatureHover.hovered
+                        ? creatureView.creatureName
+                        : creatureView.alertVisible
+                            ? "!"
+                            : creatureView.goVisible
+                                ? qsTr("Go")
+                                : creatureView.creatureState === "idle"
+                                    ? [".", "..", "..."][creatureView.idleDotCount - 1]
+                                    : ""
+                }
+            }
+
+            HealthBar {
+                id: creatureHealthBar
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                health: creatureView.health
+                maximumHealth: creatureView.maximumHealth
+            }
+        }
+
+        CreatureTooltip {
+            shown: creatureHover.hovered
+            areaWidth: creatureView.areaWidth
+            areaHeight: creatureView.areaHeight
+            attack: creatureView.attack
+            attackRange: creatureView.attackRange
+            visionRange: creatureView.visionRange
+            movementSpeed: creatureView.movementSpeed
+            z: 2
         }
     }
 }

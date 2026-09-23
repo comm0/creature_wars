@@ -266,19 +266,35 @@ Item {
         }
     }
 
-    Repeater {
-        id: creatureRepeater
+    // Creatures are z-sorted among themselves inside this layer.
+    Item {
+        id: creatureLayer
 
-        model: root.creatureModel
+        anchors.fill: parent
+        z: 2
 
-        delegate: CreatureView {
-            tileSize: root.tileSize
-            selected: root.isCreatureSelected(creatureId)
-            visionRangeVisible: root.visionRangesVisible
-            idleDotCount: root.idleDotCount
-            areaWidth: root.width
-            areaHeight: root.height
+        Repeater {
+            id: creatureRepeater
+
+            model: root.creatureModel
+
+            delegate: CreatureView {
+                tileSize: root.tileSize
+                selected: root.isCreatureSelected(creatureId)
+                visionRangeVisible: root.visionRangesVisible
+                idleDotCount: root.idleDotCount
+                areaWidth: root.width
+                areaHeight: root.height
+                overlayParent: creatureOverlayLayer
+            }
         }
+    }
+
+    Item {
+        id: creatureOverlayLayer
+
+        anchors.fill: parent
+        z: 3
     }
 
     SelectionBox {
