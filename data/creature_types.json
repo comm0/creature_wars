@@ -5,11 +5,11 @@
       "name": "Minotaur",
       "group": "minotaurs",
       "color": "#5a3825",
-      "health": 10,
-      "attack": 2,
+      "health": 14,
+      "attack": 3,
       "attackRange": 1,
       "visionRange": 5,
-      "speed": 1.0
+      "speed": 1.25
     },
     {
       "id": "minotaur_guard",
@@ -40,11 +40,11 @@
       "name": "Orc",
       "group": "orcs",
       "color": "#245b32",
-      "health": 8,
-      "attack": 3,
+      "health": 10,
+      "attack": 4,
       "attackRange": 1,
       "visionRange": 5,
-      "speed": 1.5
+      "speed": 0.9
     },
     {
       "id": "orc_warrior",
@@ -75,11 +75,11 @@
       "name": "Dwarf",
       "group": "dwarves",
       "color": "#8a4f2d",
-      "health": 12,
+      "health": 20,
       "attack": 2,
       "attackRange": 1,
       "visionRange": 5,
-      "speed": 1.0
+      "speed": 0.75
     }
   ]
 }
