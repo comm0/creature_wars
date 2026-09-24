@@ -1,7 +1,6 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QByteArray>
-#include <QLoggingCategory>
 #include <QQmlApplicationEngine>
 #include <QtLogging>
 #include <QVariant>
@@ -23,6 +22,10 @@ void qt_message_handler(
     const QString& message_p
 )
 {
+    if (qstrcmp(context_p.category, "qt.qpa.fonts") == 0) {
+        return;
+    }
+
     const auto message = qFormatLogMessage(type_p, context_p, message_p).toLocal8Bit();
     debug_console::print_message(message.constData());
 }
@@ -39,7 +42,6 @@ int main(int argc, char* argv[])
     qInstallMessageHandler(qt_message_handler);
 #endif
 
-    QLoggingCategory::setFilterRules(QStringLiteral("qt.qpa.fonts.warning=false"));
     QApplication app(argc, argv);
 
     FelgoApplication felgo;

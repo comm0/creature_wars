@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import Felgo 4.0
 
@@ -107,99 +109,100 @@ Item {
             }
         }
 
-        TexturePackerSpriteSequence {
-            id: creatureSprite
-
-            readonly property string sheet:
-                creatureView.hasSprite
-                    ? "qrc:/assets/creatures/"
-                        + creatureView.spriteIdentifier
-                        + "/"
-                        + creatureView.spriteIdentifier
-                        + ".json"
-                    : ""
-            readonly property real walkFrameRate:
-                1000 / Math.max(100, creatureView.movementDuration / 2)
+        Loader {
+            id: creatureSpriteLoader
 
             x: creatureView.visualLeft
             y: creatureView.visualTop
             width: creatureView.spriteSize
             height: creatureView.spriteSize
-            running: creatureView.hasSprite
-                && creatureView.spriteWalking
-            visible: creatureView.hasSprite
+            active: creatureView.hasSprite
 
-            TexturePackerSprite {
-                name: "north_idle"
-                source: creatureSprite.sheet
-                frameNames: ["north_0.png"]
+            sourceComponent: TexturePackerSpriteSequence {
+                id: creatureSprite
+
+                readonly property string sheet: "qrc:/assets/creatures/"
+                    + creatureView.spriteIdentifier
+                    + "/"
+                    + creatureView.spriteIdentifier
+                    + ".json"
+                readonly property real walkFrameRate:
+                    1000 / Math.max(100, creatureView.movementDuration / 2)
+
+                running: creatureView.spriteWalking
+
+                TexturePackerSprite {
+                    name: "north_idle"
+                    source: creatureSprite.sheet
+                    frameNames: ["north_0.png"]
+                }
+
+                TexturePackerSprite {
+                    name: "north_walk"
+                    source: creatureSprite.sheet
+                    frameNames: ["north_1.png", "north_2.png"]
+                    frameRate: creatureSprite.walkFrameRate
+                }
+
+                TexturePackerSprite {
+                    name: "south_idle"
+                    source: creatureSprite.sheet
+                    frameNames: ["south_0.png"]
+                }
+
+                TexturePackerSprite {
+                    name: "south_walk"
+                    source: creatureSprite.sheet
+                    frameNames: ["south_1.png", "south_2.png"]
+                    frameRate: creatureSprite.walkFrameRate
+                }
+
+                TexturePackerSprite {
+                    name: "west_idle"
+                    source: creatureSprite.sheet
+                    frameNames: ["west_0.png"]
+                }
+
+                TexturePackerSprite {
+                    name: "west_walk"
+                    source: creatureSprite.sheet
+                    frameNames: ["west_1.png", "west_2.png"]
+                    frameRate: creatureSprite.walkFrameRate
+                }
+
+                TexturePackerSprite {
+                    name: "east_idle"
+                    source: creatureSprite.sheet
+                    frameNames: ["east_0.png"]
+                }
+
+                TexturePackerSprite {
+                    name: "east_walk"
+                    source: creatureSprite.sheet
+                    frameNames: ["east_1.png", "east_2.png"]
+                    frameRate: creatureSprite.walkFrameRate
+                }
             }
 
-            TexturePackerSprite {
-                name: "north_walk"
-                source: creatureSprite.sheet
-                frameNames: ["north_1.png", "north_2.png"]
-                frameRate: creatureSprite.walkFrameRate
-            }
-
-            TexturePackerSprite {
-                name: "south_idle"
-                source: creatureSprite.sheet
-                frameNames: ["south_0.png"]
-            }
-
-            TexturePackerSprite {
-                name: "south_walk"
-                source: creatureSprite.sheet
-                frameNames: ["south_1.png", "south_2.png"]
-                frameRate: creatureSprite.walkFrameRate
-            }
-
-            TexturePackerSprite {
-                name: "west_idle"
-                source: creatureSprite.sheet
-                frameNames: ["west_0.png"]
-            }
-
-            TexturePackerSprite {
-                name: "west_walk"
-                source: creatureSprite.sheet
-                frameNames: ["west_1.png", "west_2.png"]
-                frameRate: creatureSprite.walkFrameRate
-            }
-
-            TexturePackerSprite {
-                name: "east_idle"
-                source: creatureSprite.sheet
-                frameNames: ["east_0.png"]
-            }
-
-            TexturePackerSprite {
-                name: "east_walk"
-                source: creatureSprite.sheet
-                frameNames: ["east_1.png", "east_2.png"]
-                frameRate: creatureSprite.walkFrameRate
-            }
+            onLoaded: creatureView.showSpriteAnimation()
         }
 
         OutlineEffect {
-            source: creatureView.hasSprite ? creatureSprite : creatureBody
+            source: creatureView.hasSprite ? creatureSpriteLoader : creatureBody
             color: "#f4df5a"
             visible: creatureView.selected
         }
     }
 
-    onSpriteAnimationNameChanged: {
-        if (hasSprite) {
-            creatureSprite.jumpTo(spriteAnimationName)
+    function showSpriteAnimation() {
+        const sprite = creatureSpriteLoader.item as TexturePackerSpriteSequence
+
+        if (sprite !== null) {
+            sprite.jumpTo(spriteAnimationName)
         }
     }
 
-    Component.onCompleted: {
-        if (hasSprite) {
-            creatureSprite.jumpTo(spriteAnimationName)
-        }
-    }
+    onSpriteAnimationNameChanged: showSpriteAnimation()
 
     SequentialAnimation {
         id: creatureAttackAnimation
