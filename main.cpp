@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QByteArray>
+#include <QLoggingCategory>
 #include <QQmlApplicationEngine>
 #include <QtLogging>
 #include <QVariant>
@@ -38,6 +39,7 @@ int main(int argc, char* argv[])
     qInstallMessageHandler(qt_message_handler);
 #endif
 
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.qpa.fonts.warning=false"));
     QApplication app(argc, argv);
 
     FelgoApplication felgo;

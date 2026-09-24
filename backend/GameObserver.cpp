@@ -267,3 +267,19 @@ void GameObserver::on_base_removed(std::uint64_t id_p)
         Qt::QueuedConnection
     );
 }
+
+void GameObserver::on_player_state_changed(const player_state_t& state_p)
+{
+    auto base_name = QString::fromStdString(state_p.base_name_);
+    const auto base_level = state_p.base_level_;
+    const auto gold = state_p.gold_;
+    const auto food = state_p.food_;
+
+    QMetaObject::invokeMethod(
+        this,
+        [this, base_name = std::move(base_name), base_level, gold, food]() {
+            emit playerStateChanged(base_name, base_level, gold, food);
+        },
+        Qt::QueuedConnection
+    );
+}

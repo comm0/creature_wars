@@ -16,6 +16,10 @@ class GameBackend : public QObject
     Q_PROPERTY(bool aggressive READ aggressive WRITE setAggressive NOTIFY aggressiveChanged)
     Q_PROPERTY(int mapColumnCount READ mapColumnCount CONSTANT)
     Q_PROPERTY(int mapRowCount READ mapRowCount CONSTANT)
+    Q_PROPERTY(QString playerBaseName READ playerBaseName NOTIFY playerStateChanged)
+    Q_PROPERTY(int playerBaseLevel READ playerBaseLevel NOTIFY playerStateChanged)
+    Q_PROPERTY(int playerGold READ playerGold NOTIFY playerStateChanged)
+    Q_PROPERTY(int playerFood READ playerFood NOTIFY playerStateChanged)
 
 public:
     explicit GameBackend(QObject* parent_p = nullptr);
@@ -28,6 +32,10 @@ public:
     void setAggressive(bool aggressive_p);
     int mapColumnCount() const;
     int mapRowCount() const;
+    QString playerBaseName() const;
+    int playerBaseLevel() const;
+    int playerGold() const;
+    int playerFood() const;
 
     Q_INVOKABLE void start();
     Q_INVOKABLE void stop();
@@ -52,6 +60,7 @@ public:
 signals:
     void runningChanged();
     void aggressiveChanged();
+    void playerStateChanged();
     void heartbeat();
     void creatureRemoved(std::uint64_t id_p);
 
@@ -83,4 +92,8 @@ private:
     BasesModel bases_model_;
     bool game_running_ = false;
     bool aggressive_ = true;
+    QString player_base_name_;
+    int player_base_level_ = 1;
+    int player_gold_ = 0;
+    int player_food_ = 0;
 };

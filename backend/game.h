@@ -140,6 +140,7 @@ private:
     game_map_t game_map_;
     visibility_system_t visibility_system_;
     igame_observer_t* observer_ = nullptr;
+    player_state_t player_state_;
 
     std::mutex actions_mutex_;
     std::condition_variable actions_available_;

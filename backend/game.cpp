@@ -222,6 +222,8 @@ void game_t::start_match(const std::string& player_base_identifier_p)
     clear_world();
 
     const auto& player_base = base_type_registry_.get(player_base_identifier_p);
+    player_state_ = player_state_t{player_base.name(), 1, 0, 0};
+    observer_->on_player_state_changed(player_state_);
     std::vector<const base_type_t*> enemy_bases;
 
     for (const auto& base_type : base_type_registry_.all()) {
@@ -884,4 +886,6 @@ void game_t::publish_creatures()
     for (const auto& base : bases_) {
         observer_->on_base_created(*base);
     }
+
+    observer_->on_player_state_changed(player_state_);
 }

@@ -42,6 +42,7 @@ public:
         position_t target_position_p
     ) override;
     void on_base_removed(std::uint64_t id_p) override;
+    void on_player_state_changed(const player_state_t& state_p) override;
 
 signals:
     void gameTick();
@@ -91,4 +92,10 @@ signals:
     void baseHealthChanged(std::uint64_t id_p, int health_p);
     void baseAttackPerformed(std::uint64_t id_p, position_t target_position_p);
     void baseRemoved(std::uint64_t id_p);
+    void playerStateChanged(
+        QString base_name_p,
+        int base_level_p,
+        int gold_p,
+        int food_p
+    );
 };

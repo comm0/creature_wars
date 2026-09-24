@@ -4,6 +4,7 @@
 
 #include "base.h"
 #include "creature.h"
+#include "player_state.h"
 
 class igame_observer_t
 {
@@ -39,4 +40,5 @@ public:
         position_t target_position_p
     ) = 0;
     virtual void on_base_removed(std::uint64_t id_p) = 0;
+    virtual void on_player_state_changed(const player_state_t& state_p) = 0;
 };

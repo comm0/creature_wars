@@ -75,6 +75,7 @@ set(CoreFiles
     backend/visibility_system.h
     backend/visibility_system.cpp
     backend/game_observer.h
+    backend/player_state.h
     backend/game.h
     backend/game.cpp
     backend/game_event_dispatcher.h

@@ -140,6 +140,19 @@ GameBackend::GameBackend(QObject* parent_p)
         &BasesModel::remove_base
     );
 
+    connect(
+        &game_observer_,
+        &GameObserver::playerStateChanged,
+        this,
+        [this](QString base_name_p, int base_level_p, int gold_p, int food_p) {
+            player_base_name_ = std::move(base_name_p);
+            player_base_level_ = base_level_p;
+            player_gold_ = gold_p;
+            player_food_ = food_p;
+            emit playerStateChanged();
+        }
+    );
+
     start();
 }
 
@@ -191,6 +204,26 @@ int GameBackend::mapColumnCount() const
 int GameBackend::mapRowCount() const
 {
     return game_constants::map_row_count;
+}
+
+QString GameBackend::playerBaseName() const
+{
+    return player_base_name_;
+}
+
+int GameBackend::playerBaseLevel() const
+{
+    return player_base_level_;
+}
+
+int GameBackend::playerGold() const
+{
+    return player_gold_;
+}
+
+int GameBackend::playerFood() const
+{
+    return player_food_;
 }
 
 void GameBackend::start()
