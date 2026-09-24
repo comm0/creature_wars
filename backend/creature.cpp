@@ -181,8 +181,11 @@ void creature_t::activate_manual_movement(game_t& game_p)
     const auto previous_state = state();
     active_movement_goal_ = movement_goal_t::manual;
     idle_starting_position_.reset();
-    next_movement_time_ = std::chrono::steady_clock::now();
     blocked_path_retry_count_ = 0;
+
+    if (!next_movement_time_.has_value()) {
+        next_movement_time_ = std::chrono::steady_clock::now();
+    }
 
     if (previous_state != state()) {
         game_p.notify_creature_state_changed(*this);
@@ -205,8 +208,11 @@ void creature_t::activate_target_movement(
     idle_starting_position_.reset();
     blocked_target_id_.reset();
     blocked_target_position_.reset();
-    next_movement_time_ = std::chrono::steady_clock::now();
     blocked_path_retry_count_ = 0;
+
+    if (!next_movement_time_.has_value()) {
+        next_movement_time_ = std::chrono::steady_clock::now();
+    }
 
     if (previous_state != state()) {
         game_p.notify_creature_state_changed(*this);
@@ -222,8 +228,11 @@ void creature_t::activate_idle_movement(game_t& game_p)
     const auto previous_state = state();
     active_movement_goal_ = movement_goal_t::idle;
     idle_starting_position_ = position_;
-    next_movement_time_ = std::chrono::steady_clock::now();
     blocked_path_retry_count_ = 0;
+
+    if (!next_movement_time_.has_value()) {
+        next_movement_time_ = std::chrono::steady_clock::now();
+    }
 
     if (previous_state != state()) {
         game_p.notify_creature_state_changed(*this);

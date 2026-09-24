@@ -125,7 +125,46 @@ if(CREATURE_WARS_BUILD_APP)
     set(CMAKE_AUTOMOC ON)
 
     find_package(Felgo REQUIRED)
+    find_package(Git QUIET)
     qt_policy(SET QTP0004 NEW)
+
+    set(CREATURE_WARS_BUILD_BRANCH "unknown")
+
+    if(Git_FOUND)
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} rev-parse --path-format=absolute --git-path HEAD
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            OUTPUT_VARIABLE CREATURE_WARS_GIT_HEAD
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+        )
+
+        if(CREATURE_WARS_GIT_HEAD)
+            set_property(
+                DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+                ${CREATURE_WARS_GIT_HEAD}
+            )
+        endif()
+
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} branch --show-current
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            OUTPUT_VARIABLE CREATURE_WARS_BUILD_BRANCH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+        )
+
+        if(NOT CREATURE_WARS_BUILD_BRANCH)
+            execute_process(
+                COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                OUTPUT_VARIABLE CREATURE_WARS_BUILD_COMMIT
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET
+            )
+            set(CREATURE_WARS_BUILD_BRANCH "detached@${CREATURE_WARS_BUILD_COMMIT}")
+        endif()
+    endif()
 
     set(PRODUCT_IDENTIFIER "com.example.creaturewars")
     set(PRODUCT_VERSION_NAME "0.1.0")
@@ -193,7 +232,9 @@ if(CREATURE_WARS_BUILD_APP)
     )
 
     target_compile_definitions(appCreatureWars
-        PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>
+        PRIVATE
+            $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>
+            CREATURE_WARS_BUILD_BRANCH="${CREATURE_WARS_BUILD_BRANCH}"
     )
 
     target_link_libraries(appCreatureWars

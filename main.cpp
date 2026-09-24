@@ -32,6 +32,9 @@ int main(int argc, char* argv[])
 {
 #ifndef NDEBUG
     debug_console::initialize();
+    debug_console::print_message(
+        "Build branch: " CREATURE_WARS_BUILD_BRANCH
+    );
     qInstallMessageHandler(qt_message_handler);
 #endif
 
