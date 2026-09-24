@@ -13,6 +13,8 @@
 
 namespace
 {
+constexpr int start_base_edge_gap = 3;
+
 int position_distance(position_t left_p, position_t right_p) noexcept
 {
     return std::max(
@@ -196,6 +198,74 @@ void game_t::request_spawn_from_base(std::uint64_t base_id_p)
     post([this, base_id_p]() {
         spawn_from_base(base_id_p);
     });
+}
+
+void game_t::request_start_match(std::string player_base_identifier_p)
+{
+    post([this, identifier = std::move(player_base_identifier_p)]() {
+        start_match(identifier);
+    });
+}
+
+void game_t::start_match(const std::string& player_base_identifier_p)
+{
+    clear_world();
+
+    const auto& player_base = base_type_registry_.get(player_base_identifier_p);
+    std::vector<const base_type_t*> enemy_bases;
+
+    for (const auto& base_type : base_type_registry_.all()) {
+        if (&base_type != &player_base) {
+            enemy_bases.push_back(&base_type);
+        }
+    }
+
+    const auto edge_offset = [](const base_type_t& base_type_p) {
+        return start_base_edge_gap + base_type_p.size() / 2;
+    };
+
+    spawn_base(
+        player_base.identifier(),
+        {edge_offset(player_base), game_constants::map_row_count / 2}
+    );
+
+    const auto enemy_count = static_cast<int>(enemy_bases.size());
+
+    for (auto index = 0; index < enemy_count; ++index) {
+        const auto& enemy_base = *enemy_bases[static_cast<std::size_t>(index)];
+        spawn_base(
+            enemy_base.identifier(),
+            {
+                game_constants::map_column_count - 1 - edge_offset(enemy_base),
+                (2 * index + 1) * game_constants::map_row_count / (2 * enemy_count)
+            }
+        );
+    }
+}
+
+void game_t::clear_world()
+{
+    std::vector<std::uint64_t> creature_ids;
+    creatures_.for_each([&creature_ids](const creature_t& creature_p) {
+        creature_ids.push_back(creature_p.id());
+    });
+
+    for (const auto id : creature_ids) {
+        auto* creature = creatures_.find(id);
+        game_map_.remove_creature(*creature);
+        visibility_system_.remove_creature(*creature, creatures_);
+        observer_->on_creature_removed(id);
+        creatures_.remove(id);
+    }
+
+    dead_creature_ids_.clear();
+
+    for (const auto& base : bases_) {
+        game_map_.remove_base(*base);
+        observer_->on_base_removed(base->id());
+    }
+
+    bases_.clear();
 }
 
 void game_t::spawn_base(std::string identifier_p, position_t center_p)

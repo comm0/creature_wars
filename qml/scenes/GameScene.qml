@@ -11,6 +11,15 @@ Scene {
     width: 640
     height: 360
     scaleMode: "letterbox"
+    opacity: 0
+    visible: opacity > 0
+    enabled: visible
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 250
+        }
+    }
 
     Rectangle {
         anchors.fill: parent

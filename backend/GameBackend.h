@@ -37,6 +37,7 @@ public:
         int row_p
     );
     Q_INVOKABLE void spawnCreatureFromBase(std::uint64_t base_id_p);
+    Q_INVOKABLE void startMatch(const QString& player_base_identifier_p);
     Q_INVOKABLE void walkCreature(
         std::uint64_t creature_id_p,
         int column_p,

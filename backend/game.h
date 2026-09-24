@@ -37,6 +37,7 @@ public:
     void stop();
     void request_spawn_base(std::string identifier_p, position_t center_p);
     void request_spawn_from_base(std::uint64_t base_id_p);
+    void request_start_match(std::string player_base_identifier_p);
     void request_walk_to(
         std::uint64_t id_p,
         position_t destination_p
@@ -87,6 +88,8 @@ private:
     );
     void spawn_base(std::string identifier_p, position_t center_p);
     void spawn_from_base(std::uint64_t base_id_p);
+    void start_match(const std::string& player_base_identifier_p);
+    void clear_world();
     base_t* find_base(std::uint64_t id_p) noexcept;
     const base_t* find_base(std::uint64_t id_p) const noexcept;
     void damage_target(std::uint64_t target_id_p, int damage_p);

@@ -233,6 +233,15 @@ void GameBackend::spawnBase(
     );
 }
 
+void GameBackend::startMatch(const QString& player_base_identifier_p)
+{
+    if (!game_running_) {
+        return;
+    }
+
+    game_.request_start_match(player_base_identifier_p.toStdString());
+}
+
 void GameBackend::spawnCreatureFromBase(std::uint64_t base_id_p)
 {
     if (!game_running_) {
