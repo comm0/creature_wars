@@ -63,9 +63,7 @@ public:
             || *manual_destination_ != destination_p;
         manual_destination_ = destination_p;
 
-        if (active_movement_goal_ == movement_goal_t::manual
-            && destination_changed) {
-            next_movement_time_ = std::chrono::steady_clock::now();
+        if (destination_changed) {
             blocked_path_retry_count_ = 0;
         }
     }
