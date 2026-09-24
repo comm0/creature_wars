@@ -7,7 +7,7 @@ creature_t& creatures_t::create(
     position_t position_p
 )
 {
-    const auto id = next_uid_++;
+    const auto id = allocate_id();
 
     creatures_.push_back(
         std::make_unique<creature_t>(id, type_p, position_p)
@@ -107,7 +107,7 @@ creatures_t::next_movement_time() const noexcept
     return next_time;
 }
 
-void creatures_t::publish_creatures(
+void creatures_t::for_each(
     const std::function<void(const creature_t&)>& creature_handler_p
 ) const
 {

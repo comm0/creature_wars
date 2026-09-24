@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "base.h"
 #include "creature.h"
 
 class igame_observer_t
@@ -31,4 +32,11 @@ public:
         std::uint64_t spotted_id_p
     ) = 0;
     virtual void on_creature_removed(std::uint64_t id_p) = 0;
+    virtual void on_base_created(const base_t& base_p) = 0;
+    virtual void on_base_health_changed(std::uint64_t id_p, int health_p) = 0;
+    virtual void on_base_attack_performed(
+        std::uint64_t id_p,
+        position_t target_position_p
+    ) = 0;
+    virtual void on_base_removed(std::uint64_t id_p) = 0;
 };

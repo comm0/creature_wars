@@ -26,11 +26,16 @@ Scene {
         rows: gameScene.gameBackend.mapRowCount
         tileSize: 16
         creatureModel: gameScene.gameBackend.creaturesModel
+        baseModel: gameScene.gameBackend.basesModel
         spawnEnabled: gameScene.gameBackend.running
         visionRangesVisible: showRangeCheckBox.checked
 
-        onSpawnRequested: function(identifier, column, row) {
-            gameScene.gameBackend.spawnCreature(identifier, column, row)
+        onBaseSpawnRequested: function(identifier, column, row) {
+            gameScene.gameBackend.spawnBase(identifier, column, row)
+        }
+
+        onCreatureSpawnRequested: function(baseId) {
+            gameScene.gameBackend.spawnCreatureFromBase(baseId)
         }
 
         onWalkRequested: function(creatureId, column, row) {

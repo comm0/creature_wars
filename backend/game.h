@@ -4,12 +4,16 @@
 #include <condition_variable>
 #include <deque>
 #include <functional>
+#include <memory>
 #include <mutex>
+#include <optional>
 #include <stop_token>
 #include <string>
 #include <thread>
 #include <vector>
 
+#include "base.h"
+#include "base_type_registry.h"
 #include "creatures.h"
 #include "creature_type_registry.h"
 #include "game_event_dispatcher.h"
@@ -20,7 +24,10 @@
 class game_t
 {
 public:
-    explicit game_t(const std::string& creature_types_json_p);
+    game_t(
+        const std::string& creature_types_json_p,
+        const std::string& base_types_json_p
+    );
     ~game_t();
 
     game_t(const game_t&) = delete;
@@ -28,10 +35,8 @@ public:
 
     void start(igame_observer_t& observer_p);
     void stop();
-    void request_spawn_creature(
-        std::string identifier_p,
-        position_t position_p
-    );
+    void request_spawn_base(std::string identifier_p, position_t center_p);
+    void request_spawn_from_base(std::uint64_t base_id_p);
     void request_walk_to(
         std::uint64_t id_p,
         position_t destination_p
@@ -41,17 +46,25 @@ public:
     {
         return aggressive_;
     }
-    const creature_t* find_nearest_visible_enemy(
+    std::optional<target_t> find_nearest_visible_enemy(
         const creature_t& creature_p
     ) const noexcept;
-    const creature_t* find_visible_enemy(
+    std::optional<target_t> find_visible_enemy(
         const creature_t& creature_p,
         std::uint64_t target_id_p
     ) const noexcept;
     bool is_in_attack_range(
         const creature_t& creature_p,
-        const creature_t& target_p
+        const target_t& target_p
     ) const noexcept;
+    std::optional<target_t> find_base_target(
+        const base_t& base_p,
+        std::uint64_t target_id_p
+    ) const noexcept;
+    std::optional<target_t> find_nearest_base_target(
+        const base_t& base_p
+    ) const noexcept;
+    void perform_base_attack(const base_t& base_p, const target_t& target_p);
     bool move_creature_towards(
         std::uint64_t id_p,
         position_t destination_p
@@ -72,6 +85,12 @@ private:
         std::string identifier_p,
         position_t position_p
     );
+    void spawn_base(std::string identifier_p, position_t center_p);
+    void spawn_from_base(std::uint64_t base_id_p);
+    base_t* find_base(std::uint64_t id_p) noexcept;
+    const base_t* find_base(std::uint64_t id_p) const noexcept;
+    void damage_target(std::uint64_t target_id_p, int damage_p);
+    void remove_dead_bases();
     void set_creature_destination(
         std::uint64_t id_p,
         position_t destination_p
@@ -97,7 +116,9 @@ private:
 
     game_event_dispatcher_t dispatcher_;
     creature_type_registry_t creature_type_registry_;
+    base_type_registry_t base_type_registry_;
     creatures_t creatures_;
+    std::vector<std::unique_ptr<base_t>> bases_;
     game_map_t game_map_;
     visibility_system_t visibility_system_;
     igame_observer_t* observer_ = nullptr;

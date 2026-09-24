@@ -2,6 +2,7 @@
 
 #include <QObject>
 
+#include "BasesModel.h"
 #include "CreaturesModel.h"
 #include "GameObserver.h"
 #include "game.h"
@@ -10,6 +11,7 @@ class GameBackend : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(CreaturesModel* creaturesModel READ creaturesModel CONSTANT)
+    Q_PROPERTY(BasesModel* basesModel READ basesModel CONSTANT)
     Q_PROPERTY(bool running READ running NOTIFY runningChanged)
     Q_PROPERTY(bool aggressive READ aggressive WRITE setAggressive NOTIFY aggressiveChanged)
     Q_PROPERTY(int mapColumnCount READ mapColumnCount CONSTANT)
@@ -20,6 +22,7 @@ public:
     ~GameBackend() override;
 
     CreaturesModel* creaturesModel();
+    BasesModel* basesModel();
     bool running() const;
     bool aggressive() const;
     void setAggressive(bool aggressive_p);
@@ -28,11 +31,12 @@ public:
 
     Q_INVOKABLE void start();
     Q_INVOKABLE void stop();
-    Q_INVOKABLE void spawnCreature(
+    Q_INVOKABLE void spawnBase(
         const QString& identifier_p,
         int column_p,
         int row_p
     );
+    Q_INVOKABLE void spawnCreatureFromBase(std::uint64_t base_id_p);
     Q_INVOKABLE void walkCreature(
         std::uint64_t creature_id_p,
         int column_p,
@@ -70,6 +74,7 @@ private:
     GameObserver game_observer_;
     game_t game_;
     CreaturesModel creatures_model_;
+    BasesModel bases_model_;
     bool game_running_ = false;
     bool aggressive_ = true;
 };

@@ -58,6 +58,13 @@ set(CoreFiles
     backend/creature_type.cpp
     backend/creature_type_registry.h
     backend/creature_type_registry.cpp
+    backend/type_parsing.h
+    backend/type_parsing.cpp
+    backend/base_type.h
+    backend/base_type_registry.h
+    backend/base_type_registry.cpp
+    backend/base.h
+    backend/base.cpp
     backend/creatures.h
     backend/creatures.cpp
     backend/game_constants.h
@@ -142,6 +149,8 @@ if(CREATURE_WARS_BUILD_APP)
     )
 
     set(ApplicationFiles
+        backend/BasesModel.h
+        backend/BasesModel.cpp
         backend/CreaturesModel.h
         backend/CreaturesModel.cpp
         backend/GameBackend.h
@@ -160,6 +169,7 @@ if(CREATURE_WARS_BUILD_APP)
         PREFIX "/"
         FILES
             data/creature_types.json
+            data/base_types.json
             ${AssetFiles}
     )
 

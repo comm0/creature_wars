@@ -29,9 +29,16 @@ int position_distance(position_t left_p, position_t right_p) noexcept
 */
 
 /*! Creates a stopped game. */
-game_t::game_t(const std::string& creature_types_json_p)
+game_t::game_t(
+    const std::string& creature_types_json_p,
+    const std::string& base_types_json_p
+)
     : creature_type_registry_(creature_types_json_p)
+    , base_type_registry_(base_types_json_p)
 {
+    for (const auto& base_type : base_type_registry_.all()) {
+        static_cast<void>(creature_type_registry_.get(base_type.spawn_creature()));
+    }
 }
 
 game_t::~game_t()
@@ -177,14 +184,94 @@ void game_t::collect_actions()
     }
 }
 
-void game_t::request_spawn_creature(
-    std::string identifier_p,
-    position_t position_p
-)
+void game_t::request_spawn_base(std::string identifier_p, position_t center_p)
 {
-    post([this, identifier = std::move(identifier_p), position_p]() mutable {
-        spawn_creature(std::move(identifier), position_p);
+    post([this, identifier = std::move(identifier_p), center_p]() mutable {
+        spawn_base(std::move(identifier), center_p);
     });
+}
+
+void game_t::request_spawn_from_base(std::uint64_t base_id_p)
+{
+    post([this, base_id_p]() {
+        spawn_from_base(base_id_p);
+    });
+}
+
+void game_t::spawn_base(std::string identifier_p, position_t center_p)
+{
+    const auto& base_type = base_type_registry_.get(identifier_p);
+    const auto group_has_base = std::any_of(
+        bases_.begin(),
+        bases_.end(),
+        [&base_type](const auto& base_p) {
+            return base_p->type().group() == base_type.group();
+        }
+    );
+
+    if (group_has_base) {
+        return;
+    }
+
+    const auto half_size = base_type.size() / 2;
+    const position_t position{
+        center_p.column_ - half_size,
+        center_p.row_ - half_size
+    };
+
+    if (!game_map_.can_place_base(position, base_type.size())) {
+        return;
+    }
+
+    auto& base = *bases_.emplace_back(std::make_unique<base_t>(
+        creatures_t::allocate_id(),
+        base_type,
+        creature_type_registry_.get(base_type.spawn_creature()),
+        position
+    ));
+    game_map_.place_base(base);
+    observer_->on_base_created(base);
+}
+
+void game_t::spawn_from_base(std::uint64_t base_id_p)
+{
+    const auto* base = find_base(base_id_p);
+
+    if (base == nullptr || base->is_dead()) {
+        return;
+    }
+
+    const auto position = game_map_.free_position_around(*base);
+
+    if (position.has_value()) {
+        spawn_creature(base->spawn_type().identifier(), *position);
+    }
+}
+
+base_t* game_t::find_base(std::uint64_t id_p) noexcept
+{
+    const auto base = std::find_if(
+        bases_.begin(),
+        bases_.end(),
+        [id_p](const auto& base_p) {
+            return base_p->id() == id_p;
+        }
+    );
+
+    return base == bases_.end() ? nullptr : base->get();
+}
+
+const base_t* game_t::find_base(std::uint64_t id_p) const noexcept
+{
+    const auto base = std::find_if(
+        bases_.begin(),
+        bases_.end(),
+        [id_p](const auto& base_p) {
+            return base_p->id() == id_p;
+        }
+    );
+
+    return base == bases_.end() ? nullptr : base->get();
 }
 
 /*! Creates a creature of the requested type at a map position. */
@@ -223,7 +310,13 @@ void game_t::dispatch_tick()
 
     creatures_.on_think(*this);
     creatures_.on_attacking(*this, game_constants::tick_interval);
+
+    for (const auto& base : bases_) {
+        base->on_attacking(*this, game_constants::tick_interval);
+    }
+
     remove_dead_creatures();
+    remove_dead_bases();
 
     observer_->on_game_tick();
 
@@ -299,63 +392,151 @@ void game_t::set_aggressive(bool aggressive_p)
     creatures_.on_think(*this);
 }
 
-const creature_t* game_t::find_nearest_visible_enemy(
+std::optional<target_t> game_t::find_nearest_visible_enemy(
     const creature_t& creature_p
 ) const noexcept
 {
-    const creature_t* nearest_enemy = nullptr;
+    std::optional<target_t> nearest_enemy;
     auto nearest_distance = std::numeric_limits<int>::max();
+    const auto consider = [&](std::uint64_t id_p) {
+        const auto enemy = find_visible_enemy(creature_p, id_p);
 
-    for (const auto visible_id : creature_p.visible_creature_ids()) {
-        const auto* visible_creature = creatures_.find(visible_id);
-
-        if (visible_creature == nullptr
-            || visible_creature->is_dead()
-            || visible_creature->type().group() == creature_p.type().group()) {
-            continue;
+        if (!enemy.has_value()) {
+            return;
         }
 
         const auto distance = position_distance(
             creature_p.position(),
-            visible_creature->position()
+            enemy->position_
         );
 
         if (distance < nearest_distance) {
-            nearest_enemy = visible_creature;
+            nearest_enemy = enemy;
             nearest_distance = distance;
         }
+    };
+
+    for (const auto visible_id : creature_p.visible_creature_ids()) {
+        consider(visible_id);
+    }
+
+    for (const auto& base : bases_) {
+        consider(base->id());
     }
 
     return nearest_enemy;
 }
 
-const creature_t* game_t::find_visible_enemy(
+std::optional<target_t> game_t::find_visible_enemy(
     const creature_t& creature_p,
     std::uint64_t target_id_p
 ) const noexcept
 {
-    if (!creature_p.visible_creature_ids().contains(target_id_p)) {
-        return nullptr;
+    const auto& group = creature_p.type().group();
+
+    if (creature_p.visible_creature_ids().contains(target_id_p)) {
+        const auto* target = creatures_.find(target_id_p);
+
+        if (target == nullptr
+            || target->is_dead()
+            || target->type().group() == group) {
+            return std::nullopt;
+        }
+
+        return target_t{target->id(), target->position()};
     }
 
-    const auto* target = creatures_.find(target_id_p);
+    const auto* base = find_base(target_id_p);
 
-    if (target == nullptr
-        || target->is_dead()
-        || target->type().group() == creature_p.type().group()) {
-        return nullptr;
+    if (base == nullptr
+        || base->is_dead()
+        || base->type().group() == group
+        || base->distance_to(creature_p.position())
+            > creature_p.type().vision_range()) {
+        return std::nullopt;
     }
 
-    return target;
+    return target_t{base->id(), base->closest_position_to(creature_p.position())};
 }
 
 bool game_t::is_in_attack_range(
     const creature_t& creature_p,
-    const creature_t& target_p
+    const target_t& target_p
 ) const noexcept
 {
-    return position_distance(creature_p.position(), target_p.position())
+    return position_distance(creature_p.position(), target_p.position_)
         <= creature_p.type().attack_range();
+}
+
+std::optional<target_t> game_t::find_base_target(
+    const base_t& base_p,
+    std::uint64_t target_id_p
+) const noexcept
+{
+    const auto& group = base_p.type().group();
+    const auto range = base_p.type().attack_range();
+
+    if (const auto* creature = creatures_.find(target_id_p); creature != nullptr) {
+        if (creature->is_dead()
+            || creature->type().group() == group
+            || base_p.distance_to(creature->position()) > range) {
+            return std::nullopt;
+        }
+
+        return target_t{creature->id(), creature->position()};
+    }
+
+    const auto* base = find_base(target_id_p);
+
+    if (base == nullptr
+        || base->is_dead()
+        || base->type().group() == group
+        || base_p.distance_to(*base) > range) {
+        return std::nullopt;
+    }
+
+    return target_t{
+        base->id(),
+        base->closest_position_to(base_p.closest_position_to(base->position()))
+    };
+}
+
+std::optional<target_t> game_t::find_nearest_base_target(
+    const base_t& base_p
+) const noexcept
+{
+    std::optional<target_t> nearest_target;
+    auto nearest_distance = std::numeric_limits<int>::max();
+    const auto consider = [&](std::uint64_t id_p) {
+        const auto target = find_base_target(base_p, id_p);
+
+        if (!target.has_value()) {
+            return;
+        }
+
+        const auto distance = base_p.distance_to(target->position_);
+
+        if (distance < nearest_distance) {
+            nearest_target = target;
+            nearest_distance = distance;
+        }
+    };
+
+    creatures_.for_each([&consider](const creature_t& creature_p) {
+        consider(creature_p.id());
+    });
+
+    for (const auto& base : bases_) {
+        consider(base->id());
+    }
+
+    return nearest_target;
+}
+
+void game_t::perform_base_attack(const base_t& base_p, const target_t& target_p)
+{
+    observer_->on_base_attack_performed(base_p.id(), target_p.position_);
+    damage_target(target_p.id_, base_p.type().attack());
 }
 
 bool game_t::move_creature_towards(
@@ -456,33 +637,61 @@ bool game_t::check_creature_attack(
     std::uint64_t target_id_p
 )
 {
-    auto* attacker = creatures_.find(attacker_id_p);
-    auto* target = creatures_.find(target_id_p);
+    const auto* attacker = creatures_.find(attacker_id_p);
 
-    if (attacker == nullptr
-        || target == nullptr
-        || attacker == target
-        || attacker->is_dead()
-        || target->is_dead()
-        || attacker->type().group() == target->type().group()
-        || !attacker->visible_creature_ids().contains(target_id_p)
-        || !is_in_attack_range(*attacker, *target)) {
+    if (attacker == nullptr || attacker->is_dead()) {
         return false;
     }
 
-    const auto previous_health = target->health();
-    target->drain_health(attacker->type().attack());
+    const auto target = find_visible_enemy(*attacker, target_id_p);
+
+    if (!target.has_value() || !is_in_attack_range(*attacker, *target)) {
+        return false;
+    }
+
     observer_->on_creature_attack_performed(attacker->id());
-
-    if (target->health() != previous_health) {
-        observer_->on_creature_health_changed(target->id(), target->health());
-    }
-
-    if (target->is_dead()) {
-        dead_creature_ids_.push_back(target->id());
-    }
-
+    damage_target(target_id_p, attacker->type().attack());
     return true;
+}
+
+void game_t::damage_target(std::uint64_t target_id_p, int damage_p)
+{
+    if (auto* creature = creatures_.find(target_id_p); creature != nullptr) {
+        const auto previous_health = creature->health();
+        creature->drain_health(damage_p);
+
+        if (creature->health() != previous_health) {
+            observer_->on_creature_health_changed(creature->id(), creature->health());
+        }
+
+        if (creature->is_dead()) {
+            dead_creature_ids_.push_back(creature->id());
+        }
+
+        return;
+    }
+
+    if (auto* base = find_base(target_id_p); base != nullptr) {
+        const auto previous_health = base->health();
+        base->drain_health(damage_p);
+
+        if (base->health() != previous_health) {
+            observer_->on_base_health_changed(base->id(), base->health());
+        }
+    }
+}
+
+void game_t::remove_dead_bases()
+{
+    std::erase_if(bases_, [this](const auto& base_p) {
+        if (!base_p->is_dead()) {
+            return false;
+        }
+
+        game_map_.remove_base(*base_p);
+        observer_->on_base_removed(base_p->id());
+        return true;
+    });
 }
 
 void game_t::remove_dead_creatures()
@@ -516,7 +725,11 @@ void game_t::notify_creature_state_changed(const creature_t& creature_p)
 
 void game_t::publish_creatures()
 {
-    creatures_.publish_creatures([this](const creature_t& creature_p) {
+    creatures_.for_each([this](const creature_t& creature_p) {
         observer_->on_creature_created(creature_p);
     });
+
+    for (const auto& base : bases_) {
+        observer_->on_base_created(*base);
+    }
 }

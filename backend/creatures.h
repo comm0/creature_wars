@@ -17,6 +17,11 @@ public:
         position_t position_p = {}
     );
 
+    static std::uint64_t allocate_id() noexcept
+    {
+        return next_uid_++;
+    }
+
     creature_t* find(std::uint64_t id_p) noexcept;
     const creature_t* find(std::uint64_t id_p) const noexcept;
     bool remove(std::uint64_t id_p) noexcept;
@@ -40,7 +45,7 @@ public:
     std::optional<std::chrono::steady_clock::time_point> next_movement_time()
         const noexcept;
 
-    void publish_creatures(
+    void for_each(
         const std::function<void(const creature_t&)>& creature_handler_p
     ) const;
 

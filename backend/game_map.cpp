@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <vector>
 
 namespace
 {
@@ -81,10 +82,82 @@ bool game_map_t::remove_creature(creature_t& creature_p) noexcept
     return true;
 }
 
+bool game_map_t::place_base(base_t& base_p) noexcept
+{
+    const auto position = base_p.position();
+    const auto size = base_p.type().size();
+
+    if (!can_place_base(position, size)) {
+        return false;
+    }
+
+    for (auto row = position.row_; row < position.row_ + size; ++row) {
+        for (auto column = position.column_; column < position.column_ + size; ++column) {
+            bases_[position_index({column, row})] = &base_p;
+        }
+    }
+
+    return true;
+}
+
+void game_map_t::remove_base(const base_t& base_p) noexcept
+{
+    for (auto& base : bases_) {
+        if (base == &base_p) {
+            base = nullptr;
+        }
+    }
+}
+
+bool game_map_t::can_place_base(position_t position_p, int size_p) const noexcept
+{
+    for (auto row = position_p.row_; row < position_p.row_ + size_p; ++row) {
+        for (auto column = position_p.column_; column < position_p.column_ + size_p; ++column) {
+            if (!can_place_creature({column, row})) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+std::optional<position_t> game_map_t::free_position_around(const base_t& base_p)
+{
+    const auto position = base_p.position();
+    const auto size = base_p.type().size();
+    std::vector<position_t> free_positions;
+
+    for (auto row = position.row_ - 1; row <= position.row_ + size; ++row) {
+        for (auto column = position.column_ - 1; column <= position.column_ + size; ++column) {
+            const position_t candidate{column, row};
+
+            if (base_p.distance_to(candidate) == 1 && can_place_creature(candidate)) {
+                free_positions.push_back(candidate);
+            }
+        }
+    }
+
+    if (free_positions.empty()) {
+        return std::nullopt;
+    }
+
+    auto index_distribution = std::uniform_int_distribution<std::size_t>(
+        0,
+        free_positions.size() - 1
+    );
+
+    return free_positions[index_distribution(random_generator_)];
+}
+
 bool game_map_t::is_position_occupied(position_t position_p) const noexcept
 {
-    return is_position_inside(position_p)
-        && creatures_[position_index(position_p)] != nullptr;
+    if (!is_position_inside(position_p)) {
+        return false;
+    }
+
+    const auto index = position_index(position_p);
+    return creatures_[index] != nullptr || bases_[index] != nullptr;
 }
 
 creature_t* game_map_t::creature_at(position_t position_p) const noexcept

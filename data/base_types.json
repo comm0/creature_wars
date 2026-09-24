@@ -1,0 +1,37 @@
+{
+  "baseTypes": [
+    {
+      "id": "minotaur_base",
+      "name": "Minotaur Base",
+      "group": "minotaurs",
+      "color": "#5a3825",
+      "size": 3,
+      "health": 480,
+      "attack": 6,
+      "attackRange": 5,
+      "spawnCreature": "minotaur"
+    },
+    {
+      "id": "orc_base",
+      "name": "Orc Base",
+      "group": "orcs",
+      "color": "#245b32",
+      "size": 3,
+      "health": 340,
+      "attack": 8,
+      "attackRange": 4,
+      "spawnCreature": "orc"
+    },
+    {
+      "id": "dwarf_base",
+      "name": "Dwarf Base",
+      "group": "dwarves",
+      "color": "#8a4f2d",
+      "size": 3,
+      "health": 680,
+      "attack": 4,
+      "attackRange": 3,
+      "spawnCreature": "dwarf"
+    }
+  ]
+}

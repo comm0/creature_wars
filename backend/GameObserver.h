@@ -35,6 +35,13 @@ public:
         std::uint64_t spotted_id_p
     ) override;
     void on_creature_removed(std::uint64_t id_p) override;
+    void on_base_created(const base_t& base_p) override;
+    void on_base_health_changed(std::uint64_t id_p, int health_p) override;
+    void on_base_attack_performed(
+        std::uint64_t id_p,
+        position_t target_position_p
+    ) override;
+    void on_base_removed(std::uint64_t id_p) override;
 
 signals:
     void gameTick();
@@ -67,4 +74,21 @@ signals:
         std::uint64_t spotted_id_p
     );
     void creatureRemoved(std::uint64_t id_p);
+    void baseCreated(
+        std::uint64_t id_p,
+        position_t position_p,
+        int size_p,
+        QString identifier_p,
+        QString name_p,
+        QString group_p,
+        QColor color_p,
+        int health_p,
+        int maximum_health_p,
+        int attack_p,
+        int attack_range_p,
+        QString spawn_creature_name_p
+    );
+    void baseHealthChanged(std::uint64_t id_p, int health_p);
+    void baseAttackPerformed(std::uint64_t id_p, position_t target_position_p);
+    void baseRemoved(std::uint64_t id_p);
 };

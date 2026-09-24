@@ -183,3 +183,87 @@ void GameObserver::on_creature_removed(std::uint64_t id_p)
         Qt::QueuedConnection
     );
 }
+
+void GameObserver::on_base_created(const base_t& base_p)
+{
+    const auto id = base_p.id();
+    const auto position = base_p.position();
+    const auto& type = base_p.type();
+    const auto size = type.size();
+    auto identifier = QString::fromStdString(type.identifier());
+    auto name = QString::fromStdString(type.name());
+    auto group = QString::fromStdString(type.group());
+    const auto color = QColor::fromRgb(type.color());
+    const auto health = base_p.health();
+    const auto maximum_health = type.health();
+    const auto attack = type.attack();
+    const auto attack_range = type.attack_range();
+    auto spawn_creature_name = QString::fromStdString(base_p.spawn_type().name());
+
+    QMetaObject::invokeMethod(
+        this,
+        [
+            this,
+            id,
+            position,
+            size,
+            identifier = std::move(identifier),
+            name = std::move(name),
+            group = std::move(group),
+            color,
+            health,
+            maximum_health,
+            attack,
+            attack_range,
+            spawn_creature_name = std::move(spawn_creature_name)
+        ]() mutable {
+            emit baseCreated(
+                id,
+                position,
+                size,
+                std::move(identifier),
+                std::move(name),
+                std::move(group),
+                color,
+                health,
+                maximum_health,
+                attack,
+                attack_range,
+                std::move(spawn_creature_name)
+            );
+        },
+        Qt::QueuedConnection
+    );
+}
+
+void GameObserver::on_base_health_changed(std::uint64_t id_p, int health_p)
+{
+    QMetaObject::invokeMethod(
+        this,
+        [this, id_p, health_p]() { emit baseHealthChanged(id_p, health_p); },
+        Qt::QueuedConnection
+    );
+}
+
+void GameObserver::on_base_attack_performed(
+    std::uint64_t id_p,
+    position_t target_position_p
+)
+{
+    QMetaObject::invokeMethod(
+        this,
+        [this, id_p, target_position_p]() {
+            emit baseAttackPerformed(id_p, target_position_p);
+        },
+        Qt::QueuedConnection
+    );
+}
+
+void GameObserver::on_base_removed(std::uint64_t id_p)
+{
+    QMetaObject::invokeMethod(
+        this,
+        [this, id_p]() { emit baseRemoved(id_p); },
+        Qt::QueuedConnection
+    );
+}

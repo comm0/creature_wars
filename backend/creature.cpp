@@ -31,11 +31,11 @@ void creature_t::on_think(game_t& game_p)
         return;
     }
 
-    const auto* enemy = target_id_.has_value()
+    auto enemy = target_id_.has_value()
         ? game_p.find_visible_enemy(*this, *target_id_)
-        : nullptr;
+        : std::nullopt;
 
-    if (enemy == nullptr) {
+    if (!enemy.has_value()) {
         clear_target(game_p);
     }
 
@@ -44,15 +44,15 @@ void creature_t::on_think(game_t& game_p)
         return;
     }
 
-    if (enemy == nullptr) {
+    if (!enemy.has_value()) {
         enemy = game_p.find_nearest_visible_enemy(*this);
 
-        if (enemy != nullptr) {
-            target_id_ = enemy->id();
+        if (enemy.has_value()) {
+            target_id_ = enemy->id_;
         }
     }
 
-    if (enemy == nullptr) {
+    if (!enemy.has_value()) {
         if (manual_destination_.has_value()) {
             activate_manual_movement(game_p);
         } else {
@@ -81,9 +81,9 @@ void creature_t::on_attacking(
         return;
     }
 
-    const auto* target = game_p.find_visible_enemy(*this, *target_id_);
+    const auto target = game_p.find_visible_enemy(*this, *target_id_);
 
-    if (target == nullptr) {
+    if (!target.has_value()) {
         clear_target(game_p);
         return;
     }
@@ -98,7 +98,7 @@ void creature_t::on_attacking(
         return;
     }
 
-    if (game_p.check_creature_attack(id_, target->id())) {
+    if (game_p.check_creature_attack(id_, target->id_)) {
         attack_elapsed_ = std::chrono::milliseconds{0};
     }
 }
@@ -139,16 +139,16 @@ void creature_t::update_movement(
             return;
         }
     } else {
-        const auto* target = target_id_.has_value()
+        const auto target = target_id_.has_value()
             ? game_p.find_visible_enemy(*this, *target_id_)
-            : nullptr;
+            : std::nullopt;
 
-        if (target == nullptr || game_p.is_in_attack_range(*this, *target)) {
+        if (!target.has_value() || game_p.is_in_attack_range(*this, *target)) {
             stop_movement(game_p);
             return;
         }
 
-        destination = target->position();
+        destination = target->position_;
         retry_count = target_path_retry_count;
     }
 
@@ -191,17 +191,17 @@ void creature_t::activate_manual_movement(game_t& game_p)
 
 void creature_t::activate_target_movement(
     game_t& game_p,
-    const creature_t& target_p
+    const target_t& target_p
 )
 {
     if (active_movement_goal_ == movement_goal_t::target
-        && target_id_ == target_p.id()) {
+        && target_id_ == target_p.id_) {
         return;
     }
 
     const auto previous_state = state();
     active_movement_goal_ = movement_goal_t::target;
-    target_id_ = target_p.id();
+    target_id_ = target_p.id_;
     idle_starting_position_.reset();
     blocked_target_id_.reset();
     blocked_target_position_.reset();
@@ -266,10 +266,10 @@ void creature_t::clear_target(game_t& game_p)
     }
 }
 
-bool creature_t::target_was_blocked(const creature_t& target_p) const noexcept
+bool creature_t::target_was_blocked(const target_t& target_p) const noexcept
 {
-    return blocked_target_id_ == target_p.id()
-        && blocked_target_position_ == target_p.position();
+    return blocked_target_id_ == target_p.id_
+        && blocked_target_position_ == target_p.position_;
 }
 
 std::chrono::steady_clock::duration creature_t::movement_interval() const

@@ -13,14 +13,28 @@ Item {
     property bool gridVisible: true
     property bool visionRangesVisible: false
     property var creatureModel
+    property var baseModel
     property bool spawnEnabled: true
     property int contextColumn: 0
     property int contextRow: 0
     property var selectedCreatureIds: []
     property int idleDotCount: 1
 
-    signal spawnRequested(string identifier, int column, int row)
+    signal baseSpawnRequested(string identifier, int column, int row)
+    signal creatureSpawnRequested(var baseId)
     signal walkRequested(var creatureId, int column, int row)
+
+    function hasBase(identifier) {
+        for (let index = 0; index < baseRepeater.count; ++index) {
+            const base = baseRepeater.itemAt(index) as BaseView
+
+            if (base !== null && base.baseTypeIdentifier === identifier) {
+                return true
+            }
+        }
+
+        return false
+    }
 
     function isCreatureSelected(creatureId) {
         return selectedCreatureIds.indexOf(creatureId) !== -1
@@ -235,33 +249,33 @@ Item {
         id: spawnMenu
 
         MenuItem {
-            text: qsTr("Spawn Minotaur")
-            enabled: root.spawnEnabled
+            text: qsTr("Spawn Minotaur Base")
+            enabled: root.spawnEnabled && !root.hasBase("minotaur_base")
 
-            onTriggered: root.spawnRequested(
-                "minotaur",
+            onTriggered: root.baseSpawnRequested(
+                "minotaur_base",
                 root.contextColumn,
                 root.contextRow
             )
         }
 
         MenuItem {
-            text: qsTr("Spawn Orc")
-            enabled: root.spawnEnabled
+            text: qsTr("Spawn Orc Base")
+            enabled: root.spawnEnabled && !root.hasBase("orc_base")
 
-            onTriggered: root.spawnRequested(
-                "orc",
+            onTriggered: root.baseSpawnRequested(
+                "orc_base",
                 root.contextColumn,
                 root.contextRow
             )
         }
 
         MenuItem {
-            text: qsTr("Spawn Dwarf")
-            enabled: root.spawnEnabled
+            text: qsTr("Spawn Dwarf Base")
+            enabled: root.spawnEnabled && !root.hasBase("dwarf_base")
 
-            onTriggered: root.spawnRequested(
-                "dwarf",
+            onTriggered: root.baseSpawnRequested(
+                "dwarf_base",
                 root.contextColumn,
                 root.contextRow
             )
@@ -283,6 +297,29 @@ Item {
                 color: "#4f824b"
                 border.width: root.gridVisible ? 1 : 0
                 border.color: "#315a35"
+            }
+        }
+    }
+
+    Item {
+        id: baseLayer
+
+        anchors.fill: parent
+        z: 1
+
+        Repeater {
+            id: baseRepeater
+
+            model: root.baseModel
+
+            delegate: BaseView {
+                tileSize: root.tileSize
+                rangeVisible: root.visionRangesVisible
+                overlayParent: creatureOverlayLayer
+
+                onSpawnCreatureRequested: function(baseId) {
+                    root.creatureSpawnRequested(baseId)
+                }
             }
         }
     }

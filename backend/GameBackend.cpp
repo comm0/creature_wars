@@ -13,22 +13,25 @@
 
 namespace
 {
-std::string load_creature_types()
+std::string load_resource(const QString& path_p)
 {
-    QFile creature_types_file(QStringLiteral(":/data/creature_types.json"));
+    QFile file(path_p);
 
-    if (!creature_types_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        throw std::runtime_error("Could not open creature type definitions.");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        throw std::runtime_error("Could not open " + path_p.toStdString());
     }
 
-    return creature_types_file.readAll().toStdString();
+    return file.readAll().toStdString();
 }
 }
 
 GameBackend::GameBackend(QObject* parent_p)
     : QObject(parent_p)
     , game_observer_(this)
-    , game_(load_creature_types())
+    , game_(
+        load_resource(QStringLiteral(":/data/creature_types.json")),
+        load_resource(QStringLiteral(":/data/base_types.json"))
+    )
 {
     connect(
         &game_observer_,
@@ -112,6 +115,31 @@ GameBackend::GameBackend(QObject* parent_p)
         }
     );
 
+    connect(
+        &game_observer_,
+        &GameObserver::baseCreated,
+        &bases_model_,
+        &BasesModel::insert_base
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::baseHealthChanged,
+        &bases_model_,
+        &BasesModel::update_base_health
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::baseAttackPerformed,
+        &bases_model_,
+        &BasesModel::notify_base_attack
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::baseRemoved,
+        &bases_model_,
+        &BasesModel::remove_base
+    );
+
     start();
 }
 
@@ -123,6 +151,11 @@ GameBackend::~GameBackend()
 CreaturesModel* GameBackend::creaturesModel()
 {
     return &creatures_model_;
+}
+
+BasesModel* GameBackend::basesModel()
+{
+    return &bases_model_;
 }
 
 bool GameBackend::running() const
@@ -184,7 +217,7 @@ void GameBackend::stop()
     emit runningChanged();
 }
 
-void GameBackend::spawnCreature(
+void GameBackend::spawnBase(
     const QString& identifier_p,
     int column_p,
     int row_p
@@ -194,10 +227,19 @@ void GameBackend::spawnCreature(
         return;
     }
 
-    game_.request_spawn_creature(
+    game_.request_spawn_base(
         identifier_p.toStdString(),
         position_t{column_p, row_p}
     );
+}
+
+void GameBackend::spawnCreatureFromBase(std::uint64_t base_id_p)
+{
+    if (!game_running_) {
+        return;
+    }
+
+    game_.request_spawn_from_base(base_id_p);
 }
 
 void GameBackend::walkCreature(

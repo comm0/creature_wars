@@ -5,6 +5,7 @@
 #include <optional>
 #include <random>
 
+#include "base.h"
 #include "creature.h"
 #include "game_constants.h"
 #include "pathfinder.h"
@@ -19,8 +20,12 @@ public:
     bool place_creature(creature_t& creature_p, position_t position_p) noexcept;
     bool move_creature(creature_t& creature_p, position_t position_p) noexcept;
     bool remove_creature(creature_t& creature_p) noexcept;
+    bool place_base(base_t& base_p) noexcept;
+    void remove_base(const base_t& base_p) noexcept;
 
     bool can_place_creature(position_t position_p) const noexcept;
+    bool can_place_base(position_t position_p, int size_p) const noexcept;
+    std::optional<position_t> free_position_around(const base_t& base_p);
     bool is_position_occupied(position_t position_p) const noexcept;
     creature_t* creature_at(position_t position_p) const noexcept;
     std::optional<position_t> next_step_towards(
@@ -48,6 +53,7 @@ private:
     static std::size_t position_index(position_t position_p) noexcept;
 
     std::array<creature_t*, position_count> creatures_{};
+    std::array<const base_t*, position_count> bases_{};
     pathfinder_t pathfinder_{
         game_constants::map_column_count,
         game_constants::map_row_count

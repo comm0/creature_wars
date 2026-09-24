@@ -16,6 +16,12 @@ struct position_t
     bool operator==(const position_t&) const = default;
 };
 
+struct target_t
+{
+    std::uint64_t id_ = 0;
+    position_t position_;
+};
+
 enum class creature_state_t
 {
     idle,
@@ -159,13 +165,13 @@ private:
     };
 
     void activate_manual_movement(game_t& game_p);
-    void activate_target_movement(game_t& game_p, const creature_t& target_p);
+    void activate_target_movement(game_t& game_p, const target_t& target_p);
     void activate_idle_movement(game_t& game_p);
     void stop_movement(game_t& game_p);
     void finish_manual_movement(game_t& game_p);
     void block_target(position_t target_position_p, game_t& game_p);
     void clear_target(game_t& game_p);
-    bool target_was_blocked(const creature_t& target_p) const noexcept;
+    bool target_was_blocked(const target_t& target_p) const noexcept;
     std::chrono::steady_clock::duration movement_interval() const;
 
     std::uint64_t id_;
