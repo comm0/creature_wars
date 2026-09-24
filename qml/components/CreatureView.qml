@@ -363,15 +363,13 @@ Item {
         Item {
             id: creatureIdentity
 
-            readonly property bool placeAbove:
-                creatureView.y + creatureView.visualTop >= height + 2
-
             x: creatureView.visualLeft
                 + creatureView.visualWidth / 2
                 - width / 2
-            y: placeAbove
-                ? creatureView.visualTop - height - 2
-                : creatureView.height + 2
+            y: Math.max(
+                creatureView.visualTop - height - 2,
+                -creatureView.y
+            )
             width: 56
             height: 15
 
