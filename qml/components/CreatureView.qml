@@ -41,8 +41,12 @@ Item {
 
     property bool alertVisible: false
     property bool goVisible: false
-    readonly property bool hasSprite:
+    readonly property string spriteIdentifier:
         creatureTypeIdentifier === "minotaur"
+            || creatureTypeIdentifier === "orc"
+            ? creatureTypeIdentifier
+            : ""
+    readonly property bool hasSprite: spriteIdentifier.length > 0
     readonly property int spriteSize: 32
     // Tibia-style anchoring: the sprite's bottom-right corner sits on the
     // tile's bottom-right corner, bigger sprites grow up and to the left.
@@ -106,7 +110,13 @@ Item {
             id: creatureSprite
 
             readonly property string sheet:
-                "qrc:/assets/creatures/minotaur/minotaur.json"
+                creatureView.hasSprite
+                    ? "qrc:/assets/creatures/"
+                        + creatureView.spriteIdentifier
+                        + "/"
+                        + creatureView.spriteIdentifier
+                        + ".json"
+                    : ""
             readonly property real walkFrameRate:
                 1000 / Math.max(100, creatureView.movementDuration / 2)
 
