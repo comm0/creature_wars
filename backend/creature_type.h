@@ -4,6 +4,12 @@
 #include <optional>
 #include <string>
 
+enum class creature_behavior_t
+{
+    aggressive,
+    fleeing
+};
+
 struct creature_attributes_t
 {
     int health_;
@@ -11,6 +17,7 @@ struct creature_attributes_t
     int attack_range_;
     int vision_range_;
     double speed_;
+    creature_behavior_t behavior_ = creature_behavior_t::aggressive;
 };
 
 class creature_type_t
@@ -73,6 +80,11 @@ public:
     double speed() const noexcept
     {
         return attributes_.speed_;
+    }
+
+    creature_behavior_t behavior() const noexcept
+    {
+        return attributes_.behavior_;
     }
 
 private:

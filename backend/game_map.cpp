@@ -202,6 +202,58 @@ std::optional<position_t> game_map_t::next_step_towards(
     );
 }
 
+std::optional<position_t> game_map_t::next_step_away(
+    const creature_t& creature_p,
+    position_t threat_position_p
+)
+{
+    constexpr std::array<position_t, 8> offsets{
+        position_t{0, -1},
+        position_t{1, -1},
+        position_t{1, 0},
+        position_t{1, 1},
+        position_t{0, 1},
+        position_t{-1, 1},
+        position_t{-1, 0},
+        position_t{-1, -1}
+    };
+    const auto position = creature_p.position();
+    std::vector<position_t> best_positions;
+    auto best_distance = -1;
+
+    for (const auto offset : offsets) {
+        const position_t candidate{
+            position.column_ + offset.column_,
+            position.row_ + offset.row_
+        };
+
+        if (!can_place_creature(candidate)) {
+            continue;
+        }
+
+        const auto distance = position_distance(candidate, threat_position_p);
+
+        if (distance > best_distance) {
+            best_positions.clear();
+            best_distance = distance;
+        }
+
+        if (distance == best_distance) {
+            best_positions.push_back(candidate);
+        }
+    }
+
+    if (best_positions.empty()) {
+        return std::nullopt;
+    }
+
+    auto position_distribution = std::uniform_int_distribution<std::size_t>(
+        0,
+        best_positions.size() - 1
+    );
+    return best_positions[position_distribution(random_generator_)];
+}
+
 std::optional<position_t> game_map_t::next_idle_step(
     const creature_t& creature_p,
     position_t idle_starting_position_p

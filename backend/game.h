@@ -35,6 +35,10 @@ public:
 
     void start(igame_observer_t& observer_p);
     void stop();
+    void request_spawn_creature(
+        std::string identifier_p,
+        position_t position_p
+    );
     void request_spawn_base(std::string identifier_p, position_t center_p);
     void request_spawn_from_base(std::uint64_t base_id_p);
     void request_start_match(std::string player_base_identifier_p);
@@ -54,6 +58,13 @@ public:
         const creature_t& creature_p,
         std::uint64_t target_id_p
     ) const noexcept;
+    std::optional<target_t> find_nearest_visible_threat(
+        const creature_t& creature_p
+    ) const noexcept;
+    std::optional<target_t> find_visible_threat(
+        const creature_t& creature_p,
+        std::uint64_t target_id_p
+    ) const noexcept;
     bool is_in_attack_range(
         const creature_t& creature_p,
         const target_t& target_p
@@ -69,6 +80,10 @@ public:
     bool move_creature_towards(
         std::uint64_t id_p,
         position_t destination_p
+    );
+    bool move_creature_away_from(
+        std::uint64_t id_p,
+        position_t threat_position_p
     );
     bool move_creature_idle(
         std::uint64_t id_p,

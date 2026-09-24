@@ -47,6 +47,10 @@ Scene {
             gameScene.gameBackend.spawnCreatureFromBase(baseId)
         }
 
+        onCreatureTypeSpawnRequested: function(identifier, column, row) {
+            gameScene.gameBackend.spawnCreature(identifier, column, row)
+        }
+
         onWalkRequested: function(creatureId, column, row) {
             gameScene.gameBackend.walkCreature(creatureId, column, row)
         }

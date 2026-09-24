@@ -186,6 +186,16 @@ void game_t::collect_actions()
     }
 }
 
+void game_t::request_spawn_creature(
+    std::string identifier_p,
+    position_t position_p
+)
+{
+    post([this, identifier = std::move(identifier_p), position_p]() mutable {
+        spawn_creature(std::move(identifier), position_p);
+    });
+}
+
 void game_t::request_spawn_base(std::string identifier_p, position_t center_p)
 {
     post([this, identifier = std::move(identifier_p), center_p]() mutable {
@@ -529,6 +539,55 @@ std::optional<target_t> game_t::find_visible_enemy(
     return target_t{base->id(), base->closest_position_to(creature_p.position())};
 }
 
+std::optional<target_t> game_t::find_nearest_visible_threat(
+    const creature_t& creature_p
+) const noexcept
+{
+    std::optional<target_t> nearest_threat;
+    auto nearest_distance = std::numeric_limits<int>::max();
+
+    for (const auto visible_id : creature_p.visible_creature_ids()) {
+        const auto threat = find_visible_threat(creature_p, visible_id);
+
+        if (!threat.has_value()) {
+            continue;
+        }
+
+        const auto distance = position_distance(
+            creature_p.position(),
+            threat->position_
+        );
+
+        if (distance < nearest_distance) {
+            nearest_threat = threat;
+            nearest_distance = distance;
+        }
+    }
+
+    return nearest_threat;
+}
+
+std::optional<target_t> game_t::find_visible_threat(
+    const creature_t& creature_p,
+    std::uint64_t target_id_p
+) const noexcept
+{
+    if (!creature_p.visible_creature_ids().contains(target_id_p)) {
+        return std::nullopt;
+    }
+
+    const auto* target = creatures_.find(target_id_p);
+
+    if (target == nullptr
+        || target->is_dead()
+        || target->type().group() == creature_p.type().group()
+        || target->type().attack() == 0) {
+        return std::nullopt;
+    }
+
+    return target_t{target->id(), target->position()};
+}
+
 bool game_t::is_in_attack_range(
     const creature_t& creature_p,
     const target_t& target_p
@@ -623,6 +682,29 @@ bool game_t::move_creature_towards(
     const auto next_position = game_map_.next_step_towards(
         *creature,
         destination_p
+    );
+
+    if (!next_position.has_value()) {
+        return false;
+    }
+
+    return move_creature(*creature, *next_position);
+}
+
+bool game_t::move_creature_away_from(
+    std::uint64_t id_p,
+    position_t threat_position_p
+)
+{
+    auto* creature = creatures_.find(id_p);
+
+    if (creature == nullptr) {
+        return false;
+    }
+
+    const auto next_position = game_map_.next_step_away(
+        *creature,
+        threat_position_p
     );
 
     if (!next_position.has_value()) {

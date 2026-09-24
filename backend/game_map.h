@@ -32,6 +32,10 @@ public:
         const creature_t& creature_p,
         position_t destination_p
     );
+    std::optional<position_t> next_step_away(
+        const creature_t& creature_p,
+        position_t threat_position_p
+    );
     std::optional<position_t> next_idle_step(
         const creature_t& creature_p,
         position_t idle_starting_position_p

@@ -11,6 +11,22 @@
 
 #include <nlohmann/json.hpp>
 
+namespace
+{
+creature_behavior_t parse_behavior(const std::string& behavior_p)
+{
+    if (behavior_p == "aggressive") {
+        return creature_behavior_t::aggressive;
+    }
+
+    if (behavior_p == "fleeing") {
+        return creature_behavior_t::fleeing;
+    }
+
+    throw std::invalid_argument("Unknown creature behavior.");
+}
+}
+
 creature_type_registry_t::creature_type_registry_t(
     std::string_view creature_types_json_p
 )
@@ -43,6 +59,9 @@ creature_type_registry_t::creature_type_registry_t(
         const auto attack_range = definition.at("attackRange").get<int>();
         const auto vision_range = definition.at("visionRange").get<int>();
         const auto speed = definition.at("speed").get<double>();
+        const auto behavior = parse_behavior(
+            definition.value("behavior", std::string("aggressive"))
+        );
 
         if (identifier.empty() || name.empty()) {
             throw std::invalid_argument("Creature id and name must not be empty.");
@@ -84,7 +103,8 @@ creature_type_registry_t::creature_type_registry_t(
                 attack,
                 attack_range,
                 vision_range,
-                speed
+                speed,
+                behavior
             }
         );
     }

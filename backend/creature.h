@@ -123,6 +123,7 @@ public:
     {
         return active_movement_goal_ == movement_goal_t::manual
                 || active_movement_goal_ == movement_goal_t::target
+                || active_movement_goal_ == movement_goal_t::fleeing
             ? creature_state_t::walking
             : creature_state_t::idle;
     }
@@ -159,11 +160,14 @@ private:
         none,
         manual,
         target,
+        fleeing,
         idle
     };
 
+    void on_fleeing_think(game_t& game_p);
     void activate_manual_movement(game_t& game_p);
     void activate_target_movement(game_t& game_p, const target_t& target_p);
+    void activate_fleeing_movement(game_t& game_p, const target_t& threat_p);
     void activate_idle_movement(game_t& game_p);
     void stop_movement(game_t& game_p);
     void finish_manual_movement(game_t& game_p);
@@ -178,6 +182,7 @@ private:
     std::optional<position_t> manual_destination_;
     std::optional<position_t> idle_starting_position_;
     std::optional<std::uint64_t> target_id_;
+    std::optional<std::uint64_t> fleeing_from_id_;
     std::optional<std::uint64_t> blocked_target_id_;
     std::optional<position_t> blocked_target_position_;
     std::optional<std::chrono::steady_clock::time_point> next_movement_time_;

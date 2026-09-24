@@ -22,6 +22,11 @@ Item {
 
     signal baseSpawnRequested(string identifier, int column, int row)
     signal creatureSpawnRequested(var baseId)
+    signal creatureTypeSpawnRequested(
+        string identifier,
+        int column,
+        int row
+    )
     signal walkRequested(var creatureId, int column, int row)
 
     function hasBase(identifier) {
@@ -276,6 +281,41 @@ Item {
 
             onTriggered: root.baseSpawnRequested(
                 "dwarf_base",
+                root.contextColumn,
+                root.contextRow
+            )
+        }
+
+        MenuSeparator {}
+
+        MenuItem {
+            text: qsTr("Spawn Deer")
+            enabled: root.spawnEnabled
+
+            onTriggered: root.creatureTypeSpawnRequested(
+                "deer",
+                root.contextColumn,
+                root.contextRow
+            )
+        }
+
+        MenuItem {
+            text: qsTr("Spawn Wolf")
+            enabled: root.spawnEnabled
+
+            onTriggered: root.creatureTypeSpawnRequested(
+                "wolf",
+                root.contextColumn,
+                root.contextRow
+            )
+        }
+
+        MenuItem {
+            text: qsTr("Spawn Troll")
+            enabled: root.spawnEnabled
+
+            onTriggered: root.creatureTypeSpawnRequested(
+                "troll",
                 root.contextColumn,
                 root.contextRow
             )

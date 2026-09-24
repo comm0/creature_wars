@@ -31,6 +31,11 @@ void creature_t::on_think(game_t& game_p)
         return;
     }
 
+    if (type_.behavior() == creature_behavior_t::fleeing) {
+        on_fleeing_think(game_p);
+        return;
+    }
+
     auto enemy = target_id_.has_value()
         ? game_p.find_visible_enemy(*this, *target_id_)
         : std::nullopt;
@@ -76,7 +81,7 @@ void creature_t::on_attacking(
     std::chrono::milliseconds interval_p
 )
 {
-    if (is_dead() || !target_id_.has_value()) {
+    if (is_dead() || type_.attack() == 0 || !target_id_.has_value()) {
         attack_elapsed_ = std::chrono::milliseconds{0};
         return;
     }
@@ -131,6 +136,21 @@ void creature_t::update_movement(
         return;
     }
 
+    if (active_movement_goal_ == movement_goal_t::fleeing) {
+        const auto threat = fleeing_from_id_.has_value()
+            ? game_p.find_visible_threat(*this, *fleeing_from_id_)
+            : std::nullopt;
+
+        if (!threat.has_value()) {
+            stop_movement(game_p);
+            return;
+        }
+
+        game_p.move_creature_away_from(id_, threat->position_);
+        next_movement_time_ = now_p + movement_interval();
+        return;
+    }
+
     if (active_movement_goal_ == movement_goal_t::manual) {
         destination = manual_destination_;
 
@@ -172,6 +192,24 @@ void creature_t::update_movement(
     finish_manual_movement(game_p);
 }
 
+void creature_t::on_fleeing_think(game_t& game_p)
+{
+    const auto threat = game_p.find_nearest_visible_threat(*this);
+
+    if (threat.has_value()) {
+        activate_fleeing_movement(game_p, *threat);
+        return;
+    }
+
+    fleeing_from_id_.reset();
+
+    if (manual_destination_.has_value()) {
+        activate_manual_movement(game_p);
+    } else {
+        activate_idle_movement(game_p);
+    }
+}
+
 void creature_t::activate_manual_movement(game_t& game_p)
 {
     if (active_movement_goal_ == movement_goal_t::manual) {
@@ -180,6 +218,7 @@ void creature_t::activate_manual_movement(game_t& game_p)
 
     const auto previous_state = state();
     active_movement_goal_ = movement_goal_t::manual;
+    fleeing_from_id_.reset();
     idle_starting_position_.reset();
     blocked_path_retry_count_ = 0;
 
@@ -205,9 +244,36 @@ void creature_t::activate_target_movement(
     const auto previous_state = state();
     active_movement_goal_ = movement_goal_t::target;
     target_id_ = target_p.id_;
+    fleeing_from_id_.reset();
     idle_starting_position_.reset();
     blocked_target_id_.reset();
     blocked_target_position_.reset();
+    blocked_path_retry_count_ = 0;
+
+    if (!next_movement_time_.has_value()) {
+        next_movement_time_ = std::chrono::steady_clock::now();
+    }
+
+    if (previous_state != state()) {
+        game_p.notify_creature_state_changed(*this);
+    }
+}
+
+void creature_t::activate_fleeing_movement(
+    game_t& game_p,
+    const target_t& threat_p
+)
+{
+    if (active_movement_goal_ == movement_goal_t::fleeing
+        && fleeing_from_id_ == threat_p.id_) {
+        return;
+    }
+
+    const auto previous_state = state();
+    active_movement_goal_ = movement_goal_t::fleeing;
+    target_id_.reset();
+    fleeing_from_id_ = threat_p.id_;
+    idle_starting_position_.reset();
     blocked_path_retry_count_ = 0;
 
     if (!next_movement_time_.has_value()) {
@@ -227,6 +293,7 @@ void creature_t::activate_idle_movement(game_t& game_p)
 
     const auto previous_state = state();
     active_movement_goal_ = movement_goal_t::idle;
+    fleeing_from_id_.reset();
     idle_starting_position_ = position_;
     blocked_path_retry_count_ = 0;
 
@@ -247,6 +314,7 @@ void creature_t::stop_movement(game_t& game_p)
 
     active_movement_goal_ = movement_goal_t::none;
     idle_starting_position_.reset();
+    fleeing_from_id_.reset();
     next_movement_time_.reset();
     blocked_path_retry_count_ = 0;
     game_p.notify_creature_state_changed(*this);
