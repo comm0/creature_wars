@@ -44,6 +44,7 @@ Item {
     readonly property string spriteIdentifier:
         creatureTypeIdentifier === "minotaur"
             || creatureTypeIdentifier === "orc"
+            || creatureTypeIdentifier === "dwarf"
             ? creatureTypeIdentifier
             : ""
     readonly property bool hasSprite: spriteIdentifier.length > 0

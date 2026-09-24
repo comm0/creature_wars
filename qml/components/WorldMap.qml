@@ -255,6 +255,17 @@ Item {
                 root.contextRow
             )
         }
+
+        MenuItem {
+            text: qsTr("Spawn Dwarf")
+            enabled: root.spawnEnabled
+
+            onTriggered: root.spawnRequested(
+                "dwarf",
+                root.contextColumn,
+                root.contextRow
+            )
+        }
     }
 
     Grid {
