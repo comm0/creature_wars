@@ -55,6 +55,30 @@ int position_distance(position_t left_p, position_t right_p) noexcept
     );
 }
 
+bool has_free_adjacent_position(
+    const game_map_t& game_map_p,
+    position_t position_p
+)
+{
+    for (auto row = position_p.row_ - 1; row <= position_p.row_ + 1; ++row) {
+        for (
+            auto column = position_p.column_ - 1;
+            column <= position_p.column_ + 1;
+            ++column
+        ) {
+            if (column == position_p.column_ && row == position_p.row_) {
+                continue;
+            }
+
+            if (game_map_p.can_place_creature({column, row})) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 struct reward_share_t
 {
     std::string group_;
@@ -1125,7 +1149,8 @@ std::optional<std::uint64_t> game_t::spawn_lair_near_group(
         wildlife_minimum_base_distance,
         wildlife_maximum_base_distance,
         [this](position_t position_p) {
-            return game_map_.can_place_base(position_p, 1);
+            return game_map_.can_place_base(position_p, 1)
+                && has_free_adjacent_position(game_map_, position_p);
         }
     );
 
