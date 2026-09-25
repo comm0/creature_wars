@@ -52,6 +52,7 @@ public:
     void request_spawn_base(std::string identifier_p, position_t center_p);
     void request_order_base_action(std::string key_p);
     void request_start_match(std::string player_base_identifier_p);
+    void request_attack_target(std::uint64_t id_p, std::uint64_t target_id_p);
     void request_walk_to(
         std::uint64_t id_p,
         position_t destination_p
@@ -68,6 +69,10 @@ public:
     }
     std::optional<target_t> find_nearest_visible_enemy(
         const creature_t& creature_p
+    ) const noexcept;
+    std::optional<target_t> find_commanded_target(
+        const creature_t& creature_p,
+        std::uint64_t target_id_p
     ) const noexcept;
     std::optional<target_t> find_visible_enemy(
         const creature_t& creature_p,
@@ -138,6 +143,9 @@ private:
     const base_t* find_base(std::uint64_t id_p) const noexcept;
     void damage_target(std::uint64_t target_id_p, int damage_p);
     void remove_dead_bases();
+    void set_attack_target(std::uint64_t id_p, std::uint64_t target_id_p);
+    bool is_player_creature(const creature_t& creature_p) const noexcept;
+    void report_target_changes();
     void set_creature_destination(
         std::uint64_t id_p,
         position_t destination_p

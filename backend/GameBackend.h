@@ -20,6 +20,7 @@ class GameBackend : public QObject
     Q_PROPERTY(bool aggressive READ aggressive WRITE setAggressive NOTIFY aggressiveChanged)
     Q_PROPERTY(int mapColumnCount READ mapColumnCount CONSTANT)
     Q_PROPERTY(int mapRowCount READ mapRowCount CONSTANT)
+    Q_PROPERTY(QString playerGroup READ playerGroup NOTIFY playerStateChanged)
     Q_PROPERTY(QString playerBaseName READ playerBaseName NOTIFY playerStateChanged)
     Q_PROPERTY(int playerBaseLevel READ playerBaseLevel NOTIFY playerStateChanged)
     Q_PROPERTY(int playerGold READ playerGold NOTIFY playerStateChanged)
@@ -45,6 +46,7 @@ public:
     void setAggressive(bool aggressive_p);
     int mapColumnCount() const;
     int mapRowCount() const;
+    QString playerGroup() const;
     QString playerBaseName() const;
     int playerBaseLevel() const;
     int playerGold() const;
@@ -71,6 +73,10 @@ public:
     );
     Q_INVOKABLE void orderBaseAction(const QString& key_p);
     Q_INVOKABLE void startMatch(const QString& player_base_identifier_p);
+    Q_INVOKABLE void attackTarget(
+        std::uint64_t creature_id_p,
+        std::uint64_t target_id_p
+    );
     Q_INVOKABLE void walkCreature(
         std::uint64_t creature_id_p,
         int column_p,

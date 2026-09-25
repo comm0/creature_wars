@@ -16,13 +16,24 @@
 #ifndef NDEBUG
 namespace
 {
+QtMessageHandler felgo_message_handler = nullptr;
+
 void qt_message_handler(
     QtMsgType type_p,
     const QMessageLogContext& context_p,
     const QString& message_p
 )
 {
+    thread_local auto forwarding = false;
+
     if (qstrcmp(context_p.category, "qt.qpa.fonts") == 0) {
+        return;
+    }
+
+    if (felgo_message_handler != nullptr && !forwarding) {
+        forwarding = true;
+        felgo_message_handler(type_p, context_p, message_p);
+        forwarding = false;
         return;
     }
 
@@ -39,7 +50,6 @@ int main(int argc, char* argv[])
     debug_console::print_message(
         "Build branch: " CREATURE_WARS_BUILD_BRANCH
     );
-    qInstallMessageHandler(qt_message_handler);
 #endif
 
     QApplication app(argc, argv);
@@ -49,6 +59,9 @@ int main(int argc, char* argv[])
     QQmlApplicationEngine engine;
 
     felgo.initialize(&engine);
+#ifndef NDEBUG
+    felgo_message_handler = qInstallMessageHandler(qt_message_handler);
+#endif
 
     engine.setInitialProperties({
         {QStringLiteral("gameBackend"), QVariant::fromValue(&game_backend)}

@@ -30,9 +30,11 @@ Item {
     required property int damageRevision
     required property int attackRevision
     required property int walkCommandRevision
+    required property var targetId
 
     property int tileSize: 16
     property bool selected: false
+    property bool targeted: false
     property bool visionRangeVisible: false
     property int idleDotCount: 1
     property real areaWidth: 0
@@ -175,9 +177,34 @@ Item {
         }
 
         OutlineEffect {
+            id: selectionOutline
+
             source: creatureSpriteLoader
             color: "#f4df5a"
             visible: creatureView.selected
+        }
+
+        OutlineEffect {
+            id: targetOutline
+
+            source: creatureSpriteLoader
+            color: "#ff4a3d"
+            visible: creatureView.targeted && !creatureView.selected
+
+            SequentialAnimation on opacity {
+                running: targetOutline.visible
+                loops: Animation.Infinite
+
+                NumberAnimation {
+                    to: 0.35
+                    duration: 380
+                }
+
+                NumberAnimation {
+                    to: 1
+                    duration: 380
+                }
+            }
         }
     }
 
@@ -190,6 +217,23 @@ Item {
     }
 
     onSpriteAnimationNameChanged: showSpriteAnimation()
+
+    onSelectedChanged: {
+        if (selected) {
+            selectionPulse.restart()
+        }
+    }
+
+    NumberAnimation {
+        id: selectionPulse
+
+        target: selectionOutline
+        property: "thickness"
+        from: 2.5
+        to: 1
+        duration: 250
+        easing.type: Easing.OutCubic
+    }
 
     SequentialAnimation {
         id: creatureAttackAnimation
@@ -331,6 +375,14 @@ Item {
         width: creatureView.width
         height: creatureView.height
         z: creatureHover.hovered ? 1 : 0
+
+        TargetReticle {
+            x: creatureView.visualLeft + 6
+            y: creatureView.visualTop + 6
+            width: creatureView.visualWidth - 8
+            height: creatureView.visualHeight - 8
+            visible: creatureView.targeted
+        }
 
         Text {
             id: creatureDamageText

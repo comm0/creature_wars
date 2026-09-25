@@ -51,6 +51,7 @@ Scene {
         playerFood: gameScene.gameBackend.playerFood
         gameRunning: gameScene.gameBackend.running
         gameTimeScale: gameScene.gameBackend.timeScale
+        playerGroup: gameScene.gameBackend.playerGroup
         spawnEnabled: gameScene.gameBackend.running
         visionRangesVisible: rangeToggle.checked
 
@@ -64,6 +65,10 @@ Scene {
 
         onCreatureTypeSpawnRequested: function(identifier, column, row) {
             gameScene.gameBackend.spawnCreature(identifier, column, row)
+        }
+
+        onAttackRequested: function(creatureId, targetId) {
+            gameScene.gameBackend.attackTarget(creatureId, targetId)
         }
 
         onWalkRequested: function(creatureId, column, row) {
@@ -187,8 +192,8 @@ Scene {
             }
 
             HudToggle {
-                iconType: IconType.flag
-                text: qsTr("Aggressive")
+                iconType: IconType.crosshairs
+                text: qsTr("Attack move")
                 checked: gameScene.gameBackend.aggressive
 
                 onToggled: gameScene.gameBackend.aggressive = !checked

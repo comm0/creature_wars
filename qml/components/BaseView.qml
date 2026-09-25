@@ -35,12 +35,14 @@ Item {
     property bool gameRunning: true
     property real gameTimeScale: 1
     property real mapScale: 1
+    property bool selected: false
+    property bool targeted: false
 
     readonly property int artLevel: Math.max(1, Math.min(baseLevel, 4))
     readonly property int artHeight: [12, 22, 28, 34][artLevel - 1]
     readonly property real identityScale: 1 / Math.max(mapScale, 0.01)
     readonly property bool menuOpen: isPlayerBase
-        && (baseHover.hovered || radialMenu.hovered || menuCloseTimer.running)
+        && (selected || baseHover.hovered || radialMenu.hovered || menuCloseTimer.running)
 
     signal actionRequested(string actionKey)
 
@@ -51,6 +53,8 @@ Item {
     z: column + baseSize - 1 + row + row / 1000
 
     MultiResolutionImage {
+        id: baseImage
+
         x: -baseView.artHeight
         y: -baseView.artHeight
         width: baseView.width + baseView.artHeight
@@ -61,6 +65,14 @@ Item {
         layer.effect: TintEffect {
             color: baseView.baseColor
         }
+    }
+
+    OutlineEffect {
+        id: baseSelectionOutline
+
+        source: baseImage
+        color: baseView.targeted ? "#ff4a3d" : "#f4df5a"
+        visible: baseView.selected || baseView.targeted
     }
 
     Rectangle {
@@ -83,6 +95,15 @@ Item {
         width: baseView.width
         height: baseView.height
         z: baseHover.hovered || baseView.menuOpen ? 1 : 0
+
+        TargetReticle {
+            x: -baseView.artHeight - 2
+            y: -baseView.artHeight - 2
+            width: baseView.width + baseView.artHeight + 4
+            height: baseView.height + baseView.artHeight + 4
+            cornerLength: 8
+            visible: baseView.targeted
+        }
 
         Item {
             id: baseIdentity

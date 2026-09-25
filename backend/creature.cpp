@@ -36,15 +36,33 @@ void creature_t::on_think(game_t& game_p)
         return;
     }
 
-    auto enemy = target_id_.has_value()
-        ? game_p.find_visible_enemy(*this, *target_id_)
-        : std::nullopt;
+    if (commanded_target_id_.has_value()) {
+        const auto commanded = game_p.find_commanded_target(*this, *commanded_target_id_);
+
+        if (!commanded.has_value()) {
+            commanded_target_id_.reset();
+            clear_target(game_p);
+        } else {
+            target_id_ = commanded->id_;
+
+            if (game_p.is_in_attack_range(*this, *commanded)) {
+                stop_movement(game_p);
+            } else {
+                activate_target_movement(game_p, *commanded);
+            }
+
+            return;
+        }
+    }
+
+    auto enemy = current_target(game_p);
 
     if (!enemy.has_value()) {
         clear_target(game_p);
     }
 
     if (!game_p.aggressive() && manual_destination_.has_value()) {
+        clear_target(game_p);
         activate_manual_movement(game_p);
         return;
     }
@@ -86,10 +104,13 @@ void creature_t::on_attacking(
         return;
     }
 
-    const auto target = game_p.find_visible_enemy(*this, *target_id_);
+    const auto target = current_target(game_p);
 
     if (!target.has_value()) {
-        clear_target(game_p);
+        if (!commanded_target_id_.has_value()) {
+            clear_target(game_p);
+        }
+
         return;
     }
 
@@ -121,6 +142,23 @@ bool creature_t::heal(int amount_p) noexcept
 
     health_ = std::min(type_.health(), health_ + amount_p);
     return true;
+}
+
+std::optional<target_t> creature_t::current_target(const game_t& game_p) const
+{
+    if (!target_id_.has_value()) {
+        return std::nullopt;
+    }
+
+    return commanded_target_id_ == target_id_
+        ? game_p.find_commanded_target(*this, *target_id_)
+        : game_p.find_visible_enemy(*this, *target_id_);
+}
+
+bool creature_t::recently_hit(std::chrono::steady_clock::time_point now_p) const noexcept
+{
+    return last_hit_time_.has_value()
+        && now_p - *last_hit_time_ < std::chrono::seconds{2};
 }
 
 void creature_t::update_movement(
@@ -169,9 +207,7 @@ void creature_t::update_movement(
             return;
         }
     } else {
-        const auto target = target_id_.has_value()
-            ? game_p.find_visible_enemy(*this, *target_id_)
-            : std::nullopt;
+        const auto target = current_target(game_p);
 
         if (!target.has_value() || game_p.is_in_attack_range(*this, *target)) {
             stop_movement(game_p);
@@ -185,6 +221,13 @@ void creature_t::update_movement(
     if (game_p.move_creature_towards(id_, *destination)) {
         blocked_path_retry_count_ = 0;
         next_movement_time_ = now_p + movement_interval();
+        return;
+    }
+
+    if (active_movement_goal_ == movement_goal_t::manual
+        && !game_p.aggressive()
+        && recently_hit(now_p)) {
+        finish_manual_movement(game_p);
         return;
     }
 

@@ -53,6 +53,10 @@ public:
         int radius_p,
         std::uint32_t color_p
     ) override;
+    void on_creature_target_changed(
+        std::uint64_t id_p,
+        std::uint64_t target_id_p
+    ) override;
 
 signals:
     void gameTick();
@@ -113,4 +117,5 @@ signals:
     void baseAttackPerformed(std::uint64_t id_p, position_t target_position_p);
     void baseRemoved(std::uint64_t id_p);
     void playerStateChanged(player_state_t state_p);
+    void creatureTargetChanged(std::uint64_t id_p, std::uint64_t target_id_p);
 };

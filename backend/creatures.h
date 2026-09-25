@@ -48,6 +48,7 @@ public:
     void for_each(
         const std::function<void(const creature_t&)>& creature_handler_p
     ) const;
+    void for_each(const std::function<void(creature_t&)>& creature_handler_p);
 
 private:
     static std::uint64_t next_uid_;

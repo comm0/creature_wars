@@ -117,3 +117,12 @@ void creatures_t::for_each(
         }
     }
 }
+
+void creatures_t::for_each(const std::function<void(creature_t&)>& creature_handler_p)
+{
+    for (const auto& creature : creatures_) {
+        if (creature != nullptr) {
+            creature_handler_p(*creature);
+        }
+    }
+}

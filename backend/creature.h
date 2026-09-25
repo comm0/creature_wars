@@ -62,10 +62,32 @@ public:
         const auto destination_changed = !manual_destination_.has_value()
             || *manual_destination_ != destination_p;
         manual_destination_ = destination_p;
+        commanded_target_id_.reset();
 
         if (destination_changed) {
             blocked_path_retry_count_ = 0;
         }
+    }
+
+    void command_attack(std::uint64_t target_id_p) noexcept
+    {
+        commanded_target_id_ = target_id_p;
+        manual_destination_.reset();
+    }
+
+    std::optional<std::uint64_t> target_id() const noexcept
+    {
+        return target_id_;
+    }
+
+    bool take_target_change() noexcept
+    {
+        if (reported_target_id_ == target_id_) {
+            return false;
+        }
+
+        reported_target_id_ = target_id_;
+        return true;
     }
 
     void move_to(position_t position_p) noexcept
@@ -118,6 +140,11 @@ public:
     }
 
     void drain_health(int damage_p) noexcept;
+
+    void register_hit(std::chrono::steady_clock::time_point time_p) noexcept
+    {
+        last_hit_time_ = time_p;
+    }
     bool heal(int amount_p) noexcept;
 
     creature_state_t state() const noexcept
@@ -175,6 +202,8 @@ private:
     void block_target(position_t target_position_p, game_t& game_p);
     void clear_target(game_t& game_p);
     bool target_was_blocked(const target_t& target_p) const noexcept;
+    std::optional<target_t> current_target(const game_t& game_p) const;
+    bool recently_hit(std::chrono::steady_clock::time_point now_p) const noexcept;
     std::chrono::steady_clock::duration movement_interval() const;
 
     std::uint64_t id_;
@@ -183,6 +212,9 @@ private:
     std::optional<position_t> manual_destination_;
     std::optional<position_t> idle_starting_position_;
     std::optional<std::uint64_t> target_id_;
+    std::optional<std::uint64_t> commanded_target_id_;
+    std::optional<std::uint64_t> reported_target_id_;
+    std::optional<std::chrono::steady_clock::time_point> last_hit_time_;
     std::optional<std::uint64_t> fleeing_from_id_;
     std::optional<std::uint64_t> blocked_target_id_;
     std::optional<position_t> blocked_target_position_;

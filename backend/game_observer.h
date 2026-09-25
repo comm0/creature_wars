@@ -53,4 +53,8 @@ public:
         int radius_p,
         std::uint32_t color_p
     ) = 0;
+    virtual void on_creature_target_changed(
+        std::uint64_t id_p,
+        std::uint64_t target_id_p
+    ) = 0;
 };

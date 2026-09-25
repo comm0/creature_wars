@@ -814,6 +814,7 @@ void game_t::dispatch_tick()
     heal_near_player_base();
     remove_dead_creatures();
     remove_dead_bases();
+    report_target_changes();
 
     observer_->on_game_tick();
 
@@ -827,6 +828,7 @@ void game_t::dispatch_movement(
 )
 {
     creatures_.update_movement(*this, now_p);
+    report_target_changes();
 }
 
 #ifndef NDEBUG
@@ -879,11 +881,76 @@ void game_t::set_creature_destination(
 {
     auto* creature = creatures_.find(id_p);
 
-    if (creature != nullptr) {
+    if (creature != nullptr && is_player_creature(*creature)) {
         creature->request_walk(destination_p);
         observer_->on_creature_walk_requested(id_p);
         creature->on_think(*this);
+        report_target_changes();
     }
+}
+
+void game_t::request_attack_target(std::uint64_t id_p, std::uint64_t target_id_p)
+{
+    post([this, id_p, target_id_p]() {
+        set_attack_target(id_p, target_id_p);
+    });
+}
+
+void game_t::set_attack_target(std::uint64_t id_p, std::uint64_t target_id_p)
+{
+    auto* creature = creatures_.find(id_p);
+
+    if (creature == nullptr
+        || !is_player_creature(*creature)
+        || !find_commanded_target(*creature, target_id_p).has_value()) {
+        return;
+    }
+
+    creature->command_attack(target_id_p);
+    creature->on_think(*this);
+    report_target_changes();
+}
+
+bool game_t::is_player_creature(const creature_t& creature_p) const noexcept
+{
+    return player_state_.base_group_.empty()
+        || creature_p.type().group() == player_state_.base_group_;
+}
+
+void game_t::report_target_changes()
+{
+    creatures_.for_each([this](creature_t& creature_p) {
+        if (creature_p.take_target_change()) {
+            observer_->on_creature_target_changed(
+                creature_p.id(),
+                creature_p.target_id().value_or(0)
+            );
+        }
+    });
+}
+
+std::optional<target_t> game_t::find_commanded_target(
+    const creature_t& creature_p,
+    std::uint64_t target_id_p
+) const noexcept
+{
+    const auto& group = creature_p.type().group();
+
+    if (const auto* target = creatures_.find(target_id_p); target != nullptr) {
+        if (target->is_dead() || target->type().group() == group) {
+            return std::nullopt;
+        }
+
+        return target_t{target->id(), target->position()};
+    }
+
+    const auto* base = find_base(target_id_p);
+
+    if (base == nullptr || base->is_dead() || base->type().group() == group) {
+        return std::nullopt;
+    }
+
+    return target_t{base->id(), base->closest_position_to(creature_p.position())};
 }
 
 void game_t::set_aggressive(bool aggressive_p)
@@ -1253,6 +1320,7 @@ void game_t::damage_target(std::uint64_t target_id_p, int damage_p)
         creature->drain_health(damage_p);
 
         if (creature->health() != previous_health) {
+            creature->register_hit(current_time());
             observer_->on_creature_health_changed(creature->id(), creature->health());
         }
 

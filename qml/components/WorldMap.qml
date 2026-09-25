@@ -24,7 +24,25 @@ Item {
     property int contextColumn: 0
     property int contextRow: 0
     property var selectedCreatureIds: []
+    property var selectedBaseId: 0
+    property string playerGroup
     property int idleDotCount: 1
+    readonly property var targetedIds: {
+        const targetIds = []
+
+        for (let index = 0; index < creatureRepeater.count; ++index) {
+            const creature = creatureRepeater.itemAt(index) as CreatureView
+
+            if (creature !== null
+                    && creature.selected
+                    && creature.targetId > 0
+                    && targetIds.indexOf(creature.targetId) === -1) {
+                targetIds.push(creature.targetId)
+            }
+        }
+
+        return targetIds
+    }
 
     signal baseSpawnRequested(string identifier, int column, int row)
     signal baseActionRequested(string actionKey)
@@ -34,6 +52,27 @@ Item {
         int row
     )
     signal walkRequested(var creatureId, int column, int row)
+    signal attackRequested(var creatureId, var targetId)
+
+    function isOwn(group) {
+        return playerGroup.length === 0 || group === playerGroup
+    }
+
+    function baseAt(column, row) {
+        for (let index = 0; index < baseRepeater.count; ++index) {
+            const base = baseRepeater.itemAt(index) as BaseView
+
+            if (base !== null
+                    && column >= base.column
+                    && column < base.column + base.baseSize
+                    && row >= base.row
+                    && row < base.row + base.baseSize) {
+                return base
+            }
+        }
+
+        return null
+    }
 
     function hasBase(identifier) {
         for (let index = 0; index < baseRepeater.count; ++index) {
@@ -52,13 +91,13 @@ Item {
     }
 
     // Front-most creature whose drawn graphic contains the point.
-    function creatureAt(position) {
+    function creatureAt(position, own) {
         let frontCreature = null
 
         for (let index = 0; index < creatureRepeater.count; ++index) {
             const creature = creatureRepeater.itemAt(index) as CreatureView
 
-            if (creature === null) {
+            if (creature === null || root.isOwn(creature.creatureGroup) !== own) {
                 continue
             }
 
@@ -78,8 +117,13 @@ Item {
     }
 
     function selectAt(position) {
-        const creature = creatureAt(position)
+        const creature = creatureAt(position, true)
+        const base = creature === null
+            ? baseAt(Math.floor(position.x / tileSize), Math.floor(position.y / tileSize))
+            : null
+
         selectedCreatureIds = creature === null ? [] : [creature.creatureId]
+        selectedBaseId = base !== null && isOwn(base.baseGroup) ? base.baseId : 0
     }
 
     function selectInRectangle(left, top, right, bottom) {
@@ -89,6 +133,7 @@ Item {
             const creature = creatureRepeater.itemAt(index) as CreatureView
 
             if (creature !== null
+                    && root.isOwn(creature.creatureGroup)
                     && creature.x + creature.width >= left
                     && creature.x <= right
                     && creature.y + creature.height >= top
@@ -98,6 +143,7 @@ Item {
         }
 
         selectedCreatureIds = selectedIds
+        selectedBaseId = 0
     }
 
     function removeSelectedCreature(creatureId) {
@@ -138,12 +184,23 @@ Item {
             const row = Math.floor(eventPoint.position.y / root.tileSize)
 
             if (root.selectedCreatureIds.length > 0) {
+                const enemy = root.creatureAt(eventPoint.position, false)
+                const base = enemy === null ? root.baseAt(column, row) : null
+                const targetId = enemy !== null
+                    ? enemy.creatureId
+                    : base !== null && !root.isOwn(base.baseGroup) ? base.baseId : 0
+
                 moveTargetMarker.x = column * root.tileSize
                 moveTargetMarker.y = row * root.tileSize
+                moveTargetMarker.attack = targetId !== 0
                 moveTargetAnimation.restart()
 
                 for (const creatureId of root.selectedCreatureIds) {
-                    root.walkRequested(creatureId, column, row)
+                    if (targetId !== 0) {
+                        root.attackRequested(creatureId, targetId)
+                    } else {
+                        root.walkRequested(creatureId, column, row)
+                    }
                 }
 
                 return
@@ -199,6 +256,8 @@ Item {
     Item {
         id: moveTargetMarker
 
+        property bool attack: false
+
         width: root.tileSize
         height: root.tileSize
         opacity: 0
@@ -210,7 +269,7 @@ Item {
             height: 2
             radius: 1
             rotation: 45
-            color: "#f4df5a"
+            color: moveTargetMarker.attack ? "#ff4a3d" : "#f4df5a"
         }
 
         Rectangle {
@@ -219,7 +278,7 @@ Item {
             height: 2
             radius: 1
             rotation: -45
-            color: "#f4df5a"
+            color: moveTargetMarker.attack ? "#ff4a3d" : "#f4df5a"
         }
     }
 
@@ -370,6 +429,8 @@ Item {
                 gameRunning: root.gameRunning
                 gameTimeScale: root.gameTimeScale
                 mapScale: root.scale
+                selected: baseId === root.selectedBaseId
+                targeted: root.targetedIds.indexOf(baseId) !== -1
 
                 onActionRequested: function(actionKey) {
                     root.baseActionRequested(actionKey)
@@ -385,6 +446,7 @@ Item {
             delegate: CreatureView {
                 tileSize: root.tileSize
                 selected: root.isCreatureSelected(creatureId)
+                targeted: root.targetedIds.indexOf(creatureId) !== -1
                 visionRangeVisible: root.visionRangesVisible
                 idleDotCount: root.idleDotCount
                 gameTimeScale: root.gameTimeScale

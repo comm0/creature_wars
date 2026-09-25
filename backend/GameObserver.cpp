@@ -328,3 +328,15 @@ void GameObserver::on_area_attack(
         Qt::QueuedConnection
     );
 }
+
+void GameObserver::on_creature_target_changed(
+    std::uint64_t id_p,
+    std::uint64_t target_id_p
+)
+{
+    QMetaObject::invokeMethod(
+        this,
+        [this, id_p, target_id_p]() { emit creatureTargetChanged(id_p, target_id_p); },
+        Qt::QueuedConnection
+    );
+}

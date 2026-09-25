@@ -35,7 +35,8 @@ public:
         damage_amount_role,
         damage_revision_role,
         attack_revision_role,
-        walk_command_revision_role
+        walk_command_revision_role,
+        target_id_role
     };
 
     explicit CreaturesModel(QObject* parent_p = nullptr);
@@ -70,6 +71,7 @@ public:
     void notify_creature_attack(std::uint64_t id_p);
     void notify_creature_walk_command(std::uint64_t id_p);
     void remove_creature(std::uint64_t id_p);
+    void update_creature_target(std::uint64_t id_p, std::uint64_t target_id_p);
 
 private:
     struct creature_entry_t
@@ -94,6 +96,7 @@ private:
         int damage_revision_;
         int attack_revision_;
         int walk_command_revision_;
+        std::uint64_t target_id_;
     };
 
     std::vector<creature_entry_t> creatures_;

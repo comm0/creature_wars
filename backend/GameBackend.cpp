@@ -112,6 +112,12 @@ GameBackend::GameBackend(QObject* parent_p)
     );
     connect(
         &game_observer_,
+        &GameObserver::creatureTargetChanged,
+        &creatures_model_,
+        &CreaturesModel::update_creature_target
+    );
+    connect(
+        &game_observer_,
         &GameObserver::creatureRemoved,
         this,
         [this](std::uint64_t id_p) {
@@ -243,6 +249,11 @@ int GameBackend::mapColumnCount() const
 int GameBackend::mapRowCount() const
 {
     return game_constants::map_row_count;
+}
+
+QString GameBackend::playerGroup() const
+{
+    return QString::fromStdString(player_state_.base_group_);
 }
 
 QString GameBackend::playerBaseName() const
@@ -380,6 +391,18 @@ void GameBackend::orderBaseAction(const QString& key_p)
     }
 
     game_.request_order_base_action(key_p.toStdString());
+}
+
+void GameBackend::attackTarget(
+    std::uint64_t creature_id_p,
+    std::uint64_t target_id_p
+)
+{
+    if (!game_running_) {
+        return;
+    }
+
+    game_.request_attack_target(creature_id_p, target_id_p);
 }
 
 void GameBackend::walkCreature(
