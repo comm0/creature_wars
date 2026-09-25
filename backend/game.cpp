@@ -1624,6 +1624,8 @@ std::optional<target_t> game_t::find_visible_enemy(
     if (base == nullptr
         || base->is_dead()
         || base->type().group() == group
+        || (creature_p.type().identifier() == "wolf"
+            && base->type().identifier() == "troll_lair")
         || base->distance_to(creature_p.position())
             > creature_p.type().vision_range()) {
         return std::nullopt;
