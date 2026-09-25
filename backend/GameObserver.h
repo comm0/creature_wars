@@ -93,10 +93,5 @@ signals:
     void baseHealthChanged(std::uint64_t id_p, int health_p);
     void baseAttackPerformed(std::uint64_t id_p, position_t target_position_p);
     void baseRemoved(std::uint64_t id_p);
-    void playerStateChanged(
-        QString base_name_p,
-        int base_level_p,
-        int gold_p,
-        int food_p
-    );
+    void playerStateChanged(player_state_t state_p);
 };

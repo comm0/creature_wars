@@ -16,9 +16,11 @@
 #include "base_type_registry.h"
 #include "creatures.h"
 #include "creature_type_registry.h"
+#include "economy_settings.h"
 #include "game_event_dispatcher.h"
 #include "game_map.h"
 #include "game_observer.h"
+#include "game_scheduler.h"
 #include "visibility_system.h"
 
 class game_t
@@ -26,7 +28,8 @@ class game_t
 public:
     game_t(
         const std::string& creature_types_json_p,
-        const std::string& base_types_json_p
+        const std::string& base_types_json_p,
+        const std::string& economy_json_p
     );
     ~game_t();
 
@@ -116,6 +119,11 @@ private:
     void set_aggressive(bool aggressive_p);
     void run(const std::stop_token& stop_token_p);
     void collect_actions();
+    void schedule_tick(game_scheduler_t::time_point_t time_p);
+    void schedule_income(
+        resource_state_t player_state_t::* resource_p,
+        game_scheduler_t::time_point_t time_p
+    );
     void dispatch_tick();
     void dispatch_movement(std::chrono::steady_clock::time_point now_p);
     void remove_dead_creatures();
@@ -133,8 +141,13 @@ private:
 #endif
 
     game_event_dispatcher_t dispatcher_;
+    game_scheduler_t scheduler_;
+    std::optional<game_scheduler_t::time_point_t> stopped_at_;
+    bool tick_scheduled_ = false;
+    std::uint64_t match_id_ = 0;
     creature_type_registry_t creature_type_registry_;
     base_type_registry_t base_type_registry_;
+    economy_settings_t economy_;
     creatures_t creatures_;
     std::vector<std::unique_ptr<base_t>> bases_;
     game_map_t game_map_;

@@ -84,6 +84,8 @@ set(CoreFiles
     backend/creature_type_registry.cpp
     backend/type_parsing.h
     backend/type_parsing.cpp
+    backend/economy_settings.h
+    backend/economy_settings.cpp
     backend/base_type.h
     backend/base_type_registry.h
     backend/base_type_registry.cpp
@@ -104,6 +106,8 @@ set(CoreFiles
     backend/game.cpp
     backend/game_event_dispatcher.h
     backend/game_event_dispatcher.cpp
+    backend/game_scheduler.h
+    backend/game_scheduler.cpp
 )
 
 add_library(creature_wars_core STATIC ${CoreFiles})
@@ -238,6 +242,7 @@ if(CREATURE_WARS_BUILD_APP)
         FILES
             data/creature_types.json
             data/base_types.json
+            data/economy.json
             ${AssetFiles}
     )
 

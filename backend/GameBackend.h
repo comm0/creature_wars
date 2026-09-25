@@ -20,6 +20,12 @@ class GameBackend : public QObject
     Q_PROPERTY(int playerBaseLevel READ playerBaseLevel NOTIFY playerStateChanged)
     Q_PROPERTY(int playerGold READ playerGold NOTIFY playerStateChanged)
     Q_PROPERTY(int playerFood READ playerFood NOTIFY playerStateChanged)
+    Q_PROPERTY(int goldIncome READ goldIncome NOTIFY playerStateChanged)
+    Q_PROPERTY(int goldIncomeInterval READ goldIncomeInterval NOTIFY playerStateChanged)
+    Q_PROPERTY(int goldIncomeCycle READ goldIncomeCycle NOTIFY playerStateChanged)
+    Q_PROPERTY(int foodIncome READ foodIncome NOTIFY playerStateChanged)
+    Q_PROPERTY(int foodIncomeInterval READ foodIncomeInterval NOTIFY playerStateChanged)
+    Q_PROPERTY(int foodIncomeCycle READ foodIncomeCycle NOTIFY playerStateChanged)
 
 public:
     explicit GameBackend(QObject* parent_p = nullptr);
@@ -36,6 +42,12 @@ public:
     int playerBaseLevel() const;
     int playerGold() const;
     int playerFood() const;
+    int goldIncome() const;
+    int goldIncomeInterval() const;
+    int goldIncomeCycle() const;
+    int foodIncome() const;
+    int foodIncomeInterval() const;
+    int foodIncomeCycle() const;
 
     Q_INVOKABLE void start();
     Q_INVOKABLE void stop();
@@ -92,8 +104,5 @@ private:
     BasesModel bases_model_;
     bool game_running_ = false;
     bool aggressive_ = true;
-    QString player_base_name_;
-    int player_base_level_ = 1;
-    int player_gold_ = 0;
-    int player_food_ = 0;
+    player_state_t player_state_;
 };

@@ -110,16 +110,28 @@ Scene {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 12
 
-            HudStat {
+            HudResource {
+                anchors.verticalCenter: parent.verticalCenter
                 imageSource: "qrc:/assets/ui/gold.png"
-                textColor: "#f2c438"
-                text: gameScene.gameBackend.playerGold
+                color: "#f2c438"
+                resourceName: qsTr("gold")
+                amount: gameScene.gameBackend.playerGold
+                income: gameScene.gameBackend.goldIncome
+                incomeInterval: gameScene.gameBackend.goldIncomeInterval
+                incomeCycle: gameScene.gameBackend.goldIncomeCycle
+                running: gameScene.gameBackend.running
             }
 
-            HudStat {
+            HudResource {
+                anchors.verticalCenter: parent.verticalCenter
                 imageSource: "qrc:/assets/ui/food.png"
-                textColor: "#e0955a"
-                text: gameScene.gameBackend.playerFood
+                color: "#e0955a"
+                resourceName: qsTr("food")
+                amount: gameScene.gameBackend.playerFood
+                income: gameScene.gameBackend.foodIncome
+                incomeInterval: gameScene.gameBackend.foodIncomeInterval
+                incomeCycle: gameScene.gameBackend.foodIncomeCycle
+                running: gameScene.gameBackend.running
             }
         }
 

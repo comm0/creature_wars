@@ -30,7 +30,8 @@ GameBackend::GameBackend(QObject* parent_p)
     , game_observer_(this)
     , game_(
         load_resource(QStringLiteral(":/data/creature_types.json")),
-        load_resource(QStringLiteral(":/data/base_types.json"))
+        load_resource(QStringLiteral(":/data/base_types.json")),
+        load_resource(QStringLiteral(":/data/economy.json"))
     )
 {
     connect(
@@ -144,11 +145,8 @@ GameBackend::GameBackend(QObject* parent_p)
         &game_observer_,
         &GameObserver::playerStateChanged,
         this,
-        [this](QString base_name_p, int base_level_p, int gold_p, int food_p) {
-            player_base_name_ = std::move(base_name_p);
-            player_base_level_ = base_level_p;
-            player_gold_ = gold_p;
-            player_food_ = food_p;
+        [this](player_state_t state_p) {
+            player_state_ = std::move(state_p);
             emit playerStateChanged();
         }
     );
@@ -208,22 +206,52 @@ int GameBackend::mapRowCount() const
 
 QString GameBackend::playerBaseName() const
 {
-    return player_base_name_;
+    return QString::fromStdString(player_state_.base_name_);
 }
 
 int GameBackend::playerBaseLevel() const
 {
-    return player_base_level_;
+    return player_state_.base_level_;
 }
 
 int GameBackend::playerGold() const
 {
-    return player_gold_;
+    return player_state_.gold_.amount_;
 }
 
 int GameBackend::playerFood() const
 {
-    return player_food_;
+    return player_state_.food_.amount_;
+}
+
+int GameBackend::goldIncome() const
+{
+    return player_state_.gold_.income_;
+}
+
+int GameBackend::goldIncomeInterval() const
+{
+    return static_cast<int>(player_state_.gold_.income_interval_.count());
+}
+
+int GameBackend::goldIncomeCycle() const
+{
+    return player_state_.gold_.income_cycle_;
+}
+
+int GameBackend::foodIncome() const
+{
+    return player_state_.food_.income_;
+}
+
+int GameBackend::foodIncomeInterval() const
+{
+    return static_cast<int>(player_state_.food_.income_interval_.count());
+}
+
+int GameBackend::foodIncomeCycle() const
+{
+    return player_state_.food_.income_cycle_;
 }
 
 void GameBackend::start()

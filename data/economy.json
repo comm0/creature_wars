@@ -1,0 +1,14 @@
+{
+  "startingGold": 0,
+  "startingFood": 0,
+  "income": {
+    "gold": {
+      "amount": 1,
+      "intervalMs": 1000
+    },
+    "food": {
+      "amount": 1,
+      "intervalMs": 10000
+    }
+  }
+}

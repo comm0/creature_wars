@@ -48,6 +48,22 @@ add_test(
     COMMAND game_map_tests
 )
 
+add_executable(game_scheduler_tests
+    game_scheduler_test.cpp
+)
+
+target_link_libraries(game_scheduler_tests
+    PRIVATE
+        creature_wars_core
+        creature_wars_warnings
+        GTest::gtest_main
+)
+
+add_test(
+    NAME game_scheduler_tests
+    COMMAND game_scheduler_tests
+)
+
 add_executable(pathfinder_tests
     pathfinder_test.cpp
 )

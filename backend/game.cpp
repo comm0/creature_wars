@@ -52,10 +52,12 @@ int position_distance(position_t left_p, position_t right_p) noexcept
 /*! Creates a stopped game. */
 game_t::game_t(
     const std::string& creature_types_json_p,
-    const std::string& base_types_json_p
+    const std::string& base_types_json_p,
+    const std::string& economy_json_p
 )
     : creature_type_registry_(creature_types_json_p)
     , base_type_registry_(base_types_json_p)
+    , economy_(parse_economy_settings(economy_json_p))
 {
     for (const auto& base_type : base_type_registry_.all()) {
         static_cast<void>(creature_type_registry_.get(base_type.spawn_creature()));
@@ -79,6 +81,11 @@ void game_t::start(igame_observer_t& observer_p)
 
         observer_ = &observer_p;
         thread_running_ = true;
+    }
+
+    if (stopped_at_.has_value()) {
+        scheduler_.delay_all(std::chrono::steady_clock::now() - *stopped_at_);
+        stopped_at_.reset();
     }
 
     try {
@@ -109,6 +116,7 @@ void game_t::stop()
     thread_.request_stop();
     actions_available_.notify_one();
     thread_.join();
+    stopped_at_ = std::chrono::steady_clock::now();
 
     {
         std::lock_guard<std::mutex> lock(actions_mutex_);
@@ -139,27 +147,33 @@ void game_t::post(std::function<void()> event_p)
 
 void game_t::run(const std::stop_token& stop_token_p)
 {
-    auto next_tick = std::chrono::steady_clock::now() + game_constants::tick_interval;
+    if (!tick_scheduled_) {
+        tick_scheduled_ = true;
+        schedule_tick(std::chrono::steady_clock::now() + game_constants::tick_interval);
+    }
+
     publish_creatures();
 
     while (!stop_token_p.stop_requested()) {
-        auto next_wake_time = next_tick;
+        auto next_wake_time = scheduler_.next_time();
         const auto next_movement_time = creatures_.next_movement_time();
 
         if (next_movement_time.has_value()
-            && *next_movement_time < next_wake_time) {
-            next_wake_time = *next_movement_time;
+            && (!next_wake_time.has_value() || *next_movement_time < *next_wake_time)) {
+            next_wake_time = next_movement_time;
         }
 
         {
             std::unique_lock lock(actions_mutex_);
-            actions_available_.wait_until(
-                lock,
-                next_wake_time,
-                [this, &stop_token_p]() {
-                    return stop_token_p.stop_requested() || !actions_.empty();
-                }
-            );
+            const auto wake_condition = [this, &stop_token_p]() {
+                return stop_token_p.stop_requested() || !actions_.empty();
+            };
+
+            if (next_wake_time.has_value()) {
+                actions_available_.wait_until(lock, *next_wake_time, wake_condition);
+            } else {
+                actions_available_.wait(lock, wake_condition);
+            }
         }
 
         if (stop_token_p.stop_requested()) {
@@ -168,11 +182,8 @@ void game_t::run(const std::stop_token& stop_token_p)
 
         collect_actions();
 
-        const auto now = std::chrono::steady_clock::now();
-
-        if (now >= next_tick) {
-            dispatcher_.enqueue([this]() { dispatch_tick(); });
-            next_tick = now + game_constants::tick_interval;
+        for (auto& event : scheduler_.take_due(std::chrono::steady_clock::now())) {
+            dispatcher_.enqueue(std::move(event));
         }
 
         dispatcher_.dispatch_pending();
@@ -241,8 +252,27 @@ void game_t::start_match(const std::string& player_base_identifier_p)
     clear_world();
 
     const auto& player_base = base_type_registry_.get(player_base_identifier_p);
-    player_state_ = player_state_t{player_base.name(), 1, 0, 0};
+    const auto now = std::chrono::steady_clock::now();
+    ++match_id_;
+    player_state_ = player_state_t{
+        player_base.name(),
+        1,
+        {
+            economy_.starting_gold_,
+            economy_.gold_income_.amount_,
+            economy_.gold_income_.interval_,
+            0
+        },
+        {
+            economy_.starting_food_,
+            economy_.food_income_.amount_,
+            economy_.food_income_.interval_,
+            0
+        }
+    };
     observer_->on_player_state_changed(player_state_);
+    schedule_income(&player_state_t::gold_, now + economy_.gold_income_.interval_);
+    schedule_income(&player_state_t::food_, now + economy_.food_income_.interval_);
     std::vector<const base_type_t*> enemy_bases;
 
     for (const auto& base_type : base_type_registry_.all()) {
@@ -408,6 +438,40 @@ void game_t::spawn_creature(
         creatures_,
         [this](std::uint64_t observer_id_p, std::uint64_t spotted_id_p) {
             notify_creature_spotted(observer_id_p, spotted_id_p);
+        }
+    );
+}
+
+void game_t::schedule_tick(game_scheduler_t::time_point_t time_p)
+{
+    scheduler_.schedule(time_p, [this](game_scheduler_t::time_point_t scheduled_time_p) {
+        dispatch_tick();
+        schedule_tick(std::max(
+            scheduled_time_p + game_constants::tick_interval,
+            std::chrono::steady_clock::now()
+        ));
+    });
+}
+
+void game_t::schedule_income(
+    resource_state_t player_state_t::* resource_p,
+    game_scheduler_t::time_point_t time_p
+)
+{
+    scheduler_.schedule(
+        time_p,
+        [this, resource_p, match_id = match_id_](
+            game_scheduler_t::time_point_t scheduled_time_p
+        ) {
+            if (match_id != match_id_) {
+                return;
+            }
+
+            auto& resource = player_state_.*resource_p;
+            resource.amount_ += resource.income_;
+            ++resource.income_cycle_;
+            observer_->on_player_state_changed(player_state_);
+            schedule_income(resource_p, scheduled_time_p + resource.income_interval_);
         }
     );
 }
