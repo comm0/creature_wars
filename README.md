@@ -32,7 +32,7 @@ and write a tutorial about it. The tutorial is written in QDoc and you can find 
 - Bases that heal nearby units with a healing aura and can fire several shots per turn
 - Computer controlled opponents and wild creatures that drop rewards
 - Win and lose conditions with a game over screen
-- Graphics in the oblique projection known from Tibia, with assets for several screen densities
+- Graphics in the oblique projection with assets for several screen densities
   (temporary sprites for now, see Assets below)
 
 ## How to play
@@ -156,18 +156,6 @@ sprites are not covered by this, see Assets below.
 - [nlohmann/json](https://github.com/nlohmann/json), MIT License
 - [GoogleTest](https://github.com/google/googletest), BSD 3-Clause License
 
-Felgo and Qt are trademarks of their owners. This project is not affiliated with or
-endorsed by Felgo GmbH, The Qt Company or CipSoft GmbH.
-
 ### Assets
 
-The creature sprites currently in the game are temporary. They are based on sprites from
-Tibia (CipSoft GmbH), added quickly to have something playable during the challenge and
-lightly changed with AI tools. They are not my work, they stay the property of their
-owners and they are not licensed for any use beyond this evaluation.
-
-Bases, UI icons and the fallback creature graphics were drawn by me or generated with
-scripts/generate_placeholders.py.
-
-All temporary sprites will be replaced with my own pixel art before any public release,
-and the whole game will move to a consistent pixel art style.
+All assets will be completely replaced in the future with original ones, either generated with AI or drawn by hand.
