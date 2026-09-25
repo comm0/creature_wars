@@ -129,7 +129,10 @@ Item {
                 styleColor: "#000000"
                 renderType: Text.CurveRendering
                 renderTypeQuality: Text.VeryHighRenderTypeQuality
-                text: baseView.baseName
+                text: qsTr("%1  HP %2/%3")
+                    .arg(baseView.baseName)
+                    .arg(baseView.health)
+                    .arg(baseView.maximumHealth)
                 visible: baseHover.hovered
             }
 
