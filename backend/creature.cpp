@@ -11,6 +11,7 @@ namespace
 constexpr int manual_path_retry_count = 10;
 constexpr int target_path_retry_count = 2;
 constexpr double idle_speed_multiplier = 0.5;
+constexpr std::chrono::seconds idle_pause_interval{1};
 }
 
 creature_t::creature_t(
@@ -190,7 +191,9 @@ void creature_t::update_movement(
             game_p.move_creature_idle(id_, *idle_starting_position_);
         }
 
-        next_movement_time_ = now_p + movement_interval();
+        next_movement_time_ = now_p
+            + movement_interval()
+            + idle_pause_interval;
         return;
     }
 
