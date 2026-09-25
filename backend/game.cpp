@@ -18,6 +18,8 @@ constexpr int start_base_edge_gap = 3;
 constexpr int max_spawn_queue = 9;
 constexpr int wildlife_minimum_base_distance = 6;
 constexpr int wildlife_maximum_base_distance = 10;
+constexpr int lair_minimum_base_distance = 10;
+constexpr int lair_maximum_base_distance = 15;
 constexpr std::chrono::seconds corpse_lifetime{30};
 const std::string spawn_prefix = "spawn:";
 const std::string training_prefix = "training:";
@@ -1146,10 +1148,22 @@ std::optional<std::uint64_t> game_t::spawn_lair_near_group(
 
     const auto position = game_map_.random_position_near(
         *base,
-        wildlife_minimum_base_distance,
-        wildlife_maximum_base_distance,
+        lair_minimum_base_distance,
+        lair_maximum_base_distance,
         [this](position_t position_p) {
-            return game_map_.can_place_base(position_p, 1)
+            const auto far_from_match_bases = std::all_of(
+                bases_.begin(),
+                bases_.end(),
+                [position_p](const auto& base_p) {
+                    return base_p->is_dead()
+                        || !base_p->type().is_match_base()
+                        || base_p->distance_to(position_p)
+                            >= lair_minimum_base_distance;
+                }
+            );
+
+            return far_from_match_bases
+                && game_map_.can_place_base(position_p, 1)
                 && has_free_adjacent_position(game_map_, position_p);
         }
     );
