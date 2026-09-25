@@ -6,6 +6,7 @@
 #include "game_constants.h"
 
 #include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <limits>
 #include <stdexcept>
@@ -14,6 +15,24 @@
 namespace
 {
 constexpr int start_base_edge_gap = 3;
+constexpr std::size_t match_base_count = 3;
+
+std::array<position_t, match_base_count> starting_base_positions(
+    int edge_offset_p
+)
+{
+    const auto top_row = edge_offset_p;
+    const auto bottom_row = game_constants::map_row_count - 1 - edge_offset_p;
+    const auto left_column = 2 * edge_offset_p;
+    const auto right_column = game_constants::map_column_count - 1 - left_column;
+    const auto middle_column = (left_column + right_column) / 2;
+
+    return {
+        position_t{middle_column, bottom_row},
+        position_t{left_column, top_row},
+        position_t{right_column, top_row}
+    };
+}
 
 int position_distance(position_t left_p, position_t right_p) noexcept
 {
@@ -232,25 +251,29 @@ void game_t::start_match(const std::string& player_base_identifier_p)
         }
     }
 
-    const auto edge_offset = [](const base_type_t& base_type_p) {
-        return start_base_edge_gap + base_type_p.size() / 2;
-    };
+    if (enemy_bases.size() + 1 != match_base_count) {
+        throw std::logic_error("A match requires exactly three bases.");
+    }
+
+    auto largest_base_size = player_base.size();
+
+    for (const auto* enemy_base : enemy_bases) {
+        largest_base_size = std::max(largest_base_size, enemy_base->size());
+    }
+
+    const auto edge_offset = start_base_edge_gap + largest_base_size / 2;
+    const auto starting_positions = starting_base_positions(edge_offset);
 
     spawn_base(
         player_base.identifier(),
-        {edge_offset(player_base), game_constants::map_row_count / 2}
+        starting_positions[0]
     );
 
-    const auto enemy_count = static_cast<int>(enemy_bases.size());
-
-    for (auto index = 0; index < enemy_count; ++index) {
-        const auto& enemy_base = *enemy_bases[static_cast<std::size_t>(index)];
+    for (std::size_t index = 0; index < enemy_bases.size(); ++index) {
+        const auto& enemy_base = *enemy_bases[index];
         spawn_base(
             enemy_base.identifier(),
-            {
-                game_constants::map_column_count - 1 - edge_offset(enemy_base),
-                (2 * index + 1) * game_constants::map_row_count / (2 * enemy_count)
-            }
+            starting_positions[index + 1]
         );
     }
 }

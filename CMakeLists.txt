@@ -11,6 +11,30 @@ option(CREATURE_WARS_WARNINGS_AS_ERRORS "Treat project warnings as errors." OFF)
 option(CREATURE_WARS_ENABLE_CLANG_TIDY "Run clang-tidy while building project targets." OFF)
 option(CREATURE_WARS_ENABLE_CPPCHECK "Run cppcheck while building project targets." OFF)
 
+set(CREATURE_WARS_MAP_SIZE "64x32" CACHE STRING "Map size preset.")
+set_property(CACHE CREATURE_WARS_MAP_SIZE PROPERTY STRINGS
+    "40x20"
+    "48x24"
+    "56x28"
+    "64x32"
+)
+
+if(CREATURE_WARS_MAP_SIZE STREQUAL "40x20")
+    set(CREATURE_WARS_MAP_COLUMN_COUNT 40)
+    set(CREATURE_WARS_MAP_ROW_COUNT 20)
+elseif(CREATURE_WARS_MAP_SIZE STREQUAL "48x24")
+    set(CREATURE_WARS_MAP_COLUMN_COUNT 48)
+    set(CREATURE_WARS_MAP_ROW_COUNT 24)
+elseif(CREATURE_WARS_MAP_SIZE STREQUAL "56x28")
+    set(CREATURE_WARS_MAP_COLUMN_COUNT 56)
+    set(CREATURE_WARS_MAP_ROW_COUNT 28)
+elseif(CREATURE_WARS_MAP_SIZE STREQUAL "64x32")
+    set(CREATURE_WARS_MAP_COLUMN_COUNT 64)
+    set(CREATURE_WARS_MAP_ROW_COUNT 32)
+else()
+    message(FATAL_ERROR "Unsupported map size: ${CREATURE_WARS_MAP_SIZE}")
+endif()
+
 include(CTest)
 include(FetchContent)
 find_package(Threads REQUIRED)
@@ -85,6 +109,10 @@ set(CoreFiles
 add_library(creature_wars_core STATIC ${CoreFiles})
 
 target_include_directories(creature_wars_core PUBLIC backend)
+target_compile_definitions(creature_wars_core PUBLIC
+    CREATURE_WARS_MAP_COLUMN_COUNT=${CREATURE_WARS_MAP_COLUMN_COUNT}
+    CREATURE_WARS_MAP_ROW_COUNT=${CREATURE_WARS_MAP_ROW_COUNT}
+)
 target_link_libraries(creature_wars_core
     PUBLIC Threads::Threads
     PRIVATE

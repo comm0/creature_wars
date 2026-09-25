@@ -7,6 +7,14 @@ Scene {
 
     required property var gameBackend
 
+    readonly property int mapTileSize: 16
+    readonly property real mapAreaHeight:
+        height - topBar.height - bottomBar.height
+    readonly property real mapScale: Math.min(
+        width / (gameBackend.mapColumnCount * mapTileSize),
+        mapAreaHeight / (gameBackend.mapRowCount * mapTileSize)
+    )
+
     width: 640
     height: 360
     scaleMode: "letterbox"
@@ -28,11 +36,13 @@ Scene {
     WorldMap {
         id: worldMap
 
-        x: 0
-        y: topBar.height
+        x: (gameScene.width - width * scale) / 2
+        y: topBar.height + (gameScene.mapAreaHeight - height * scale) / 2
         columns: gameScene.gameBackend.mapColumnCount
         rows: gameScene.gameBackend.mapRowCount
-        tileSize: 16
+        tileSize: gameScene.mapTileSize
+        scale: gameScene.mapScale
+        transformOrigin: Item.TopLeft
         creatureModel: gameScene.gameBackend.creaturesModel
         baseModel: gameScene.gameBackend.basesModel
         spawnEnabled: gameScene.gameBackend.running
@@ -132,8 +142,8 @@ Scene {
 
         anchors.left: gameScene.gameWindowAnchorItem.left
         anchors.right: gameScene.gameWindowAnchorItem.right
-        y: worldMap.y + worldMap.height
-        height: gameScene.height - y
+        y: gameScene.height - height
+        height: 24
 
         Row {
             anchors.centerIn: parent
