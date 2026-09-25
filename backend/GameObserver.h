@@ -43,6 +43,16 @@ public:
     ) override;
     void on_base_removed(std::uint64_t id_p) override;
     void on_player_state_changed(const player_state_t& state_p) override;
+    void on_base_changed(const base_t& base_p) override;
+    void on_base_actions_changed(
+        std::uint64_t base_id_p,
+        const std::vector<base_action_state_t>& actions_p
+    ) override;
+    void on_area_attack(
+        position_t center_p,
+        int radius_p,
+        std::uint32_t color_p
+    ) override;
 
 signals:
     void gameTick();
@@ -87,9 +97,18 @@ signals:
         int health_p,
         int maximum_health_p,
         int attack_p,
-        int attack_range_p,
-        QString spawn_creature_name_p
+        int range_p
     );
+    void baseChanged(
+        std::uint64_t id_p,
+        int level_p,
+        int health_p,
+        int maximum_health_p,
+        int attack_p,
+        int range_p
+    );
+    void baseActionsChanged(std::vector<base_action_state_t> actions_p);
+    void areaAttack(position_t center_p, int radius_p, QColor color_p);
     void baseHealthChanged(std::uint64_t id_p, int health_p);
     void baseAttackPerformed(std::uint64_t id_p, position_t target_position_p);
     void baseRemoved(std::uint64_t id_p);

@@ -12,10 +12,11 @@ Item {
     property int incomeInterval: 0
     property int incomeCycle: 0
     property bool running: true
+    property real gameTimeScale: 1
     property real progress: 0
 
     width: resourceStat.width
-    height: 16
+    height: 14
 
     function restartProgress() {
         progress = 0
@@ -28,10 +29,19 @@ Item {
     HudStat {
         id: resourceStat
 
-        y: 2
+        y: 1
         imageSource: hudResource.imageSource
         textColor: hudResource.color
+        textMinimumWidth: widestAmount.width
         text: hudResource.amount
+    }
+
+    TextMetrics {
+        id: widestAmount
+
+        font.pixelSize: 9
+        font.weight: Font.DemiBold
+        text: "99999"
     }
 
     Rectangle {
@@ -58,7 +68,10 @@ Item {
         property: "progress"
         from: 0
         to: 1
-        duration: Math.max(1, hudResource.incomeInterval)
+        duration: Math.max(
+            1,
+            hudResource.incomeInterval / hudResource.gameTimeScale
+        )
         paused: running && !hudResource.running
     }
 

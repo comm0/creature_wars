@@ -27,8 +27,7 @@ public:
         health_role,
         maximum_health_role,
         attack_role,
-        attack_range_role,
-        spawn_creature_name_role,
+        range_role,
         damage_amount_role,
         damage_revision_role,
         attack_revision_role,
@@ -54,8 +53,15 @@ public:
         int health_p,
         int maximum_health_p,
         int attack_p,
-        int attack_range_p,
-        QString spawn_creature_name_p
+        int range_p
+    );
+    void update_base(
+        std::uint64_t id_p,
+        int level_p,
+        int health_p,
+        int maximum_health_p,
+        int attack_p,
+        int range_p
     );
     void update_base_health(std::uint64_t id_p, int health_p);
     void notify_base_attack(std::uint64_t id_p, position_t target_position_p);
@@ -75,8 +81,7 @@ private:
         int health_;
         int maximum_health_;
         int attack_;
-        int attack_range_;
-        QString spawn_creature_name_;
+        int range_;
         int damage_amount_;
         int damage_revision_;
         int attack_revision_;

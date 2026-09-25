@@ -45,6 +45,12 @@ Scene {
         transformOrigin: Item.TopLeft
         creatureModel: gameScene.gameBackend.creaturesModel
         baseModel: gameScene.gameBackend.basesModel
+        baseActionsModel: gameScene.gameBackend.baseActionsModel
+        playerBaseId: gameScene.gameBackend.playerBaseId
+        playerGold: gameScene.gameBackend.playerGold
+        playerFood: gameScene.gameBackend.playerFood
+        gameRunning: gameScene.gameBackend.running
+        gameTimeScale: gameScene.gameBackend.timeScale
         spawnEnabled: gameScene.gameBackend.running
         visionRangesVisible: rangeToggle.checked
 
@@ -52,8 +58,8 @@ Scene {
             gameScene.gameBackend.spawnBase(identifier, column, row)
         }
 
-        onCreatureSpawnRequested: function(baseId) {
-            gameScene.gameBackend.spawnCreatureFromBase(baseId)
+        onBaseActionRequested: function(actionKey) {
+            gameScene.gameBackend.orderBaseAction(actionKey)
         }
 
         onCreatureTypeSpawnRequested: function(identifier, column, row) {
@@ -71,7 +77,7 @@ Scene {
         anchors.left: gameScene.gameWindowAnchorItem.left
         anchors.right: gameScene.gameWindowAnchorItem.right
         y: 0
-        height: 16
+        height: 14
         borderOnTop: false
 
         Row {
@@ -120,6 +126,7 @@ Scene {
                 incomeInterval: gameScene.gameBackend.goldIncomeInterval
                 incomeCycle: gameScene.gameBackend.goldIncomeCycle
                 running: gameScene.gameBackend.running
+                gameTimeScale: gameScene.gameBackend.timeScale
             }
 
             HudResource {
@@ -132,6 +139,7 @@ Scene {
                 incomeInterval: gameScene.gameBackend.foodIncomeInterval
                 incomeCycle: gameScene.gameBackend.foodIncomeCycle
                 running: gameScene.gameBackend.running
+                gameTimeScale: gameScene.gameBackend.timeScale
             }
         }
 
@@ -155,7 +163,7 @@ Scene {
         anchors.left: gameScene.gameWindowAnchorItem.left
         anchors.right: gameScene.gameWindowAnchorItem.right
         y: gameScene.height - height
-        height: 24
+        height: 20
 
         Row {
             anchors.centerIn: parent
@@ -187,6 +195,14 @@ Scene {
             }
 
             HudToggle {
+                iconType: IconType.clocko
+                text: qsTr("%1x").arg(gameScene.gameBackend.timeScale)
+                checked: gameScene.gameBackend.timeScale > 1
+
+                onToggled: gameScene.gameBackend.cycleTimeScale()
+            }
+
+            HudToggle {
                 iconType: gameScene.gameBackend.running ? IconType.pause : IconType.play
                 text: gameScene.gameBackend.running ? qsTr("Running") : qsTr("Paused")
                 checked: gameScene.gameBackend.running
@@ -209,14 +225,14 @@ Scene {
             target: heartbeatIndicator
             property: "opacity"
             to: 1
-            duration: 120
+            duration: Math.max(1, 120 / gameScene.gameBackend.timeScale)
         }
 
         NumberAnimation {
             target: heartbeatIndicator
             property: "opacity"
             to: 0.35
-            duration: 500
+            duration: Math.max(1, 500 / gameScene.gameBackend.timeScale)
         }
     }
 
@@ -225,6 +241,10 @@ Scene {
 
         function onHeartbeat() {
             heartbeatAnimation.restart()
+        }
+
+        function onAreaAttack(column, row, radius, color) {
+            worldMap.showAreaAttack(column, row, radius, color)
         }
 
         function onCreatureRemoved(creatureId) {

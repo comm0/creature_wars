@@ -18,6 +18,8 @@ struct creature_attributes_t
     int vision_range_;
     double speed_;
     creature_behavior_t behavior_ = creature_behavior_t::aggressive;
+    int area_radius_ = 0;
+    std::uint32_t area_color_ = 0xffffff;
 };
 
 class creature_type_t
@@ -85,6 +87,16 @@ public:
     creature_behavior_t behavior() const noexcept
     {
         return attributes_.behavior_;
+    }
+
+    int area_radius() const noexcept
+    {
+        return attributes_.area_radius_;
+    }
+
+    std::uint32_t area_color() const noexcept
+    {
+        return attributes_.area_color_;
     }
 
 private:

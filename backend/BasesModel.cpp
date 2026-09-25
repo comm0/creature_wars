@@ -56,10 +56,8 @@ QVariant BasesModel::data(const QModelIndex& index_p, int role_p) const
         return base.maximum_health_;
     case attack_role:
         return base.attack_;
-    case attack_range_role:
-        return base.attack_range_;
-    case spawn_creature_name_role:
-        return base.spawn_creature_name_;
+    case range_role:
+        return base.range_;
     case damage_amount_role:
         return base.damage_amount_;
     case damage_revision_role:
@@ -90,8 +88,7 @@ QHash<int, QByteArray> BasesModel::roleNames() const
         {health_role, "health"},
         {maximum_health_role, "maximumHealth"},
         {attack_role, "attack"},
-        {attack_range_role, "attackRange"},
-        {spawn_creature_name_role, "spawnCreatureName"},
+        {range_role, "baseRange"},
         {damage_amount_role, "damageAmount"},
         {damage_revision_role, "damageRevision"},
         {attack_revision_role, "attackRevision"},
@@ -112,8 +109,7 @@ void BasesModel::insert_base(
     int health_p,
     int maximum_health_p,
     int attack_p,
-    int attack_range_p,
-    QString spawn_creature_name_p
+    int range_p
 )
 {
     if (row_of(id_p) >= 0) {
@@ -134,14 +130,43 @@ void BasesModel::insert_base(
         health_p,
         maximum_health_p,
         attack_p,
-        attack_range_p,
-        std::move(spawn_creature_name_p),
+        range_p,
         0,
         0,
         0,
         position_p
     });
     endInsertRows();
+}
+
+void BasesModel::update_base(
+    std::uint64_t id_p,
+    int level_p,
+    int health_p,
+    int maximum_health_p,
+    int attack_p,
+    int range_p
+)
+{
+    const auto row = row_of(id_p);
+
+    if (row < 0) {
+        return;
+    }
+
+    auto& base = bases_[static_cast<std::size_t>(row)];
+    base.level_ = level_p;
+    base.health_ = health_p;
+    base.maximum_health_ = maximum_health_p;
+    base.attack_ = attack_p;
+    base.range_ = range_p;
+    notify_row_changed(row, {
+        level_role,
+        health_role,
+        maximum_health_role,
+        attack_role,
+        range_role
+    });
 }
 
 void BasesModel::update_base_health(std::uint64_t id_p, int health_p)

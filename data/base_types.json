@@ -6,10 +6,28 @@
       "group": "minotaurs",
       "color": "#5a3825",
       "size": 3,
-      "health": 480,
-      "attack": 6,
-      "attackRange": 5,
-      "spawnCreature": "minotaur"
+      "range": 5,
+      "levels": [
+        { "health": 480, "attack": 6 },
+        { "health": 720, "attack": 9 },
+        { "health": 1080, "attack": 14 },
+        { "health": 1620, "attack": 20 }
+      ],
+      "units": [
+        { "creature": "minotaur", "tier": 1, "gold": 10, "food": 1, "timeMs": 5000 },
+        {
+          "creature": "minotaur_archer", "tier": 2, "gold": 25, "food": 1, "timeMs": 6000,
+          "training": { "gold": 30, "timeMs": 30000 }
+        },
+        {
+          "creature": "minotaur_guard", "tier": 3, "gold": 40, "food": 2, "timeMs": 8000,
+          "training": { "gold": 80, "timeMs": 45000 }
+        },
+        {
+          "creature": "minotaur_mage", "tier": 4, "gold": 60, "food": 3, "timeMs": 10000,
+          "training": { "gold": 150, "timeMs": 60000 }
+        }
+      ]
     },
     {
       "id": "orc_base",
@@ -17,10 +35,28 @@
       "group": "orcs",
       "color": "#245b32",
       "size": 3,
-      "health": 340,
-      "attack": 8,
-      "attackRange": 4,
-      "spawnCreature": "orc"
+      "range": 4,
+      "levels": [
+        { "health": 340, "attack": 8 },
+        { "health": 510, "attack": 12 },
+        { "health": 765, "attack": 18 },
+        { "health": 1148, "attack": 27 }
+      ],
+      "units": [
+        { "creature": "orc", "tier": 1, "gold": 10, "food": 1, "timeMs": 5000 },
+        {
+          "creature": "orc_spearman", "tier": 2, "gold": 25, "food": 1, "timeMs": 6000,
+          "training": { "gold": 30, "timeMs": 30000 }
+        },
+        {
+          "creature": "orc_warrior", "tier": 3, "gold": 40, "food": 2, "timeMs": 8000,
+          "training": { "gold": 80, "timeMs": 45000 }
+        },
+        {
+          "creature": "orc_shaman", "tier": 4, "gold": 60, "food": 3, "timeMs": 10000,
+          "training": { "gold": 150, "timeMs": 60000 }
+        }
+      ]
     },
     {
       "id": "dwarf_base",
@@ -28,10 +64,28 @@
       "group": "dwarves",
       "color": "#8a4f2d",
       "size": 3,
-      "health": 680,
-      "attack": 4,
-      "attackRange": 3,
-      "spawnCreature": "dwarf"
+      "range": 3,
+      "levels": [
+        { "health": 680, "attack": 4 },
+        { "health": 1020, "attack": 6 },
+        { "health": 1530, "attack": 9 },
+        { "health": 2295, "attack": 14 }
+      ],
+      "units": [
+        { "creature": "dwarf", "tier": 1, "gold": 10, "food": 1, "timeMs": 5000 },
+        {
+          "creature": "dwarf_soldier", "tier": 2, "gold": 25, "food": 1, "timeMs": 6000,
+          "training": { "gold": 30, "timeMs": 30000 }
+        },
+        {
+          "creature": "dwarf_guard", "tier": 3, "gold": 40, "food": 2, "timeMs": 8000,
+          "training": { "gold": 80, "timeMs": 45000 }
+        },
+        {
+          "creature": "dwarf_geomancer", "tier": 4, "gold": 60, "food": 3, "timeMs": 10000,
+          "training": { "gold": 150, "timeMs": 60000 }
+        }
+      ]
     }
   ]
 }

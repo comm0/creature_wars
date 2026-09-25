@@ -194,6 +194,25 @@ def generate_bases():
     draw_boxes(draw, boxes)
     write_scaled(image, "assets/structures/base", "base_3")
 
+    image, draw, top = base_image(18, 16)
+    draw_door(draw, top)
+    boxes = battlements(top, 14, 34, 5)
+    tower = 11
+
+    for column in (0, 47 - tower):
+        for row in (0, 47 - tower):
+            boxes.append((
+                top[0] + column,
+                top[1] + row,
+                top[0] + column + tower,
+                top[1] + row + tower,
+                10,
+            ))
+
+    boxes.append((top[0] + 16, top[1] + 16, top[0] + 31, top[1] + 31, 16))
+    draw_boxes(draw, boxes)
+    write_scaled(image, "assets/structures/base", "base_4")
+
 
 if __name__ == "__main__":
     generate_pawn()

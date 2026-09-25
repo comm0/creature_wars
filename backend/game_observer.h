@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 #include "base.h"
+#include "base_action.h"
 #include "creature.h"
 #include "player_state.h"
 
@@ -41,4 +43,14 @@ public:
     ) = 0;
     virtual void on_base_removed(std::uint64_t id_p) = 0;
     virtual void on_player_state_changed(const player_state_t& state_p) = 0;
+    virtual void on_base_changed(const base_t& base_p) = 0;
+    virtual void on_base_actions_changed(
+        std::uint64_t base_id_p,
+        const std::vector<base_action_state_t>& actions_p
+    ) = 0;
+    virtual void on_area_attack(
+        position_t center_p,
+        int radius_p,
+        std::uint32_t color_p
+    ) = 0;
 };

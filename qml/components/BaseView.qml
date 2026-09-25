@@ -18,8 +18,7 @@ Item {
     required property int health
     required property int maximumHealth
     required property int attack
-    required property int attackRange
-    required property string spawnCreatureName
+    required property int baseRange
     required property int damageAmount
     required property int damageRevision
     required property int attackRevision
@@ -29,10 +28,21 @@ Item {
     property int tileSize: 16
     property bool rangeVisible: false
     property Item overlayParent: parent
+    property bool isPlayerBase: false
+    property var actionsModel
+    property int gold: 0
+    property int food: 0
+    property bool gameRunning: true
+    property real gameTimeScale: 1
+    property real mapScale: 1
 
-    readonly property int artHeight: [12, 22, 28][Math.max(1, Math.min(baseLevel, 3)) - 1]
+    readonly property int artLevel: Math.max(1, Math.min(baseLevel, 4))
+    readonly property int artHeight: [12, 22, 28, 34][artLevel - 1]
+    readonly property real identityScale: 1 / Math.max(mapScale, 0.01)
+    readonly property bool menuOpen: isPlayerBase
+        && (baseHover.hovered || radialMenu.hovered || menuCloseTimer.running)
 
-    signal spawnCreatureRequested(var baseId)
+    signal actionRequested(string actionKey)
 
     x: column * tileSize
     y: row * tileSize
@@ -45,9 +55,7 @@ Item {
         y: -baseView.artHeight
         width: baseView.width + baseView.artHeight
         height: baseView.height + baseView.artHeight
-        source: "qrc:/assets/structures/base/base_"
-            + Math.max(1, Math.min(baseView.baseLevel, 3))
-            + ".png"
+        source: "qrc:/assets/structures/base/base_" + baseView.artLevel + ".png"
         smooth: false
         layer.enabled: true
         layer.effect: TintEffect {
@@ -57,7 +65,7 @@ Item {
 
     Rectangle {
         anchors.centerIn: parent
-        width: parent.width + 2 * baseView.attackRange * baseView.tileSize
+        width: parent.width + 2 * baseView.baseRange * baseView.tileSize
         height: width
         color: "transparent"
         border.width: 1
@@ -74,18 +82,23 @@ Item {
         y: baseView.y
         width: baseView.width
         height: baseView.height
-        z: baseHover.hovered ? 1 : 0
+        z: baseHover.hovered || baseView.menuOpen ? 1 : 0
 
         Item {
             id: baseIdentity
 
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.horizontalCenterOffset: -baseView.artHeight / 2
-            y: Math.max(-baseView.artHeight - height - 2, -baseView.y)
+            y: Math.max(
+                -baseView.artHeight - height - 2,
+                -baseView.y - height + height * baseView.identityScale
+            )
             width: 72
             height: 16
+            scale: baseView.identityScale
+            transformOrigin: Item.Bottom
 
-            Text {
+            AppText {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 color: baseHealthBar.fillColor
@@ -93,6 +106,8 @@ Item {
                 font.weight: Font.DemiBold
                 style: Text.Outline
                 styleColor: "#000000"
+                renderType: Text.CurveRendering
+                renderTypeQuality: Text.VeryHighRenderTypeQuality
                 text: baseView.baseName
                 visible: baseHover.hovered
             }
@@ -134,41 +149,65 @@ Item {
         }
 
         Item {
-            anchors.centerIn: parent
-            width: Math.max(parent.width, spawnButton.width)
-            height: parent.height
+            anchors.fill: parent
 
             HoverHandler {
                 id: baseHover
 
                 blocking: true
             }
+        }
 
-            AppButton {
-                id: spawnButton
+        RadialMenu {
+            id: radialMenu
 
-                anchors.centerIn: parent
-                visible: baseHover.hovered
-                text: qsTr("Spawn %1").arg(baseView.spawnCreatureName)
-                textSize: 7
-                fontCapitalization: Font.MixedCase
-                minimumWidth: 0
-                minimumHeight: 0
-                horizontalMargin: 0
-                verticalMargin: 0
-                horizontalPadding: 4
-                verticalPadding: 2
-                radius: 2
-                dropShadow: false
-                rippleEffect: false
-                backgroundColor: "#e6111814"
-                backgroundColorHovered: "#e62a3a30"
-                backgroundColorPressed: "#e6405348"
-                borderColor: "#758579"
-                borderWidth: 1
-                textColor: "#f1f4f2"
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: Math.min(
+                0,
+                baseView.overlayParent.height
+                    - (baseView.y + baseView.height / 2)
+                    - radius
+                    - actionSize / 2
+                    - 2
+            )
+            radius: baseView.width / 2 + 44
+            actionSize: 44
+            visible: baseView.menuOpen
+            enabled: visible
+            actionsModel: baseView.isPlayerBase ? baseView.actionsModel : null
+            gold: baseView.gold
+            food: baseView.food
+            running: baseView.gameRunning
+            timeScale: baseView.gameTimeScale
 
-                onClicked: baseView.spawnCreatureRequested(baseView.baseId)
+            onActionActivated: function(actionKey) {
+                baseView.actionRequested(actionKey)
+            }
+        }
+    }
+
+    Timer {
+        id: menuCloseTimer
+
+        interval: 300
+    }
+
+    Connections {
+        target: baseHover
+
+        function onHoveredChanged() {
+            if (!baseHover.hovered) {
+                menuCloseTimer.restart()
+            }
+        }
+    }
+
+    Connections {
+        target: radialMenu
+
+        function onHoveredChanged() {
+            if (!radialMenu.hovered) {
+                menuCloseTimer.restart()
             }
         }
     }
@@ -181,7 +220,7 @@ Item {
             property: "y"
             from: baseView.height / 2 - baseDamageText.height / 2
             to: -baseView.tileSize
-            duration: 900
+            duration: Math.max(1, 900 / baseView.gameTimeScale)
             easing.type: Easing.OutCubic
         }
 
@@ -190,7 +229,7 @@ Item {
             property: "opacity"
             from: 1
             to: 0
-            duration: 900
+            duration: Math.max(1, 900 / baseView.gameTimeScale)
         }
     }
 
@@ -204,7 +243,7 @@ Item {
             to: (baseView.attackTargetColumn + 0.5) * baseView.tileSize
                 - baseView.x
                 - baseProjectile.width / 2
-            duration: 180
+            duration: Math.max(1, 180 / baseView.gameTimeScale)
         }
 
         NumberAnimation {
@@ -214,7 +253,7 @@ Item {
             to: (baseView.attackTargetRow + 0.5) * baseView.tileSize
                 - baseView.y
                 - baseProjectile.height / 2
-            duration: 180
+            duration: Math.max(1, 180 / baseView.gameTimeScale)
         }
     }
 

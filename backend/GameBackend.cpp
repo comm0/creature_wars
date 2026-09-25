@@ -7,12 +7,15 @@
 #include <QIODevice>
 #include <QString>
 
+#include <array>
 #include <stdexcept>
 #include <string>
 #include <utility>
 
 namespace
 {
+constexpr std::array<double, 5> time_scales{1.0, 1.5, 2.0, 5.0, 10.0};
+
 std::string load_resource(const QString& path_p)
 {
     QFile file(path_p);
@@ -31,7 +34,8 @@ GameBackend::GameBackend(QObject* parent_p)
     , game_(
         load_resource(QStringLiteral(":/data/creature_types.json")),
         load_resource(QStringLiteral(":/data/base_types.json")),
-        load_resource(QStringLiteral(":/data/economy.json"))
+        load_resource(QStringLiteral(":/data/economy.json")),
+        load_resource(QStringLiteral(":/data/tech_tree.json"))
     )
 {
     connect(
@@ -124,6 +128,28 @@ GameBackend::GameBackend(QObject* parent_p)
     );
     connect(
         &game_observer_,
+        &GameObserver::baseChanged,
+        &bases_model_,
+        &BasesModel::update_base
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::baseActionsChanged,
+        this,
+        [this](std::vector<base_action_state_t> actions_p) {
+            base_actions_model_.set_actions(std::move(actions_p));
+        }
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::areaAttack,
+        this,
+        [this](position_t center_p, int radius_p, QColor color_p) {
+            emit areaAttack(center_p.column_, center_p.row_, radius_p, color_p);
+        }
+    );
+    connect(
+        &game_observer_,
         &GameObserver::baseHealthChanged,
         &bases_model_,
         &BasesModel::update_base_health
@@ -169,9 +195,24 @@ BasesModel* GameBackend::basesModel()
     return &bases_model_;
 }
 
+BaseActionsModel* GameBackend::baseActionsModel()
+{
+    return &base_actions_model_;
+}
+
+qulonglong GameBackend::playerBaseId() const
+{
+    return player_state_.base_id_;
+}
+
 bool GameBackend::running() const
 {
     return game_running_;
+}
+
+double GameBackend::timeScale() const
+{
+    return time_scales[static_cast<std::size_t>(time_scale_index_)];
 }
 
 bool GameBackend::aggressive() const
@@ -262,9 +303,22 @@ void GameBackend::start()
 
     game_.start(game_observer_);
     game_.request_set_aggressive(aggressive_);
+    game_.request_set_time_scale(timeScale());
 
     game_running_ = true;
     emit runningChanged();
+}
+
+void GameBackend::cycleTimeScale()
+{
+    time_scale_index_ = (time_scale_index_ + 1)
+        % static_cast<int>(time_scales.size());
+
+    if (game_running_) {
+        game_.request_set_time_scale(timeScale());
+    }
+
+    emit timeScaleChanged();
 }
 
 void GameBackend::stop()
@@ -319,13 +373,13 @@ void GameBackend::spawnCreature(
     );
 }
 
-void GameBackend::spawnCreatureFromBase(std::uint64_t base_id_p)
+void GameBackend::orderBaseAction(const QString& key_p)
 {
     if (!game_running_) {
         return;
     }
 
-    game_.request_spawn_from_base(base_id_p);
+    game_.request_order_base_action(key_p.toStdString());
 }
 
 void GameBackend::walkCreature(

@@ -1,15 +1,25 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
-struct base_attributes_t
+#include "resource_cost.h"
+
+struct base_level_stats_t
 {
-    int size_;
     int health_;
     int attack_;
-    int attack_range_;
+};
+
+struct unit_option_t
+{
+    std::string creature_;
+    int tier_;
+    timed_cost_t spawn_;
+    std::optional<timed_cost_t> training_;
 };
 
 class base_type_t
@@ -20,15 +30,19 @@ public:
         std::string name_p,
         std::string group_p,
         std::uint32_t color_p,
-        std::string spawn_creature_p,
-        base_attributes_t attributes_p
+        int size_p,
+        int range_p,
+        std::vector<base_level_stats_t> levels_p,
+        std::vector<unit_option_t> units_p
     )
         : identifier_(std::move(identifier_p))
         , name_(std::move(name_p))
         , group_(std::move(group_p))
         , color_(color_p)
-        , spawn_creature_(std::move(spawn_creature_p))
-        , attributes_(attributes_p)
+        , size_(size_p)
+        , range_(range_p)
+        , levels_(std::move(levels_p))
+        , units_(std::move(units_p))
     {
     }
 
@@ -52,29 +66,29 @@ public:
         return color_;
     }
 
-    const std::string& spawn_creature() const noexcept
-    {
-        return spawn_creature_;
-    }
-
     int size() const noexcept
     {
-        return attributes_.size_;
+        return size_;
     }
 
-    int health() const noexcept
+    int range() const noexcept
     {
-        return attributes_.health_;
+        return range_;
     }
 
-    int attack() const noexcept
+    int max_level() const noexcept
     {
-        return attributes_.attack_;
+        return static_cast<int>(levels_.size());
     }
 
-    int attack_range() const noexcept
+    const base_level_stats_t& level_stats(int level_p) const
     {
-        return attributes_.attack_range_;
+        return levels_.at(static_cast<std::size_t>(level_p - 1));
+    }
+
+    const std::vector<unit_option_t>& units() const noexcept
+    {
+        return units_;
     }
 
 private:
@@ -82,6 +96,8 @@ private:
     std::string name_;
     std::string group_;
     std::uint32_t color_;
-    std::string spawn_creature_;
-    base_attributes_t attributes_;
+    int size_;
+    int range_;
+    std::vector<base_level_stats_t> levels_;
+    std::vector<unit_option_t> units_;
 };

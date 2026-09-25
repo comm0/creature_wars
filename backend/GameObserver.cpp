@@ -196,10 +196,9 @@ void GameObserver::on_base_created(const base_t& base_p)
     auto group = QString::fromStdString(type.group());
     const auto color = QColor::fromRgb(type.color());
     const auto health = base_p.health();
-    const auto maximum_health = type.health();
-    const auto attack = type.attack();
-    const auto attack_range = type.attack_range();
-    auto spawn_creature_name = QString::fromStdString(base_p.spawn_type().name());
+    const auto maximum_health = base_p.stats().max_health_;
+    const auto attack = base_p.stats().attack_;
+    const auto range = base_p.stats().range_;
 
     QMetaObject::invokeMethod(
         this,
@@ -216,8 +215,7 @@ void GameObserver::on_base_created(const base_t& base_p)
             health,
             maximum_health,
             attack,
-            attack_range,
-            spawn_creature_name = std::move(spawn_creature_name)
+            range
         ]() mutable {
             emit baseCreated(
                 id,
@@ -231,8 +229,7 @@ void GameObserver::on_base_created(const base_t& base_p)
                 health,
                 maximum_health,
                 attack,
-                attack_range,
-                std::move(spawn_creature_name)
+                range
             );
         },
         Qt::QueuedConnection
@@ -276,6 +273,58 @@ void GameObserver::on_player_state_changed(const player_state_t& state_p)
     QMetaObject::invokeMethod(
         this,
         [this, state = state_p]() { emit playerStateChanged(state); },
+        Qt::QueuedConnection
+    );
+}
+
+void GameObserver::on_base_changed(const base_t& base_p)
+{
+    const auto id = base_p.id();
+    const auto level = base_p.level();
+    const auto health = base_p.health();
+    const auto& stats = base_p.stats();
+    const auto maximum_health = stats.max_health_;
+    const auto attack = stats.attack_;
+    const auto range = stats.range_;
+
+    QMetaObject::invokeMethod(
+        this,
+        [this, id, level, health, maximum_health, attack, range]() {
+            emit baseChanged(id, level, health, maximum_health, attack, range);
+        },
+        Qt::QueuedConnection
+    );
+}
+
+void GameObserver::on_base_actions_changed(
+    std::uint64_t base_id_p,
+    const std::vector<base_action_state_t>& actions_p
+)
+{
+    static_cast<void>(base_id_p);
+
+    QMetaObject::invokeMethod(
+        this,
+        [this, actions = actions_p]() mutable {
+            emit baseActionsChanged(std::move(actions));
+        },
+        Qt::QueuedConnection
+    );
+}
+
+void GameObserver::on_area_attack(
+    position_t center_p,
+    int radius_p,
+    std::uint32_t color_p
+)
+{
+    const auto color = QColor::fromRgb(color_p);
+
+    QMetaObject::invokeMethod(
+        this,
+        [this, center_p, radius_p, color]() {
+            emit areaAttack(center_p, radius_p, color);
+        },
         Qt::QueuedConnection
     );
 }

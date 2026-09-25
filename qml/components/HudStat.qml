@@ -9,6 +9,7 @@ Row {
     property color iconColor: "#c9d4cb"
     property alias text: statText.text
     property color textColor: "#f1f4f2"
+    property real textMinimumWidth: 0
 
     spacing: 3
 
@@ -33,6 +34,7 @@ Row {
         id: statText
 
         anchors.verticalCenter: parent.verticalCenter
+        width: Math.max(implicitWidth, hudStat.textMinimumWidth)
         color: hudStat.textColor
         font.pixelSize: 9
         font.weight: Font.DemiBold

@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Felgo 4.0
+import "CreatureSprites.js" as CreatureSprites
 
 // One creature standing on a single map tile. The item itself covers exactly
 // that tile (used for hit testing), the sprite may extend beyond it.
@@ -36,6 +37,8 @@ Item {
     property int idleDotCount: 1
     property real areaWidth: 0
     property real areaHeight: 0
+    property real gameTimeScale: 1
+    property real mapScale: 1
     // Layer drawn above all creatures; names, health bars, damage numbers
     // and tooltips live there so neighbouring sprites never cover them.
     // It must share the coordinate system of this item's parent.
@@ -43,13 +46,9 @@ Item {
 
     property bool alertVisible: false
     property bool goVisible: false
-    readonly property string spriteIdentifier:
-        creatureTypeIdentifier === "minotaur"
-            || creatureTypeIdentifier === "orc"
-            || creatureTypeIdentifier === "dwarf"
-            ? creatureTypeIdentifier
-            : "placeholder"
-    readonly property bool isPlaceholder: spriteIdentifier === "placeholder"
+    readonly property bool isPlaceholder:
+        CreatureSprites.isPlaceholder(creatureTypeIdentifier)
+    readonly property real identityScale: 1 / Math.max(mapScale, 0.01)
     readonly property int spriteSize: 32
     // Tibia-style anchoring: the sprite's bottom-right corner sits on the
     // tile's bottom-right corner, bigger sprites grow up and to the left.
@@ -67,7 +66,9 @@ Item {
             : movementSpeed
     readonly property int movementDuration: Math.max(
         1,
-        Math.round(1000 / Math.max(effectiveMovementSpeed, 0.01))
+        Math.round(
+            1000 / Math.max(effectiveMovementSpeed, 0.01) / gameTimeScale
+        )
     )
 
     x: column * tileSize
@@ -101,11 +102,8 @@ Item {
             sourceComponent: TexturePackerSpriteSequence {
                 id: creatureSprite
 
-                readonly property string sheet: "qrc:/assets/creatures/"
-                    + creatureView.spriteIdentifier
-                    + "/"
-                    + creatureView.spriteIdentifier
-                    + ".json"
+                readonly property string sheet:
+                    CreatureSprites.sheetSource(creatureView.creatureTypeIdentifier)
                 readonly property real walkFrameRate:
                     1000 / Math.max(100, creatureView.movementDuration / 2)
 
@@ -200,7 +198,7 @@ Item {
             target: creatureAttackTranslation
             property: "y"
             to: -3
-            duration: 80
+            duration: Math.max(1, 80 / creatureView.gameTimeScale)
             easing.type: Easing.OutCubic
         }
 
@@ -208,7 +206,7 @@ Item {
             target: creatureAttackTranslation
             property: "y"
             to: 0
-            duration: 110
+            duration: Math.max(1, 110 / creatureView.gameTimeScale)
             easing.type: Easing.InCubic
         }
     }
@@ -223,7 +221,7 @@ Item {
                 + creatureView.visualHeight / 2
                 - creatureDamageText.height / 2
             to: creatureView.visualTop - creatureView.tileSize
-            duration: 900
+            duration: Math.max(1, 900 / creatureView.gameTimeScale)
             easing.type: Easing.OutCubic
         }
 
@@ -232,7 +230,7 @@ Item {
             property: "opacity"
             from: 1
             to: 0
-            duration: 900
+            duration: Math.max(1, 900 / creatureView.gameTimeScale)
         }
     }
 
@@ -360,10 +358,13 @@ Item {
                 - width / 2
             y: Math.max(
                 creatureView.visualTop - height - 2,
-                -creatureView.y
+                -creatureView.y - height
+                    + height * creatureView.identityScale
             )
             width: 56
             height: 15
+            scale: creatureView.identityScale
+            transformOrigin: Item.Bottom
 
             Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -374,7 +375,7 @@ Item {
                 color: creatureHover.hovered ? "#b8000000" : "transparent"
                 visible: creatureStatusText.text.length > 0
 
-                Text {
+                AppText {
                     id: creatureStatusText
 
                     anchors.centerIn: parent
@@ -386,7 +387,8 @@ Item {
                     font.pixelSize: 8
                     font.weight: Font.DemiBold
                     font.letterSpacing: -0.2
-                    renderType: Text.QtRendering
+                    renderType: Text.CurveRendering
+                    renderTypeQuality: Text.VeryHighRenderTypeQuality
                     style: Text.Outline
                     styleColor: "#000000"
                     text: creatureHover.hovered

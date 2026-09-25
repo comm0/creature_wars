@@ -113,6 +113,16 @@ void creature_t::drain_health(int damage_p) noexcept
     health_ = std::max(0, health_ - std::max(0, damage_p));
 }
 
+bool creature_t::heal(int amount_p) noexcept
+{
+    if (is_dead() || amount_p <= 0 || health_ >= type_.health()) {
+        return false;
+    }
+
+    health_ = std::min(type_.health(), health_ + amount_p);
+    return true;
+}
+
 void creature_t::update_movement(
     game_t& game_p,
     std::chrono::steady_clock::time_point now_p
@@ -223,7 +233,7 @@ void creature_t::activate_manual_movement(game_t& game_p)
     blocked_path_retry_count_ = 0;
 
     if (!next_movement_time_.has_value()) {
-        next_movement_time_ = std::chrono::steady_clock::now();
+        next_movement_time_ = game_p.current_time();
     }
 
     if (previous_state != state()) {
@@ -251,7 +261,7 @@ void creature_t::activate_target_movement(
     blocked_path_retry_count_ = 0;
 
     if (!next_movement_time_.has_value()) {
-        next_movement_time_ = std::chrono::steady_clock::now();
+        next_movement_time_ = game_p.current_time();
     }
 
     if (previous_state != state()) {
@@ -277,7 +287,7 @@ void creature_t::activate_fleeing_movement(
     blocked_path_retry_count_ = 0;
 
     if (!next_movement_time_.has_value()) {
-        next_movement_time_ = std::chrono::steady_clock::now();
+        next_movement_time_ = game_p.current_time();
     }
 
     if (previous_state != state()) {
@@ -298,7 +308,7 @@ void creature_t::activate_idle_movement(game_t& game_p)
     blocked_path_retry_count_ = 0;
 
     if (!next_movement_time_.has_value()) {
-        next_movement_time_ = std::chrono::steady_clock::now();
+        next_movement_time_ = game_p.current_time();
     }
 
     if (previous_state != state()) {

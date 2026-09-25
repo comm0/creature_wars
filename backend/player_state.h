@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
 #include <string>
 
 struct resource_state_t
@@ -13,6 +14,8 @@ struct resource_state_t
 
 struct player_state_t
 {
+    std::uint64_t base_id_ = 0;
+    std::string base_group_;
     std::string base_name_;
     int base_level_ = 1;
     resource_state_t gold_;

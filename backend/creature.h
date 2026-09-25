@@ -118,6 +118,7 @@ public:
     }
 
     void drain_health(int damage_p) noexcept;
+    bool heal(int amount_p) noexcept;
 
     creature_state_t state() const noexcept
     {

@@ -64,6 +64,19 @@ std::optional<game_scheduler_t::time_point_t> game_scheduler_t::next_time() cons
     return events_.begin()->first.time_;
 }
 
+std::optional<game_scheduler_t::time_point_t> game_scheduler_t::time_of(
+    event_id_t id_p
+) const noexcept
+{
+    const auto time = times_by_id_.find(id_p);
+
+    if (time == times_by_id_.end()) {
+        return std::nullopt;
+    }
+
+    return time->second;
+}
+
 std::vector<std::function<void()>> game_scheduler_t::take_due(time_point_t now_p)
 {
     std::vector<std::function<void()>> due_events;

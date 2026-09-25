@@ -14,6 +14,12 @@ Item {
     property bool visionRangesVisible: false
     property var creatureModel
     property var baseModel
+    property var baseActionsModel
+    property var playerBaseId: 0
+    property int playerGold: 0
+    property int playerFood: 0
+    property bool gameRunning: true
+    property real gameTimeScale: 1
     property bool spawnEnabled: true
     property int contextColumn: 0
     property int contextRow: 0
@@ -21,7 +27,7 @@ Item {
     property int idleDotCount: 1
 
     signal baseSpawnRequested(string identifier, int column, int row)
-    signal creatureSpawnRequested(var baseId)
+    signal baseActionRequested(string actionKey)
     signal creatureTypeSpawnRequested(
         string identifier,
         int column,
@@ -109,7 +115,7 @@ Item {
     clip: true
 
     Timer {
-        interval: 400
+        interval: Math.max(1, 400 / root.gameTimeScale)
         running: true
         repeat: true
 
@@ -357,9 +363,16 @@ Item {
                 tileSize: root.tileSize
                 rangeVisible: root.visionRangesVisible
                 overlayParent: creatureOverlayLayer
+                isPlayerBase: baseId === root.playerBaseId
+                actionsModel: root.baseActionsModel
+                gold: root.playerGold
+                food: root.playerFood
+                gameRunning: root.gameRunning
+                gameTimeScale: root.gameTimeScale
+                mapScale: root.scale
 
-                onSpawnCreatureRequested: function(baseId) {
-                    root.creatureSpawnRequested(baseId)
+                onActionRequested: function(actionKey) {
+                    root.baseActionRequested(actionKey)
                 }
             }
         }
@@ -374,11 +387,43 @@ Item {
                 selected: root.isCreatureSelected(creatureId)
                 visionRangeVisible: root.visionRangesVisible
                 idleDotCount: root.idleDotCount
+                gameTimeScale: root.gameTimeScale
+                mapScale: root.scale
                 areaWidth: root.width
                 areaHeight: root.height
                 overlayParent: creatureOverlayLayer
             }
         }
+    }
+
+    Item {
+        id: effectLayer
+
+        anchors.fill: parent
+        z: 2.5
+    }
+
+    EntityManager {
+        id: entityManager
+
+        entityContainer: effectLayer
+    }
+
+    Component {
+        id: areaExplosionComponent
+
+        AreaExplosion {}
+    }
+
+    function showAreaAttack(column, row, radius, color) {
+        entityManager.createEntityFromComponentWithProperties(areaExplosionComponent, {
+            x: (column - radius) * root.tileSize,
+            y: (row - radius) * root.tileSize,
+            tileSize: root.tileSize,
+            radius: radius,
+            color: color,
+            gameTimeScale: root.gameTimeScale
+        })
     }
 
     Item {

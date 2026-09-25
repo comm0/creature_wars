@@ -15,6 +15,7 @@ struct economy_settings_t
     int starting_food_;
     income_settings_t gold_income_;
     income_settings_t food_income_;
+    int level_income_bonus_percent_;
 };
 
 economy_settings_t parse_economy_settings(std::string_view economy_json_p);

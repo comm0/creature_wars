@@ -25,22 +25,53 @@ base_type_registry_t::base_type_registry_t(std::string_view base_types_json_p)
         auto name = definition.at("name").get<std::string>();
         auto group = definition.at("group").get<std::string>();
         const auto color = parse_color(definition.at("color").get<std::string>());
-        auto spawn_creature = definition.at("spawnCreature").get<std::string>();
         const auto size = definition.at("size").get<int>();
-        const auto health = definition.at("health").get<int>();
-        const auto attack = definition.at("attack").get<int>();
-        const auto attack_range = definition.at("attackRange").get<int>();
+        const auto range = definition.at("range").get<int>();
 
         if (identifier.empty() || name.empty() || group.empty()) {
             throw std::invalid_argument("Base id, name and group must not be empty.");
         }
 
-        if (size <= 0 || health <= 0) {
-            throw std::invalid_argument("Base size and health must be positive.");
+        if (size <= 0) {
+            throw std::invalid_argument("Base size must be positive.");
         }
 
-        require_non_negative(attack, "attack");
-        require_non_negative(attack_range, "attackRange");
+        require_non_negative(range, "range");
+
+        std::vector<base_level_stats_t> levels;
+
+        for (const auto& level : definition.at("levels")) {
+            const auto health = level.at("health").get<int>();
+            const auto attack = level.at("attack").get<int>();
+
+            if (health <= 0) {
+                throw std::invalid_argument("Base health must be positive.");
+            }
+
+            require_non_negative(attack, "attack");
+            levels.push_back({health, attack});
+        }
+
+        if (levels.empty()) {
+            throw std::invalid_argument("Base needs at least one level.");
+        }
+
+        std::vector<unit_option_t> units;
+
+        for (const auto& unit : definition.at("units")) {
+            std::optional<timed_cost_t> training;
+
+            if (unit.contains("training")) {
+                training = parse_timed_cost(unit.at("training"));
+            }
+
+            units.push_back({
+                unit.at("creature").get<std::string>(),
+                unit.at("tier").get<int>(),
+                parse_timed_cost(unit),
+                training
+            });
+        }
 
         const auto duplicate = std::find_if(
             base_types_.begin(),
@@ -59,8 +90,10 @@ base_type_registry_t::base_type_registry_t(std::string_view base_types_json_p)
             std::move(name),
             std::move(group),
             color,
-            std::move(spawn_creature),
-            base_attributes_t{size, health, attack, attack_range}
+            size,
+            range,
+            std::move(levels),
+            std::move(units)
         );
     }
 }

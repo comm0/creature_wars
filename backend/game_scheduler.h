@@ -21,6 +21,7 @@ public:
     void clear() noexcept;
     void delay_all(std::chrono::steady_clock::duration delay_p);
     std::optional<time_point_t> next_time() const noexcept;
+    std::optional<time_point_t> time_of(event_id_t id_p) const noexcept;
     std::vector<std::function<void()>> take_due(time_point_t now_p);
 
     std::size_t size() const noexcept

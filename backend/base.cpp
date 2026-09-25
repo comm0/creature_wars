@@ -13,19 +13,16 @@ int axis_distance(int value_p, int first_p, int last_p) noexcept
 }
 }
 
-base_t::base_t(
-    std::uint64_t id_p,
-    const base_type_t& type_p,
-    const creature_type_t& spawn_type_p,
-    position_t position_p,
-    int level_p
-)
+base_t::base_t(std::uint64_t id_p, const base_type_t& type_p, position_t position_p)
     : id_(id_p)
     , type_(type_p)
-    , spawn_type_(spawn_type_p)
     , position_(position_p)
-    , health_(type_p.health())
-    , level_(level_p)
+    , stats_{
+        type_p.level_stats(1).health_,
+        type_p.level_stats(1).attack_,
+        type_p.range()
+    }
+    , health_(stats_.max_health_)
 {
 }
 
@@ -38,22 +35,6 @@ void base_t::on_attacking(
         return;
     }
 
-    auto target = target_id_.has_value()
-        ? game_p.find_base_target(*this, *target_id_)
-        : std::nullopt;
-
-    if (!target.has_value()) {
-        target = game_p.find_nearest_base_target(*this);
-        target_id_ = target.has_value()
-            ? std::optional<std::uint64_t>(target->id_)
-            : std::nullopt;
-    }
-
-    if (!target.has_value()) {
-        attack_elapsed_ = std::chrono::milliseconds{0};
-        return;
-    }
-
     attack_elapsed_ = std::min(
         game_constants::attack_interval,
         attack_elapsed_ + interval_p
@@ -63,8 +44,42 @@ void base_t::on_attacking(
         return;
     }
 
-    game_p.perform_base_attack(*this, *target);
-    attack_elapsed_ = std::chrono::milliseconds{0};
+    for (auto shot = 0; shot < stats_.shots_; ++shot) {
+        auto target = target_id_.has_value()
+            ? game_p.find_base_target(*this, *target_id_)
+            : std::nullopt;
+
+        if (!target.has_value()) {
+            target = game_p.find_nearest_base_target(*this);
+            target_id_ = target.has_value()
+                ? std::optional<std::uint64_t>(target->id_)
+                : std::nullopt;
+        }
+
+        if (!target.has_value()) {
+            break;
+        }
+
+        game_p.perform_base_attack(*this, *target);
+        attack_elapsed_ = std::chrono::milliseconds{0};
+    }
+}
+
+void base_t::apply_stats(const base_stats_t& stats_p) noexcept
+{
+    const auto health_gain = std::max(0, stats_p.max_health_ - stats_.max_health_);
+    stats_ = stats_p;
+    health_ = std::min(stats_.max_health_, health_ + health_gain);
+}
+
+bool base_t::regenerate() noexcept
+{
+    if (is_dead() || stats_.regeneration_ <= 0 || health_ >= stats_.max_health_) {
+        return false;
+    }
+
+    health_ = std::min(stats_.max_health_, health_ + stats_.regeneration_);
+    return true;
 }
 
 void base_t::drain_health(int damage_p) noexcept

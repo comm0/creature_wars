@@ -10,5 +10,6 @@
       "amount": 1,
       "intervalMs": 10000
     }
-  }
+  },
+  "levelIncomeBonusPercent": 20
 }

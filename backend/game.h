@@ -12,15 +12,21 @@
 #include <thread>
 #include <vector>
 
+#include <unordered_map>
+#include <unordered_set>
+
 #include "base.h"
+#include "base_orders.h"
 #include "base_type_registry.h"
 #include "creatures.h"
 #include "creature_type_registry.h"
 #include "economy_settings.h"
+#include "game_clock.h"
 #include "game_event_dispatcher.h"
 #include "game_map.h"
 #include "game_observer.h"
 #include "game_scheduler.h"
+#include "tech_tree.h"
 #include "visibility_system.h"
 
 class game_t
@@ -29,7 +35,8 @@ public:
     game_t(
         const std::string& creature_types_json_p,
         const std::string& base_types_json_p,
-        const std::string& economy_json_p
+        const std::string& economy_json_p,
+        const std::string& tech_tree_json_p
     );
     ~game_t();
 
@@ -43,16 +50,21 @@ public:
         position_t position_p
     );
     void request_spawn_base(std::string identifier_p, position_t center_p);
-    void request_spawn_from_base(std::uint64_t base_id_p);
+    void request_order_base_action(std::string key_p);
     void request_start_match(std::string player_base_identifier_p);
     void request_walk_to(
         std::uint64_t id_p,
         position_t destination_p
     );
     void request_set_aggressive(bool aggressive_p);
+    void request_set_time_scale(double time_scale_p);
     bool aggressive() const noexcept
     {
         return aggressive_;
+    }
+    game_clock_t::time_point_t current_time() const noexcept
+    {
+        return game_clock_.now();
     }
     std::optional<target_t> find_nearest_visible_enemy(
         const creature_t& creature_p
@@ -104,8 +116,22 @@ private:
         std::string identifier_p,
         position_t position_p
     );
-    void spawn_base(std::string identifier_p, position_t center_p, int level_p = 1);
-    void spawn_from_base(std::uint64_t base_id_p);
+    base_t* spawn_base(const std::string& identifier_p, position_t center_p);
+    std::vector<base_action_state_t> player_base_actions() const;
+    void order_base_action(const std::string& key_p);
+    bool complete_base_order(const std::string& key_p);
+    void publish_base_actions();
+    int research_level(const std::string& identifier_p) const;
+    int research_value(research_effect_t effect_p) const;
+    void apply_base_stats(base_t& base_p);
+    void update_income_intervals();
+    void regenerate_bases();
+    void heal_near_player_base();
+    void damage_area(
+        const creature_t& attacker_p,
+        position_t center_p,
+        int radius_p
+    );
     void start_match(const std::string& player_base_identifier_p);
     void clear_world();
     base_t* find_base(std::uint64_t id_p) noexcept;
@@ -117,6 +143,7 @@ private:
         position_t destination_p
     );
     void set_aggressive(bool aggressive_p);
+    void set_time_scale(double time_scale_p);
     void run(const std::stop_token& stop_token_p);
     void collect_actions();
     void schedule_tick(game_scheduler_t::time_point_t time_p);
@@ -142,12 +169,16 @@ private:
 
     game_event_dispatcher_t dispatcher_;
     game_scheduler_t scheduler_;
-    std::optional<game_scheduler_t::time_point_t> stopped_at_;
+    game_clock_t game_clock_;
     bool tick_scheduled_ = false;
     std::uint64_t match_id_ = 0;
     creature_type_registry_t creature_type_registry_;
     base_type_registry_t base_type_registry_;
     economy_settings_t economy_;
+    tech_tree_t tech_tree_;
+    base_orders_t player_orders_;
+    std::unordered_map<std::string, int> research_levels_;
+    std::unordered_set<std::string> trained_units_;
     creatures_t creatures_;
     std::vector<std::unique_ptr<base_t>> bases_;
     game_map_t game_map_;

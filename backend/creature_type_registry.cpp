@@ -62,6 +62,10 @@ creature_type_registry_t::creature_type_registry_t(
         const auto behavior = parse_behavior(
             definition.value("behavior", std::string("aggressive"))
         );
+        const auto area_radius = definition.value("areaRadius", 0);
+        const auto area_color = parse_color(
+            definition.value("areaColor", std::string("#ffffff"))
+        );
 
         if (identifier.empty() || name.empty()) {
             throw std::invalid_argument("Creature id and name must not be empty.");
@@ -75,6 +79,7 @@ creature_type_registry_t::creature_type_registry_t(
         require_non_negative(attack, "attack");
         require_non_negative(attack_range, "attackRange");
         require_non_negative(vision_range, "visionRange");
+        require_non_negative(area_radius, "areaRadius");
 
         if (!std::isfinite(speed) || speed <= 0.0) {
             throw std::invalid_argument("Creature speed must be positive.");
@@ -104,7 +109,9 @@ creature_type_registry_t::creature_type_registry_t(
                 attack_range,
                 vision_range,
                 speed,
-                behavior
+                behavior,
+                area_radius,
+                area_color
             }
         );
     }

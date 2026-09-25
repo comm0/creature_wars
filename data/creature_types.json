@@ -5,11 +5,11 @@
       "name": "Minotaur",
       "group": "minotaurs",
       "color": "#5a3825",
-      "health": 14,
-      "attack": 3,
+      "health": 16,
+      "attack": 4,
       "attackRange": 1,
       "visionRange": 5,
-      "speed": 1.25
+      "speed": 1.2
     },
     {
       "id": "minotaur_guard",
@@ -17,11 +17,11 @@
       "group": "minotaurs",
       "color": "#5a3825",
       "markerColor": "#3284ff",
-      "health": 20,
-      "attack": 4,
+      "health": 26,
+      "attack": 5,
       "attackRange": 1,
       "visionRange": 5,
-      "speed": 0.75
+      "speed": 1.05
     },
     {
       "id": "minotaur_archer",
@@ -29,9 +29,9 @@
       "group": "minotaurs",
       "color": "#5a3825",
       "markerColor": "#e13b3b",
-      "health": 10,
-      "attack": 2,
-      "attackRange": 3,
+      "health": 11,
+      "attack": 3,
+      "attackRange": 4,
       "visionRange": 5,
       "speed": 1.25
     },
@@ -40,11 +40,11 @@
       "name": "Orc",
       "group": "orcs",
       "color": "#245b32",
-      "health": 10,
-      "attack": 4,
+      "health": 12,
+      "attack": 5,
       "attackRange": 1,
       "visionRange": 5,
-      "speed": 0.9
+      "speed": 1.0
     },
     {
       "id": "orc_warrior",
@@ -52,11 +52,11 @@
       "group": "orcs",
       "color": "#245b32",
       "markerColor": "#3284ff",
-      "health": 16,
-      "attack": 5,
+      "health": 22,
+      "attack": 7,
       "attackRange": 1,
       "visionRange": 5,
-      "speed": 0.8
+      "speed": 0.9
     },
     {
       "id": "orc_spearman",
@@ -64,19 +64,19 @@
       "group": "orcs",
       "color": "#245b32",
       "markerColor": "#e13b3b",
-      "health": 8,
-      "attack": 3,
+      "health": 9,
+      "attack": 4,
       "attackRange": 2,
       "visionRange": 5,
-      "speed": 1.2
+      "speed": 1.0
     },
     {
       "id": "dwarf",
       "name": "Dwarf",
       "group": "dwarves",
       "color": "#8a4f2d",
-      "health": 20,
-      "attack": 2,
+      "health": 22,
+      "attack": 3,
       "attackRange": 1,
       "visionRange": 5,
       "speed": 0.75
@@ -114,6 +114,72 @@
       "attackRange": 1,
       "visionRange": 5,
       "speed": 0.8
+    },
+    {
+      "id": "orc_shaman",
+      "name": "Orc Shaman",
+      "group": "orcs",
+      "color": "#245b32",
+      "markerColor": "#7ce05a",
+      "health": 12,
+      "attack": 5,
+      "attackRange": 2,
+      "visionRange": 5,
+      "speed": 0.9,
+      "areaRadius": 1,
+      "areaColor": "#4cd964"
+    },
+    {
+      "id": "minotaur_mage",
+      "name": "Minotaur Mage",
+      "group": "minotaurs",
+      "color": "#5a3825",
+      "markerColor": "#ff6b3a",
+      "health": 13,
+      "attack": 4,
+      "attackRange": 3,
+      "visionRange": 5,
+      "speed": 1.1,
+      "areaRadius": 1,
+      "areaColor": "#ff3b30"
+    },
+    {
+      "id": "dwarf_soldier",
+      "name": "Dwarf Soldier",
+      "group": "dwarves",
+      "color": "#8a4f2d",
+      "markerColor": "#e13b3b",
+      "health": 17,
+      "attack": 3,
+      "attackRange": 3,
+      "visionRange": 5,
+      "speed": 0.75
+    },
+    {
+      "id": "dwarf_guard",
+      "name": "Dwarf Guard",
+      "group": "dwarves",
+      "color": "#8a4f2d",
+      "markerColor": "#3284ff",
+      "health": 36,
+      "attack": 4,
+      "attackRange": 1,
+      "visionRange": 5,
+      "speed": 0.65
+    },
+    {
+      "id": "dwarf_geomancer",
+      "name": "Dwarf Geomancer",
+      "group": "dwarves",
+      "color": "#8a4f2d",
+      "markerColor": "#3ad0ff",
+      "health": 16,
+      "attack": 3,
+      "attackRange": 3,
+      "visionRange": 5,
+      "speed": 0.7,
+      "areaRadius": 1,
+      "areaColor": "#3284ff"
     }
   ]
 }

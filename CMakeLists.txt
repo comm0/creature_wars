@@ -86,6 +86,12 @@ set(CoreFiles
     backend/type_parsing.cpp
     backend/economy_settings.h
     backend/economy_settings.cpp
+    backend/resource_cost.h
+    backend/tech_tree.h
+    backend/tech_tree.cpp
+    backend/base_action.h
+    backend/base_orders.h
+    backend/base_orders.cpp
     backend/base_type.h
     backend/base_type_registry.h
     backend/base_type_registry.cpp
@@ -102,6 +108,8 @@ set(CoreFiles
     backend/visibility_system.cpp
     backend/game_observer.h
     backend/player_state.h
+    backend/game_clock.h
+    backend/game_clock.cpp
     backend/game.h
     backend/game.cpp
     backend/game_event_dispatcher.h
@@ -221,6 +229,8 @@ if(CREATURE_WARS_BUILD_APP)
     )
 
     set(ApplicationFiles
+        backend/BaseActionsModel.h
+        backend/BaseActionsModel.cpp
         backend/BasesModel.h
         backend/BasesModel.cpp
         backend/CreaturesModel.h
@@ -243,6 +253,7 @@ if(CREATURE_WARS_BUILD_APP)
             data/creature_types.json
             data/base_types.json
             data/economy.json
+            data/tech_tree.json
             ${AssetFiles}
     )
 

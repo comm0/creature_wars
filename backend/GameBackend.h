@@ -2,6 +2,7 @@
 
 #include <QObject>
 
+#include "BaseActionsModel.h"
 #include "BasesModel.h"
 #include "CreaturesModel.h"
 #include "GameObserver.h"
@@ -12,7 +13,10 @@ class GameBackend : public QObject
     Q_OBJECT
     Q_PROPERTY(CreaturesModel* creaturesModel READ creaturesModel CONSTANT)
     Q_PROPERTY(BasesModel* basesModel READ basesModel CONSTANT)
+    Q_PROPERTY(BaseActionsModel* baseActionsModel READ baseActionsModel CONSTANT)
+    Q_PROPERTY(qulonglong playerBaseId READ playerBaseId NOTIFY playerStateChanged)
     Q_PROPERTY(bool running READ running NOTIFY runningChanged)
+    Q_PROPERTY(double timeScale READ timeScale NOTIFY timeScaleChanged)
     Q_PROPERTY(bool aggressive READ aggressive WRITE setAggressive NOTIFY aggressiveChanged)
     Q_PROPERTY(int mapColumnCount READ mapColumnCount CONSTANT)
     Q_PROPERTY(int mapRowCount READ mapRowCount CONSTANT)
@@ -33,7 +37,10 @@ public:
 
     CreaturesModel* creaturesModel();
     BasesModel* basesModel();
+    BaseActionsModel* baseActionsModel();
+    qulonglong playerBaseId() const;
     bool running() const;
+    double timeScale() const;
     bool aggressive() const;
     void setAggressive(bool aggressive_p);
     int mapColumnCount() const;
@@ -51,6 +58,7 @@ public:
 
     Q_INVOKABLE void start();
     Q_INVOKABLE void stop();
+    Q_INVOKABLE void cycleTimeScale();
     Q_INVOKABLE void spawnBase(
         const QString& identifier_p,
         int column_p,
@@ -61,7 +69,7 @@ public:
         int column_p,
         int row_p
     );
-    Q_INVOKABLE void spawnCreatureFromBase(std::uint64_t base_id_p);
+    Q_INVOKABLE void orderBaseAction(const QString& key_p);
     Q_INVOKABLE void startMatch(const QString& player_base_identifier_p);
     Q_INVOKABLE void walkCreature(
         std::uint64_t creature_id_p,
@@ -71,8 +79,10 @@ public:
 
 signals:
     void runningChanged();
+    void timeScaleChanged();
     void aggressiveChanged();
     void playerStateChanged();
+    void areaAttack(int column_p, int row_p, int radius_p, QColor color_p);
     void heartbeat();
     void creatureRemoved(std::uint64_t id_p);
 
@@ -102,7 +112,9 @@ private:
     game_t game_;
     CreaturesModel creatures_model_;
     BasesModel bases_model_;
+    BaseActionsModel base_actions_model_;
     bool game_running_ = false;
+    int time_scale_index_ = 0;
     bool aggressive_ = true;
     player_state_t player_state_;
 };

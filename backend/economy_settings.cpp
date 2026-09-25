@@ -37,6 +37,7 @@ economy_settings_t parse_economy_settings(std::string_view economy_json_p)
         starting_gold,
         starting_food,
         parse_income(income.at("gold"), "gold"),
-        parse_income(income.at("food"), "food")
+        parse_income(income.at("food"), "food"),
+        document.value("levelIncomeBonusPercent", 0)
     };
 }

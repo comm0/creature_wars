@@ -1,0 +1,71 @@
+{
+  "baseUpgrades": [
+    { "level": 2, "gold": 200, "timeMs": 60000 },
+    { "level": 3, "gold": 400, "timeMs": 90000 },
+    { "level": 4, "gold": 800, "timeMs": 120000 }
+  ],
+  "researches": [
+    {
+      "id": "base_regeneration",
+      "name": "Base Regeneration",
+      "effect": "baseRegeneration",
+      "levels": [
+        { "baseLevel": 1, "gold": 15, "timeMs": 15000, "value": 1 },
+        { "baseLevel": 2, "gold": 80, "timeMs": 40000, "value": 3 },
+        { "baseLevel": 3, "gold": 200, "timeMs": 60000, "value": 6 },
+        { "baseLevel": 4, "gold": 350, "timeMs": 75000, "value": 10 }
+      ]
+    },
+    {
+      "id": "reinforced_walls",
+      "name": "Reinforced Walls",
+      "effect": "baseHealthPercent",
+      "levels": [
+        { "baseLevel": 1, "gold": 40, "timeMs": 30000, "value": 10 },
+        { "baseLevel": 2, "gold": 120, "timeMs": 45000, "value": 25 },
+        { "baseLevel": 3, "gold": 250, "timeMs": 60000, "value": 50 },
+        { "baseLevel": 4, "gold": 400, "timeMs": 75000, "value": 75 }
+      ]
+    },
+    {
+      "id": "healing_aura",
+      "name": "Healing Aura",
+      "effect": "healingAura",
+      "levels": [
+        { "baseLevel": 2, "gold": 100, "timeMs": 60000, "value": 1 },
+        { "baseLevel": 3, "gold": 220, "timeMs": 60000, "value": 3 },
+        { "baseLevel": 4, "gold": 380, "timeMs": 75000, "value": 5 }
+      ]
+    },
+    {
+      "id": "heavy_shots",
+      "name": "Heavy Shots",
+      "effect": "baseDamagePercent",
+      "levels": [
+        { "baseLevel": 2, "gold": 120, "timeMs": 45000, "value": 20 },
+        { "baseLevel": 3, "gold": 250, "timeMs": 60000, "value": 40 },
+        { "baseLevel": 4, "gold": 400, "timeMs": 75000, "value": 60 }
+      ]
+    },
+    {
+      "id": "multi_shot",
+      "name": "Multi Shot",
+      "effect": "shotCount",
+      "levels": [
+        { "baseLevel": 2, "gold": 150, "timeMs": 60000, "value": 2 },
+        { "baseLevel": 3, "gold": 300, "timeMs": 90000, "value": 3 },
+        { "baseLevel": 4, "gold": 500, "timeMs": 120000, "value": 4 }
+      ]
+    },
+    {
+      "id": "long_range",
+      "name": "Long Range",
+      "effect": "baseRangeBonus",
+      "levels": [
+        { "baseLevel": 2, "gold": 120, "timeMs": 45000, "value": 1 },
+        { "baseLevel": 3, "gold": 250, "timeMs": 60000, "value": 2 },
+        { "baseLevel": 4, "gold": 400, "timeMs": 75000, "value": 3 }
+      ]
+    }
+  ]
+}

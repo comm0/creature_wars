@@ -64,6 +64,38 @@ add_test(
     COMMAND game_scheduler_tests
 )
 
+add_executable(game_clock_tests
+    game_clock_test.cpp
+)
+
+target_link_libraries(game_clock_tests
+    PRIVATE
+        creature_wars_core
+        creature_wars_warnings
+        GTest::gtest_main
+)
+
+add_test(
+    NAME game_clock_tests
+    COMMAND game_clock_tests
+)
+
+add_executable(base_orders_tests
+    base_orders_test.cpp
+)
+
+target_link_libraries(base_orders_tests
+    PRIVATE
+        creature_wars_core
+        creature_wars_warnings
+        GTest::gtest_main
+)
+
+add_test(
+    NAME base_orders_tests
+    COMMAND base_orders_tests
+)
+
 add_executable(pathfinder_tests
     pathfinder_test.cpp
 )
