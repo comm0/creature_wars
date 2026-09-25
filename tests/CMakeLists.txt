@@ -96,6 +96,42 @@ add_test(
     COMMAND base_orders_tests
 )
 
+add_executable(ai_planner_tests
+    ai_planner_test.cpp
+)
+
+target_link_libraries(ai_planner_tests
+    PRIVATE
+        creature_wars_core
+        creature_wars_warnings
+        GTest::gtest_main
+)
+
+add_test(
+    NAME ai_planner_tests
+    COMMAND ai_planner_tests
+)
+
+add_executable(game_ai_tests
+    game_ai_test.cpp
+)
+
+target_compile_definitions(game_ai_tests
+    PRIVATE CREATURE_WARS_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+)
+
+target_link_libraries(game_ai_tests
+    PRIVATE
+        creature_wars_core
+        creature_wars_warnings
+        GTest::gtest_main
+)
+
+add_test(
+    NAME game_ai_tests
+    COMMAND game_ai_tests
+)
+
 add_executable(pathfinder_tests
     pathfinder_test.cpp
 )

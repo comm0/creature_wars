@@ -116,7 +116,8 @@ game_t::game_t(
     const std::string& creature_types_json_p,
     const std::string& base_types_json_p,
     const std::string& economy_json_p,
-    const std::string& tech_tree_json_p
+    const std::string& tech_tree_json_p,
+    const std::string& ai_profiles_json_p
 )
     : wildlife_spawner_(
         scheduler_,
@@ -139,11 +140,7 @@ game_t::game_t(
     , base_type_registry_(base_types_json_p)
     , economy_(parse_economy_settings(economy_json_p))
     , tech_tree_(tech_tree_json_p)
-    , player_orders_(
-        scheduler_,
-        [this](const std::string& key_p) { return complete_base_order(key_p); },
-        [this]() { publish_base_actions(); }
-    )
+    , ai_profiles_(ai_profiles_json_p)
 {
     for (const auto& base_type : base_type_registry_.all()) {
         for (const auto& unit : base_type.units()) {
@@ -326,23 +323,38 @@ void game_t::request_spawn_base(std::string identifier_p, position_t center_p)
 void game_t::request_order_base_action(std::string key_p)
 {
     post([this, key = std::move(key_p)]() {
-        order_base_action(key);
+        auto* controller = player_controller();
+        if (controller != nullptr) {
+            order_base_action(*controller, key);
+        }
     });
 }
 
-void game_t::request_start_match(std::string player_base_identifier_p)
+void game_t::request_start_match(
+    std::string player_base_identifier_p,
+    std::unordered_map<std::string, ai_difficulty_t> ai_difficulties_p
+)
 {
-    post([this, identifier = std::move(player_base_identifier_p)]() {
-        start_match(identifier);
+    post([
+        this,
+        identifier = std::move(player_base_identifier_p),
+        difficulties = std::move(ai_difficulties_p)
+    ]() {
+        start_match(identifier, difficulties);
     });
 }
 
-void game_t::start_match(const std::string& player_base_identifier_p)
+void game_t::start_match(
+    const std::string& player_base_identifier_p,
+    const std::unordered_map<std::string, ai_difficulty_t>& ai_difficulties_p
+)
 {
+    for (auto& controller : controllers_) {
+        controller->orders_->clear();
+        retired_controllers_.push_back(std::move(controller));
+    }
+    controllers_.clear();
     clear_world();
-    player_orders_.clear();
-    research_levels_.clear();
-    trained_units_.clear();
 
     const auto& player_base = base_type_registry_.get(player_base_identifier_p);
 
@@ -352,27 +364,8 @@ void game_t::start_match(const std::string& player_base_identifier_p)
 
     const auto now = game_clock_.now();
     ++match_id_;
-    player_state_ = player_state_t{
-        0,
-        player_base.group(),
-        player_base.name(),
-        1,
-        {
-            economy_.starting_gold_,
-            economy_.gold_income_.amount_,
-            economy_.gold_income_.interval_,
-            0
-        },
-        {
-            economy_.starting_food_,
-            economy_.food_income_.amount_,
-            economy_.food_income_.interval_,
-            0
-        }
-    };
-    observer_->on_player_state_changed(player_state_);
-    schedule_income(&player_state_t::gold_, now + economy_.gold_income_.interval_);
-    schedule_income(&player_state_t::food_, now + economy_.food_income_.interval_);
+    match_active_ = true;
+    match_started_at_ = now;
     std::vector<const base_type_t*> enemy_bases;
     earned_resources_.clear();
 
@@ -406,20 +399,120 @@ void game_t::start_match(const std::string& player_base_identifier_p)
         starting_positions[0]
     );
 
+    if (spawned_player_base == nullptr) {
+        throw std::logic_error("Could not spawn the player base.");
+    }
+
+    auto& player = create_controller(
+        *spawned_player_base,
+        true,
+        ai_difficulty_t::normal
+    );
+    schedule_income(
+        player.state_.base_id_,
+        &player_state_t::gold_,
+        now + player.state_.gold_.income_interval_
+    );
+    schedule_income(
+        player.state_.base_id_,
+        &player_state_t::food_,
+        now + player.state_.food_.income_interval_
+    );
+
     for (std::size_t index = 0; index < enemy_bases.size(); ++index) {
         const auto& enemy_base = *enemy_bases[index];
-        spawn_base(
+        const auto* spawned_enemy_base = spawn_base(
             enemy_base.identifier(),
             starting_positions[index + 1]
         );
+
+        if (spawned_enemy_base == nullptr) {
+            throw std::logic_error("Could not spawn an AI base.");
+        }
+
+        const auto difficulty = ai_difficulties_p.contains(enemy_base.identifier())
+            ? ai_difficulties_p.at(enemy_base.identifier())
+            : ai_difficulty_t::normal;
+        auto& controller = create_controller(
+            *spawned_enemy_base,
+            false,
+            difficulty
+        );
+        schedule_income(
+            controller.state_.base_id_,
+            &player_state_t::gold_,
+            now + controller.state_.gold_.income_interval_
+        );
+        schedule_income(
+            controller.state_.base_id_,
+            &player_state_t::food_,
+            now + controller.state_.food_.income_interval_
+        );
+        schedule_ai_decision(
+            controller.state_.base_id_,
+            now + controller.profile_->decision_interval_
+        );
     }
 
-    player_state_.base_id_ = spawned_player_base != nullptr
-        ? spawned_player_base->id()
-        : 0;
-    observer_->on_player_state_changed(player_state_);
+    publish_controller(player);
     publish_base_actions();
     wildlife_spawner_.start(now);
+    dispatcher_.enqueue([this]() {
+        retired_controllers_.clear();
+    });
+}
+
+base_controller_t& game_t::create_controller(
+    const base_t& base_p,
+    bool human_controlled_p,
+    ai_difficulty_t difficulty_p
+)
+{
+    auto controller = std::make_unique<base_controller_t>();
+    controller->state_ = {
+        base_p.id(),
+        base_p.type().group(),
+        base_p.type().name(),
+        base_p.level(),
+        {
+            economy_.starting_gold_,
+            economy_.gold_income_.amount_,
+            economy_.gold_income_.interval_,
+            0
+        },
+        {
+            economy_.starting_food_,
+            economy_.food_income_.amount_,
+            economy_.food_income_.interval_,
+            0
+        }
+    };
+    controller->human_controlled_ = human_controlled_p;
+    controller->difficulty_ = difficulty_p;
+    controller->profile_ = &ai_profiles_.profile(difficulty_p);
+    auto* result = controller.get();
+    const auto base_id = controller->state_.base_id_;
+    controller->orders_ = std::make_unique<base_orders_t>(
+        scheduler_,
+        [this, base_id](const std::string& key_p) {
+            auto* current = controller_for_base(base_id);
+            return current == nullptr || complete_base_order(*current, key_p);
+        },
+        [this, base_id]() {
+            auto* current = controller_for_base(base_id);
+            if (current == nullptr) {
+                return;
+            }
+
+            publish_controller(*current);
+            if (current->human_controlled_) {
+                publish_base_actions();
+            }
+        }
+    );
+    controllers_.push_back(std::move(controller));
+    publish_controller(*result);
+    return *result;
 }
 
 void game_t::clear_world()
@@ -490,17 +583,24 @@ base_t* game_t::spawn_base(const std::string& identifier_p, position_t center_p)
     return &base;
 }
 
-std::vector<base_action_state_t> game_t::player_base_actions() const
+std::vector<base_action_state_t> game_t::base_actions(
+    const base_controller_t& controller_p
+) const
 {
     std::vector<base_action_state_t> actions;
-    const auto* base = find_base(player_state_.base_id_);
+
+    if (!match_active_) {
+        return actions;
+    }
+
+    const auto* base = find_base(controller_p.state_.base_id_);
 
     if (base == nullptr || base->is_dead()) {
         return actions;
     }
 
     const auto now = game_clock_.now();
-    const auto add_action = [this, &actions, now](
+    const auto add_action = [&controller_p, &actions, now](
         std::string key_p,
         base_action_kind_t kind_p,
         std::string name_p,
@@ -509,7 +609,7 @@ std::vector<base_action_state_t> game_t::player_base_actions() const
         int level_p,
         const timed_cost_t& cost_p
     ) {
-        const auto progress = player_orders_.progress(key_p);
+        const auto progress = controller_p.orders_->progress(key_p);
         auto remaining = std::chrono::milliseconds{0};
 
         if (progress.finish_time_.has_value()) {
@@ -541,7 +641,8 @@ std::vector<base_action_state_t> game_t::player_base_actions() const
 
         const auto& creature = creature_type_registry_.get(unit.creature_);
 
-        if (unit.training_.has_value() && !trained_units_.contains(unit.creature_)) {
+        if (unit.training_.has_value()
+            && !controller_p.trained_units_.contains(unit.creature_)) {
             add_action(
                 training_prefix + unit.creature_,
                 base_action_kind_t::training,
@@ -565,7 +666,10 @@ std::vector<base_action_state_t> game_t::player_base_actions() const
     }
 
     for (const auto& research : tech_tree_.researches()) {
-        const auto completed = static_cast<std::size_t>(research_level(research.identifier_));
+        const auto completed = static_cast<std::size_t>(research_level(
+            controller_p,
+            research.identifier_
+        ));
 
         if (completed >= research.levels_.size()
             || research.levels_[completed].base_level_ > base->level()) {
@@ -600,9 +704,16 @@ std::vector<base_action_state_t> game_t::player_base_actions() const
     return actions;
 }
 
-void game_t::order_base_action(const std::string& key_p)
+bool game_t::order_base_action(
+    base_controller_t& controller_p,
+    const std::string& key_p
+)
 {
-    const auto actions = player_base_actions();
+    if (!match_active_) {
+        return false;
+    }
+
+    const auto actions = base_actions(controller_p);
     const auto action = std::find_if(
         actions.begin(),
         actions.end(),
@@ -612,30 +723,38 @@ void game_t::order_base_action(const std::string& key_p)
     );
 
     if (action == actions.end()) {
-        return;
+        return false;
     }
 
     const auto queue_limit = action->kind_ == base_action_kind_t::spawn
         ? max_spawn_queue
         : 1;
-    auto& gold = player_state_.gold_.amount_;
-    auto& food = player_state_.food_.amount_;
+    auto& gold = controller_p.state_.gold_.amount_;
+    auto& food = controller_p.state_.food_.amount_;
 
     if (action->queued_ >= queue_limit
         || gold < action->cost_.cost_.gold_
         || food < action->cost_.cost_.food_) {
-        return;
+        return false;
     }
 
     gold -= action->cost_.cost_.gold_;
     food -= action->cost_.cost_.food_;
-    observer_->on_player_state_changed(player_state_);
-    player_orders_.enqueue(key_p, action->cost_.duration_, game_clock_.now());
+    publish_controller(controller_p);
+    controller_p.orders_->enqueue(key_p, action->cost_.duration_, game_clock_.now());
+    return true;
 }
 
-bool game_t::complete_base_order(const std::string& key_p)
+bool game_t::complete_base_order(
+    base_controller_t& controller_p,
+    const std::string& key_p
+)
 {
-    auto* base = find_base(player_state_.base_id_);
+    if (!match_active_) {
+        return true;
+    }
+
+    auto* base = find_base(controller_p.state_.base_id_);
 
     if (base == nullptr || base->is_dead()) {
         return true;
@@ -643,10 +762,10 @@ bool game_t::complete_base_order(const std::string& key_p)
 
     if (key_p == upgrade_key) {
         base->set_level(base->level() + 1);
-        player_state_.base_level_ = base->level();
-        apply_base_stats(*base);
-        update_income_intervals();
-        observer_->on_player_state_changed(player_state_);
+        controller_p.state_.base_level_ = base->level();
+        apply_base_stats(controller_p, *base);
+        update_income_intervals(controller_p);
+        publish_controller(controller_p);
         return true;
     }
 
@@ -662,13 +781,13 @@ bool game_t::complete_base_order(const std::string& key_p)
     }
 
     if (starts_with(key_p, training_prefix)) {
-        trained_units_.insert(key_p.substr(training_prefix.size()));
+        controller_p.trained_units_.insert(key_p.substr(training_prefix.size()));
         return true;
     }
 
     if (starts_with(key_p, research_prefix)) {
-        ++research_levels_[key_p.substr(research_prefix.size())];
-        apply_base_stats(*base);
+        ++controller_p.research_levels_[key_p.substr(research_prefix.size())];
+        apply_base_stats(controller_p, *base);
     }
 
     return true;
@@ -676,21 +795,47 @@ bool game_t::complete_base_order(const std::string& key_p)
 
 void game_t::publish_base_actions()
 {
-    observer_->on_base_actions_changed(player_state_.base_id_, player_base_actions());
+    const auto* controller = player_controller();
+    if (controller != nullptr) {
+        observer_->on_base_actions_changed(
+            controller->state_.base_id_,
+            base_actions(*controller)
+        );
+    }
 }
 
-int game_t::research_level(const std::string& identifier_p) const
+void game_t::publish_controller(const base_controller_t& controller_p)
 {
-    const auto level = research_levels_.find(identifier_p);
-    return level == research_levels_.end() ? 0 : level->second;
+    observer_->on_base_controller_changed({
+        controller_p.state_,
+        controller_p.human_controlled_,
+        to_string(controller_p.difficulty_),
+        to_string(controller_p.strategy_)
+    });
+
+    if (controller_p.human_controlled_) {
+        observer_->on_player_state_changed(controller_p.state_);
+    }
 }
 
-int game_t::research_value(research_effect_t effect_p) const
+int game_t::research_level(
+    const base_controller_t& controller_p,
+    const std::string& identifier_p
+) const
+{
+    const auto level = controller_p.research_levels_.find(identifier_p);
+    return level == controller_p.research_levels_.end() ? 0 : level->second;
+}
+
+int game_t::research_value(
+    const base_controller_t& controller_p,
+    research_effect_t effect_p
+) const
 {
     auto value = 0;
 
     for (const auto& research : tech_tree_.researches()) {
-        const auto level = research_level(research.identifier_);
+        const auto level = research_level(controller_p, research.identifier_);
 
         if (research.effect_ == effect_p && level > 0) {
             value += research.levels_[static_cast<std::size_t>(level - 1)].value_;
@@ -700,12 +845,14 @@ int game_t::research_value(research_effect_t effect_p) const
     return value;
 }
 
-void game_t::apply_base_stats(base_t& base_p)
+void game_t::apply_base_stats(
+    base_controller_t& controller_p,
+    base_t& base_p
+)
 {
     const auto& level = base_p.type().level_stats(base_p.level());
-    const auto is_player_base = base_p.id() == player_state_.base_id_;
-    const auto value = [this, is_player_base](research_effect_t effect_p) {
-        return is_player_base ? research_value(effect_p) : 0;
+    const auto value = [this, &controller_p](research_effect_t effect_p) {
+        return research_value(controller_p, effect_p);
     };
 
     base_p.apply_stats({
@@ -719,16 +866,16 @@ void game_t::apply_base_stats(base_t& base_p)
     observer_->on_base_changed(base_p);
 }
 
-void game_t::update_income_intervals()
+void game_t::update_income_intervals(base_controller_t& controller_p)
 {
     const auto speed_percent = 100
-        + economy_.level_income_bonus_percent_ * (player_state_.base_level_ - 1);
+        + economy_.level_income_bonus_percent_ * (controller_p.state_.base_level_ - 1);
     const auto scaled = [speed_percent](std::chrono::milliseconds interval_p) {
         return std::chrono::milliseconds{interval_p.count() * 100 / speed_percent};
     };
 
-    player_state_.gold_.income_interval_ = scaled(economy_.gold_income_.interval_);
-    player_state_.food_.income_interval_ = scaled(economy_.food_income_.interval_);
+    controller_p.state_.gold_.income_interval_ = scaled(economy_.gold_income_.interval_);
+    controller_p.state_.food_.income_interval_ = scaled(economy_.food_income_.interval_);
 }
 
 void game_t::regenerate_bases()
@@ -740,27 +887,27 @@ void game_t::regenerate_bases()
     }
 }
 
-void game_t::heal_near_player_base()
+void game_t::heal_near_bases()
 {
-    const auto* base = find_base(player_state_.base_id_);
-
-    if (base == nullptr || base->is_dead() || base->stats().healing_aura_ <= 0) {
-        return;
-    }
-
-    std::vector<std::uint64_t> creature_ids;
-    creatures_.for_each([base, &creature_ids](const creature_t& creature_p) {
-        if (creature_p.type().group() == base->type().group()
-            && base->distance_to(creature_p.position()) <= base->stats().range_) {
-            creature_ids.push_back(creature_p.id());
+    for (const auto& base : bases_) {
+        if (base->is_dead() || base->stats().healing_aura_ <= 0) {
+            continue;
         }
-    });
 
-    for (const auto id : creature_ids) {
-        auto* creature = creatures_.find(id);
+        std::vector<std::uint64_t> creature_ids;
+        creatures_.for_each([&base, &creature_ids](const creature_t& creature_p) {
+            if (creature_p.type().group() == base->type().group()
+                && base->distance_to(creature_p.position()) <= base->stats().range_) {
+                creature_ids.push_back(creature_p.id());
+            }
+        });
 
-        if (creature != nullptr && creature->heal(base->stats().healing_aura_)) {
-            observer_->on_creature_health_changed(id, creature->health());
+        for (const auto id : creature_ids) {
+            auto* creature = creatures_.find(id);
+
+            if (creature != nullptr && creature->heal(base->stats().healing_aura_)) {
+                observer_->on_creature_health_changed(id, creature->health());
+            }
         }
     }
 }
@@ -823,6 +970,68 @@ const base_t* game_t::find_base(std::uint64_t id_p) const noexcept
     );
 
     return base == bases_.end() ? nullptr : base->get();
+}
+
+base_controller_t* game_t::controller_for_base(std::uint64_t base_id_p) noexcept
+{
+    const auto controller = std::find_if(
+        controllers_.begin(),
+        controllers_.end(),
+        [base_id_p](const auto& controller_p) {
+            return controller_p->state_.base_id_ == base_id_p;
+        }
+    );
+    return controller == controllers_.end() ? nullptr : controller->get();
+}
+
+const base_controller_t* game_t::controller_for_base(
+    std::uint64_t base_id_p
+) const noexcept
+{
+    const auto controller = std::find_if(
+        controllers_.begin(),
+        controllers_.end(),
+        [base_id_p](const auto& controller_p) {
+            return controller_p->state_.base_id_ == base_id_p;
+        }
+    );
+    return controller == controllers_.end() ? nullptr : controller->get();
+}
+
+base_controller_t* game_t::controller_for_group(std::string_view group_p) noexcept
+{
+    const auto controller = std::find_if(
+        controllers_.begin(),
+        controllers_.end(),
+        [group_p](const auto& controller_p) {
+            return controller_p->state_.base_group_ == group_p;
+        }
+    );
+    return controller == controllers_.end() ? nullptr : controller->get();
+}
+
+base_controller_t* game_t::player_controller() noexcept
+{
+    const auto controller = std::find_if(
+        controllers_.begin(),
+        controllers_.end(),
+        [](const auto& controller_p) {
+            return controller_p->human_controlled_;
+        }
+    );
+    return controller == controllers_.end() ? nullptr : controller->get();
+}
+
+const base_controller_t* game_t::player_controller() const noexcept
+{
+    const auto controller = std::find_if(
+        controllers_.begin(),
+        controllers_.end(),
+        [](const auto& controller_p) {
+            return controller_p->human_controlled_;
+        }
+    );
+    return controller == controllers_.end() ? nullptr : controller->get();
 }
 
 const base_t* game_t::find_match_base(std::string_view group_p) const noexcept
@@ -965,26 +1174,218 @@ void game_t::schedule_tick(game_scheduler_t::time_point_t time_p)
 }
 
 void game_t::schedule_income(
+    std::uint64_t base_id_p,
     resource_state_t player_state_t::* resource_p,
     game_scheduler_t::time_point_t time_p
 )
 {
     scheduler_.schedule(
         time_p,
-        [this, resource_p, match_id = match_id_](
+        [this, base_id_p, resource_p, match_id = match_id_](
             game_scheduler_t::time_point_t scheduled_time_p
         ) {
-            if (match_id != match_id_) {
+            if (match_id != match_id_ || !match_active_) {
                 return;
             }
 
-            auto& resource = player_state_.*resource_p;
+            auto* controller = controller_for_base(base_id_p);
+            if (controller == nullptr || find_base(base_id_p) == nullptr) {
+                return;
+            }
+
+            auto& resource = controller->state_.*resource_p;
             resource.amount_ += resource.income_;
             ++resource.income_cycle_;
-            observer_->on_player_state_changed(player_state_);
-            schedule_income(resource_p, scheduled_time_p + resource.income_interval_);
+            publish_controller(*controller);
+            schedule_income(
+                base_id_p,
+                resource_p,
+                scheduled_time_p + resource.income_interval_
+            );
         }
     );
+}
+
+void game_t::schedule_ai_decision(
+    std::uint64_t base_id_p,
+    game_scheduler_t::time_point_t time_p
+)
+{
+    scheduler_.schedule(
+        time_p,
+        [this, base_id_p, match_id = match_id_](
+            game_scheduler_t::time_point_t scheduled_time_p
+        ) {
+            if (match_id != match_id_ || !match_active_) {
+                return;
+            }
+
+            auto* controller = controller_for_base(base_id_p);
+            if (controller == nullptr
+                || controller->human_controlled_
+                || find_base(base_id_p) == nullptr) {
+                return;
+            }
+
+            run_ai_decision(*controller);
+            schedule_ai_decision(
+                base_id_p,
+                scheduled_time_p + controller->profile_->decision_interval_
+            );
+        }
+    );
+}
+
+void game_t::run_ai_decision(base_controller_t& controller_p)
+{
+    const auto* base = find_base(controller_p.state_.base_id_);
+    if (base == nullptr || base->is_dead()) {
+        return;
+    }
+
+    const auto neutral_target = find_neutral_target(controller_p);
+    ai_context_t context{
+        .gold_ = controller_p.state_.gold_.amount_,
+        .food_ = controller_p.state_.food_.amount_,
+        .base_level_ = base->level(),
+        .base_health_ = base->health(),
+        .base_max_health_ = base->stats().max_health_,
+        .neutral_target_available_ = neutral_target.has_value()
+    };
+    creatures_.for_each([this, &context, base](const creature_t& creature_p) {
+        if (creature_p.is_dead()) {
+            return;
+        }
+
+        if (creature_p.type().group() == base->type().group()) {
+            ++context.army_size_;
+        } else if ((controller_for_group(creature_p.type().group()) != nullptr
+                || creature_p.type().attack() > 0)
+            && base->distance_to(creature_p.position()) <= base->stats().range_ + 3) {
+            ++context.nearby_enemy_count_;
+        }
+    });
+
+    const auto decision = ai_planner_t::plan(
+        *controller_p.profile_,
+        context,
+        base_actions(controller_p)
+    );
+    controller_p.strategy_ = decision.strategy_;
+
+    if (!decision.action_key_.empty()) {
+        order_base_action(controller_p, decision.action_key_);
+    }
+    if (decision.launch_hunt_ && neutral_target.has_value()) {
+        const auto hunting_party_size = static_cast<std::size_t>(
+            std::max(1, context.army_size_ / 2)
+        );
+        command_attack(controller_p, *neutral_target, hunting_party_size);
+    } else if (decision.launch_assault_) {
+        launch_assault(controller_p);
+    }
+
+    publish_controller(controller_p);
+}
+
+std::optional<std::uint64_t> game_t::find_neutral_target(
+    const base_controller_t& controller_p
+) const
+{
+    const auto* base = find_base(controller_p.state_.base_id_);
+    if (base == nullptr) {
+        return std::nullopt;
+    }
+
+    std::optional<std::uint64_t> target_id;
+    auto target_distance = std::numeric_limits<int>::max();
+    creatures_.for_each([this, base, &controller_p, &target_id, &target_distance](
+        const creature_t& creature_p
+    ) {
+        if (creature_p.is_dead()
+            || creature_p.type().group() == controller_p.state_.base_group_) {
+            return;
+        }
+
+        const auto controlled_group = std::any_of(
+            controllers_.begin(),
+            controllers_.end(),
+            [&creature_p](const auto& candidate_p) {
+                return candidate_p->state_.base_group_ == creature_p.type().group();
+            }
+        );
+        const auto distance = base->distance_to(creature_p.position());
+        if (!controlled_group
+            && distance <= controller_p.profile_->hunt_maximum_distance_
+            && distance < target_distance) {
+            target_id = creature_p.id();
+            target_distance = distance;
+        }
+    });
+    return target_id;
+}
+
+void game_t::command_attack(
+    base_controller_t& controller_p,
+    std::uint64_t target_id_p,
+    std::size_t maximum_unit_count_p
+)
+{
+    if (controller_p.strategic_target_id_ != target_id_p) {
+        controller_p.strategic_target_id_ = target_id_p;
+        controller_p.commanded_units_.clear();
+    }
+
+    auto commanded_count = controller_p.commanded_units_.size();
+    creatures_.for_each([this, &controller_p, target_id_p, maximum_unit_count_p, &commanded_count](
+        creature_t& creature_p
+    ) {
+        if (commanded_count >= maximum_unit_count_p
+            || creature_p.is_dead()
+            || creature_p.type().group() != controller_p.state_.base_group_
+            || controller_p.commanded_units_.contains(creature_p.id())
+            || !find_commanded_target(creature_p, target_id_p).has_value()) {
+            return;
+        }
+
+        creature_p.command_attack(target_id_p);
+        creature_p.on_think(*this);
+        controller_p.commanded_units_.insert(creature_p.id());
+        ++commanded_count;
+    });
+    report_target_changes();
+}
+
+void game_t::launch_assault(base_controller_t& controller_p)
+{
+    const auto* source = find_base(controller_p.state_.base_id_);
+    if (source == nullptr) {
+        return;
+    }
+
+    const base_t* target = nullptr;
+    auto target_distance = std::numeric_limits<int>::max();
+    for (const auto& candidate : bases_) {
+        if (candidate->is_dead()
+            || !candidate->type().is_match_base()
+            || candidate->type().group() == source->type().group()) {
+            continue;
+        }
+
+        const auto distance = position_distance(source->position(), candidate->position());
+        if (distance < target_distance) {
+            target = candidate.get();
+            target_distance = distance;
+        }
+    }
+
+    if (target != nullptr) {
+        command_attack(
+            controller_p,
+            target->id(),
+            std::numeric_limits<std::size_t>::max()
+        );
+    }
 }
 
 void game_t::dispatch_tick()
@@ -1001,7 +1402,7 @@ void game_t::dispatch_tick()
     }
 
     regenerate_bases();
-    heal_near_player_base();
+    heal_near_bases();
     remove_dead_creatures();
     remove_dead_bases();
     report_target_changes();
@@ -1103,8 +1504,9 @@ void game_t::set_attack_target(std::uint64_t id_p, std::uint64_t target_id_p)
 
 bool game_t::is_player_creature(const creature_t& creature_p) const noexcept
 {
-    return player_state_.base_group_.empty()
-        || creature_p.type().group() == player_state_.base_group_;
+    const auto* controller = player_controller();
+    return controller == nullptr
+        || creature_p.type().group() == controller->state_.base_group_;
 }
 
 void game_t::report_target_changes()
@@ -1556,20 +1958,21 @@ void game_t::award_reward(
         }
     }
 
-    auto player_rewarded = false;
-    const auto award = [this, &eligible_damage, &player_rewarded](
+    std::unordered_set<std::uint64_t> rewarded_base_ids;
+    const auto award = [this, &eligible_damage, &rewarded_base_ids](
         int amount_p,
         int resource_reward_t::* resource_p
     ) {
         for (const auto& share : split_reward(amount_p, eligible_damage)) {
             earned_resources_[share.group_].*resource_p += share.amount_;
 
-            if (share.group_ == player_state_.base_group_) {
+            auto* controller = controller_for_group(share.group_);
+            if (controller != nullptr && share.amount_ > 0) {
                 auto& resource = resource_p == &resource_reward_t::gold_
-                    ? player_state_.gold_.amount_
-                    : player_state_.food_.amount_;
+                    ? controller->state_.gold_.amount_
+                    : controller->state_.food_.amount_;
                 resource += share.amount_;
-                player_rewarded = player_rewarded || share.amount_ > 0;
+                rewarded_base_ids.insert(controller->state_.base_id_);
             }
         }
     };
@@ -1577,8 +1980,12 @@ void game_t::award_reward(
     award(reward_p.gold_, &resource_reward_t::gold_);
     award(reward_p.food_, &resource_reward_t::food_);
 
-    if (player_rewarded) {
-        observer_->on_player_state_changed(player_state_);
+    for (const auto base_id : rewarded_base_ids) {
+        if (const auto* controller = controller_for_base(base_id); controller != nullptr) {
+            publish_controller(*controller);
+        }
+    }
+    if (!rewarded_base_ids.empty()) {
         publish_base_actions();
     }
 }
@@ -1613,16 +2020,94 @@ void game_t::remove_corpse(std::uint64_t id_p)
 
 void game_t::remove_dead_bases()
 {
-    std::erase_if(bases_, [this](const auto& base_p) {
+    std::vector<std::string> eliminated_groups;
+
+    std::erase_if(bases_, [this, &eliminated_groups](const auto& base_p) {
         if (!base_p->is_dead()) {
             return false;
         }
 
         award_reward(base_p->type().reward(), base_p->damage_contributions());
+
+        if (base_p->type().is_match_base()) {
+            eliminated_groups.push_back(base_p->type().group());
+        }
+
         game_map_.remove_base(*base_p);
         observer_->on_base_removed(base_p->id());
         return true;
     });
+
+    if (!match_active_ || eliminated_groups.empty()) {
+        return;
+    }
+
+    for (const auto& group : eliminated_groups) {
+        eliminate_group(group);
+    }
+
+    check_match_end();
+}
+
+void game_t::eliminate_group(const std::string& group_p)
+{
+    creatures_.for_each([this, &group_p](creature_t& creature_p) {
+        if (creature_p.is_dead() || creature_p.type().group() != group_p) {
+            return;
+        }
+
+        creature_p.receive_damage(group_p, creature_p.health());
+        observer_->on_creature_health_changed(creature_p.id(), 0);
+        dead_creature_ids_.push_back(creature_p.id());
+    });
+}
+
+void game_t::check_match_end()
+{
+    const auto* controller = player_controller();
+    if (controller == nullptr) {
+        return;
+    }
+
+    const auto& player_group = controller->state_.base_group_;
+    const auto player_base_alive = std::any_of(
+        bases_.begin(),
+        bases_.end(),
+        [&player_group](const auto& base_p) {
+            return base_p->type().is_match_base()
+                && base_p->type().group() == player_group;
+        }
+    );
+    const auto enemy_base_alive = std::any_of(
+        bases_.begin(),
+        bases_.end(),
+        [&player_group](const auto& base_p) {
+            return base_p->type().is_match_base()
+                && base_p->type().group() != player_group;
+        }
+    );
+
+    if (!player_base_alive) {
+        end_match(false);
+    } else if (!enemy_base_alive) {
+        end_match(true);
+    }
+}
+
+void game_t::end_match(bool victory_p)
+{
+    match_active_ = false;
+    wildlife_spawner_.reset();
+    for (auto& controller : controllers_) {
+        controller->orders_->clear();
+    }
+    publish_base_actions();
+    observer_->on_match_ended(
+        victory_p,
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            current_time() - match_started_at_
+        )
+    );
 }
 
 void game_t::remove_dead_creatures()
@@ -1666,5 +2151,7 @@ void game_t::publish_creatures()
         observer_->on_base_created(*base);
     }
 
-    observer_->on_player_state_changed(player_state_);
+    if (const auto* controller = player_controller(); controller != nullptr) {
+        publish_controller(*controller);
+    }
 }

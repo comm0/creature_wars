@@ -21,3 +21,11 @@ struct player_state_t
     resource_state_t gold_;
     resource_state_t food_;
 };
+
+struct base_controller_state_t
+{
+    player_state_t resources_;
+    bool human_controlled_ = false;
+    std::string difficulty_;
+    std::string strategy_;
+};

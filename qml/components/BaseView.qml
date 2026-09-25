@@ -25,6 +25,13 @@ Item {
     required property int attackTargetColumn
     required property int attackTargetRow
     required property bool removing
+    required property int baseGold
+    required property int baseFood
+    required property int baseGoldIncome
+    required property int baseFoodIncome
+    required property string aiDifficulty
+    required property string aiStrategy
+    required property bool humanControlled
 
     property int tileSize: 16
     property bool rangeVisible: false
@@ -159,6 +166,37 @@ Item {
                 width: (baseView.width - 8) * 1.3
                 health: baseView.health
                 maximumHealth: baseView.maximumHealth
+            }
+        }
+
+        Rectangle {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.horizontalCenterOffset: -baseView.artHeight / 2
+            y: baseView.height + 2
+            width: 104
+            height: 29
+            scale: baseView.identityScale
+            transformOrigin: Item.Top
+            radius: 3
+            color: "#dd111814"
+            border.width: 1
+            border.color: "#65766b"
+            visible: baseHover.hovered && !baseView.isPlayerBase
+
+            AppText {
+                anchors.centerIn: parent
+                color: "#f1f4f2"
+                font.pixelSize: 7
+                horizontalAlignment: Text.AlignHCenter
+                renderType: Text.CurveRendering
+                renderTypeQuality: Text.VeryHighRenderTypeQuality
+                text: qsTr("Gold %1 (+%2)  Food %3 (+%4)\nAI %5 · %6")
+                    .arg(baseView.baseGold)
+                    .arg(baseView.baseGoldIncome)
+                    .arg(baseView.baseFood)
+                    .arg(baseView.baseFoodIncome)
+                    .arg(baseView.aiDifficulty)
+                    .arg(baseView.aiStrategy)
             }
         }
 

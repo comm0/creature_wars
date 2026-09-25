@@ -71,6 +71,20 @@ QVariant BasesModel::data(const QModelIndex& index_p, int role_p) const
         return base.attack_target_.row_;
     case removing_role:
         return base.removing_;
+    case gold_role:
+        return base.gold_;
+    case food_role:
+        return base.food_;
+    case gold_income_role:
+        return base.gold_income_;
+    case food_income_role:
+        return base.food_income_;
+    case ai_difficulty_role:
+        return base.ai_difficulty_;
+    case ai_strategy_role:
+        return base.ai_strategy_;
+    case human_controlled_role:
+        return base.human_controlled_;
     default:
         return {};
     }
@@ -97,7 +111,14 @@ QHash<int, QByteArray> BasesModel::roleNames() const
         {attack_revision_role, "attackRevision"},
         {attack_target_column_role, "attackTargetColumn"},
         {attack_target_row_role, "attackTargetRow"},
-        {removing_role, "removing"}
+        {removing_role, "removing"},
+        {gold_role, "baseGold"},
+        {food_role, "baseFood"},
+        {gold_income_role, "baseGoldIncome"},
+        {food_income_role, "baseFoodIncome"},
+        {ai_difficulty_role, "aiDifficulty"},
+        {ai_strategy_role, "aiStrategy"},
+        {human_controlled_role, "humanControlled"}
     };
 }
 
@@ -139,6 +160,13 @@ void BasesModel::insert_base(
         0,
         0,
         position_p,
+        false,
+        0,
+        0,
+        0,
+        0,
+        QStringLiteral("normal"),
+        QStringLiteral("recover"),
         false
     });
     endInsertRows();
@@ -191,6 +219,42 @@ void BasesModel::update_base_health(std::uint64_t id_p, int health_p)
 
     base.health_ = health_p;
     notify_row_changed(row, {health_role, damage_amount_role, damage_revision_role});
+}
+
+void BasesModel::update_base_controller(
+    std::uint64_t id_p,
+    int gold_p,
+    int food_p,
+    int gold_income_p,
+    int food_income_p,
+    QString ai_difficulty_p,
+    QString ai_strategy_p,
+    bool human_controlled_p
+)
+{
+    const auto row = row_of(id_p);
+
+    if (row < 0) {
+        return;
+    }
+
+    auto& base = bases_[static_cast<std::size_t>(row)];
+    base.gold_ = gold_p;
+    base.food_ = food_p;
+    base.gold_income_ = gold_income_p;
+    base.food_income_ = food_income_p;
+    base.ai_difficulty_ = std::move(ai_difficulty_p);
+    base.ai_strategy_ = std::move(ai_strategy_p);
+    base.human_controlled_ = human_controlled_p;
+    notify_row_changed(row, {
+        gold_role,
+        food_role,
+        gold_income_role,
+        food_income_role,
+        ai_difficulty_role,
+        ai_strategy_role,
+        human_controlled_role
+    });
 }
 
 void BasesModel::notify_base_attack(

@@ -49,6 +49,9 @@ public:
     ) override;
     void on_base_removed(std::uint64_t id_p) override;
     void on_player_state_changed(const player_state_t& state_p) override;
+    void on_base_controller_changed(
+        const base_controller_state_t& state_p
+    ) override;
     void on_base_changed(const base_t& base_p) override;
     void on_base_actions_changed(
         std::uint64_t base_id_p,
@@ -59,6 +62,7 @@ public:
         int radius_p,
         std::uint32_t color_p
     ) override;
+    void on_match_ended(bool victory_p, std::chrono::milliseconds duration_p) override;
     void on_creature_target_changed(
         std::uint64_t id_p,
         std::uint64_t target_id_p
@@ -129,5 +133,16 @@ signals:
     void baseAttackPerformed(std::uint64_t id_p, position_t target_position_p);
     void baseRemoved(std::uint64_t id_p);
     void playerStateChanged(player_state_t state_p);
+    void baseControllerChanged(
+        std::uint64_t base_id_p,
+        int gold_p,
+        int food_p,
+        int gold_income_p,
+        int food_income_p,
+        QString difficulty_p,
+        QString strategy_p,
+        bool human_controlled_p
+    );
+    void matchEnded(bool victory_p, int duration_ms_p);
     void creatureTargetChanged(std::uint64_t id_p, std::uint64_t target_id_p);
 };

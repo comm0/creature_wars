@@ -1,0 +1,37 @@
+{
+  "profiles": {
+    "easy": {
+      "decisionIntervalMs": 3000,
+      "goldReserve": 25,
+      "foodReserve": 2,
+      "minimumArmyForGrowth": 4,
+      "minimumArmyForAssault": 4,
+      "maximumSpawnQueue": 1,
+      "huntGoldBelow": 35,
+      "huntFoodBelow": 3,
+      "huntMaximumDistance": 10
+    },
+    "normal": {
+      "decisionIntervalMs": 1500,
+      "goldReserve": 15,
+      "foodReserve": 1,
+      "minimumArmyForGrowth": 3,
+      "minimumArmyForAssault": 3,
+      "maximumSpawnQueue": 2,
+      "huntGoldBelow": 60,
+      "huntFoodBelow": 5,
+      "huntMaximumDistance": 14
+    },
+    "hard": {
+      "decisionIntervalMs": 750,
+      "goldReserve": 8,
+      "foodReserve": 0,
+      "minimumArmyForGrowth": 2,
+      "minimumArmyForAssault": 2,
+      "maximumSpawnQueue": 3,
+      "huntGoldBelow": 100,
+      "huntFoodBelow": 8,
+      "huntMaximumDistance": 18
+    }
+  }
+}

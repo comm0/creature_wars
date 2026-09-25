@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -50,6 +51,9 @@ public:
     ) = 0;
     virtual void on_base_removed(std::uint64_t id_p) = 0;
     virtual void on_player_state_changed(const player_state_t& state_p) = 0;
+    virtual void on_base_controller_changed(
+        const base_controller_state_t& state_p
+    ) = 0;
     virtual void on_base_changed(const base_t& base_p) = 0;
     virtual void on_base_actions_changed(
         std::uint64_t base_id_p,
@@ -60,6 +64,7 @@ public:
         int radius_p,
         std::uint32_t color_p
     ) = 0;
+    virtual void on_match_ended(bool victory_p, std::chrono::milliseconds duration_p) = 0;
     virtual void on_creature_target_changed(
         std::uint64_t id_p,
         std::uint64_t target_id_p

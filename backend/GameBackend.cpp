@@ -35,7 +35,8 @@ GameBackend::GameBackend(QObject* parent_p)
         load_resource(QStringLiteral(":/data/creature_types.json")),
         load_resource(QStringLiteral(":/data/base_types.json")),
         load_resource(QStringLiteral(":/data/economy.json")),
-        load_resource(QStringLiteral(":/data/tech_tree.json"))
+        load_resource(QStringLiteral(":/data/tech_tree.json")),
+        load_resource(QStringLiteral(":/data/ai_profiles.json"))
     )
 {
     connect(
@@ -109,6 +110,12 @@ GameBackend::GameBackend(QObject* parent_p)
             static_cast<void>(spotted_id_p);
             creatures_model_.notify_creature_spotted(observer_id_p);
         }
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::matchEnded,
+        this,
+        &GameBackend::matchEnded
     );
     connect(
         &game_observer_,
@@ -193,6 +200,12 @@ GameBackend::GameBackend(QObject* parent_p)
             player_state_ = std::move(state_p);
             emit playerStateChanged();
         }
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::baseControllerChanged,
+        &bases_model_,
+        &BasesModel::update_base_controller
     );
 
     start();
@@ -376,13 +389,34 @@ void GameBackend::spawnBase(
     );
 }
 
-void GameBackend::startMatch(const QString& player_base_identifier_p)
+void GameBackend::startMatch(
+    const QString& player_base_identifier_p,
+    const QString& minotaur_difficulty_p,
+    const QString& orc_difficulty_p,
+    const QString& dwarf_difficulty_p
+)
 {
     if (!game_running_) {
         return;
     }
 
-    game_.request_start_match(player_base_identifier_p.toStdString());
+    game_.request_start_match(
+        player_base_identifier_p.toStdString(),
+        {
+            {
+                "minotaur_base",
+                ai_difficulty_from_string(minotaur_difficulty_p.toStdString())
+            },
+            {
+                "orc_base",
+                ai_difficulty_from_string(orc_difficulty_p.toStdString())
+            },
+            {
+                "dwarf_base",
+                ai_difficulty_from_string(dwarf_difficulty_p.toStdString())
+            }
+        }
+    );
 }
 
 void GameBackend::spawnCreature(

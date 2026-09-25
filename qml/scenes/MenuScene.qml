@@ -8,8 +8,40 @@ Scene {
     id: menuScene
 
     property string selectedBase: ""
+    property string minotaurDifficulty: "normal"
+    property string orcDifficulty: "normal"
+    property string dwarfDifficulty: "normal"
 
-    signal startRequested(string baseIdentifier)
+    signal startRequested(
+        string baseIdentifier,
+        string minotaurDifficulty,
+        string orcDifficulty,
+        string dwarfDifficulty
+    )
+
+    function difficultyFor(baseIdentifier) {
+        if (baseIdentifier === "minotaur_base") {
+            return minotaurDifficulty
+        }
+        if (baseIdentifier === "orc_base") {
+            return orcDifficulty
+        }
+        return dwarfDifficulty
+    }
+
+    function cycleDifficulty(baseIdentifier) {
+        const values = ["easy", "normal", "hard"]
+        const current = difficultyFor(baseIdentifier)
+        const next = values[(values.indexOf(current) + 1) % values.length]
+
+        if (baseIdentifier === "minotaur_base") {
+            minotaurDifficulty = next
+        } else if (baseIdentifier === "orc_base") {
+            orcDifficulty = next
+        } else {
+            dwarfDifficulty = next
+        }
+    }
 
     width: 640
     height: 360
@@ -78,15 +110,17 @@ Scene {
                 raceName: modelData.raceName
                 creatureIdentifier: modelData.creatureIdentifier
                 selected: menuScene.selectedBase === modelData.baseIdentifier
+                aiDifficulty: menuScene.difficultyFor(modelData.baseIdentifier)
 
                 onClicked: menuScene.selectedBase = modelData.baseIdentifier
+                onDifficultyClicked: menuScene.cycleDifficulty(modelData.baseIdentifier)
             }
         }
     }
 
     AppButton {
         anchors.horizontalCenter: parent.horizontalCenter
-        y: 262
+        y: 280
         text: qsTr("Start")
         enabled: menuScene.selectedBase !== ""
         textSize: 14
@@ -105,6 +139,11 @@ Scene {
         textColor: "#f1f4f2"
         textColorDisabled: "#6b776f"
 
-        onClicked: menuScene.startRequested(menuScene.selectedBase)
+        onClicked: menuScene.startRequested(
+            menuScene.selectedBase,
+            menuScene.minotaurDifficulty,
+            menuScene.orcDifficulty,
+            menuScene.dwarfDifficulty
+        )
     }
 }

@@ -75,7 +75,12 @@ public:
         int row_p
     );
     Q_INVOKABLE void orderBaseAction(const QString& key_p);
-    Q_INVOKABLE void startMatch(const QString& player_base_identifier_p);
+    Q_INVOKABLE void startMatch(
+        const QString& player_base_identifier_p,
+        const QString& minotaur_difficulty_p,
+        const QString& orc_difficulty_p,
+        const QString& dwarf_difficulty_p
+    );
     Q_INVOKABLE void attackTarget(
         std::uint64_t creature_id_p,
         std::uint64_t target_id_p
@@ -91,6 +96,7 @@ signals:
     void timeScaleChanged();
     void aggressiveChanged();
     void playerStateChanged();
+    void matchEnded(bool victory, int durationMs);
     void areaAttack(int column_p, int row_p, int radius_p, QColor color_p);
     void heartbeat();
     void creatureRemoved(std::uint64_t id_p);

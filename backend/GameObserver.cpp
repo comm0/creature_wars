@@ -303,6 +303,47 @@ void GameObserver::on_player_state_changed(const player_state_t& state_p)
     );
 }
 
+void GameObserver::on_base_controller_changed(
+    const base_controller_state_t& state_p
+)
+{
+    const auto base_id = state_p.resources_.base_id_;
+    const auto gold = state_p.resources_.gold_.amount_;
+    const auto food = state_p.resources_.food_.amount_;
+    const auto gold_income = state_p.resources_.gold_.income_;
+    const auto food_income = state_p.resources_.food_.income_;
+    auto difficulty = QString::fromStdString(state_p.difficulty_);
+    auto strategy = QString::fromStdString(state_p.strategy_);
+    const auto human_controlled = state_p.human_controlled_;
+
+    QMetaObject::invokeMethod(
+        this,
+        [
+            this,
+            base_id,
+            gold,
+            food,
+            gold_income,
+            food_income,
+            difficulty = std::move(difficulty),
+            strategy = std::move(strategy),
+            human_controlled
+        ]() mutable {
+            emit baseControllerChanged(
+                base_id,
+                gold,
+                food,
+                gold_income,
+                food_income,
+                std::move(difficulty),
+                std::move(strategy),
+                human_controlled
+            );
+        },
+        Qt::QueuedConnection
+    );
+}
+
 void GameObserver::on_base_changed(const base_t& base_p)
 {
     const auto id = base_p.id();
@@ -363,6 +404,17 @@ void GameObserver::on_creature_target_changed(
     QMetaObject::invokeMethod(
         this,
         [this, id_p, target_id_p]() { emit creatureTargetChanged(id_p, target_id_p); },
+        Qt::QueuedConnection
+    );
+}
+
+void GameObserver::on_match_ended(bool victory_p, std::chrono::milliseconds duration_p)
+{
+    const auto duration_ms = static_cast<int>(duration_p.count());
+
+    QMetaObject::invokeMethod(
+        this,
+        [this, victory_p, duration_ms]() { emit matchEnded(victory_p, duration_ms); },
         Qt::QueuedConnection
     );
 }

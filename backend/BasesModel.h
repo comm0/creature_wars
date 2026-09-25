@@ -33,7 +33,14 @@ public:
         attack_revision_role,
         attack_target_column_role,
         attack_target_row_role,
-        removing_role
+        removing_role,
+        gold_role,
+        food_role,
+        gold_income_role,
+        food_income_role,
+        ai_difficulty_role,
+        ai_strategy_role,
+        human_controlled_role
     };
 
     explicit BasesModel(QObject* parent_p = nullptr);
@@ -65,6 +72,16 @@ public:
         int range_p
     );
     void update_base_health(std::uint64_t id_p, int health_p);
+    void update_base_controller(
+        std::uint64_t id_p,
+        int gold_p,
+        int food_p,
+        int gold_income_p,
+        int food_income_p,
+        QString ai_difficulty_p,
+        QString ai_strategy_p,
+        bool human_controlled_p
+    );
     void notify_base_attack(std::uint64_t id_p, position_t target_position_p);
     void remove_base(std::uint64_t id_p);
 
@@ -88,6 +105,13 @@ private:
         int attack_revision_;
         position_t attack_target_;
         bool removing_;
+        int gold_;
+        int food_;
+        int gold_income_;
+        int food_income_;
+        QString ai_difficulty_;
+        QString ai_strategy_;
+        bool human_controlled_;
     };
 
     int row_of(std::uint64_t id_p) const;

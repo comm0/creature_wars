@@ -13,13 +13,46 @@ GameWindow {
     activeScene: menuScene
     state: "menu"
 
+    property string lastBaseIdentifier
+    property string lastMinotaurDifficulty: "normal"
+    property string lastOrcDifficulty: "normal"
+    property string lastDwarfDifficulty: "normal"
+
+    function startMatch(
+        baseIdentifier,
+        minotaurDifficulty,
+        orcDifficulty,
+        dwarfDifficulty
+    ) {
+        lastBaseIdentifier = baseIdentifier
+        lastMinotaurDifficulty = minotaurDifficulty
+        lastOrcDifficulty = orcDifficulty
+        lastDwarfDifficulty = dwarfDifficulty
+        gameScene.resetGameTimer()
+        gameBackend.startMatch(
+            baseIdentifier,
+            minotaurDifficulty,
+            orcDifficulty,
+            dwarfDifficulty
+        )
+        state = "game"
+    }
+
     MenuScene {
         id: menuScene
 
-        onStartRequested: function(baseIdentifier) {
-            gameScene.resetGameTimer()
-            gameWindow.gameBackend.startMatch(baseIdentifier)
-            gameWindow.state = "game"
+        onStartRequested: function(
+            baseIdentifier,
+            minotaurDifficulty,
+            orcDifficulty,
+            dwarfDifficulty
+        ) {
+            gameWindow.startMatch(
+                baseIdentifier,
+                minotaurDifficulty,
+                orcDifficulty,
+                dwarfDifficulty
+            )
         }
     }
 
@@ -27,6 +60,28 @@ GameWindow {
         id: gameScene
 
         gameBackend: gameWindow.gameBackend
+    }
+
+    GameOverScene {
+        id: gameOverScene
+
+        onPlayAgainRequested: gameWindow.startMatch(
+            gameWindow.lastBaseIdentifier,
+            gameWindow.lastMinotaurDifficulty,
+            gameWindow.lastOrcDifficulty,
+            gameWindow.lastDwarfDifficulty
+        )
+        onMainMenuRequested: gameWindow.state = "menu"
+    }
+
+    Connections {
+        target: gameWindow.gameBackend
+
+        function onMatchEnded(victory, durationMs) {
+            gameOverScene.victory = victory
+            gameOverScene.durationMs = durationMs
+            gameWindow.state = "gameOver"
+        }
     }
 
     states: [
@@ -44,6 +99,15 @@ GameWindow {
             PropertyChanges {
                 gameScene.opacity: 1
                 gameWindow.activeScene: gameScene
+            }
+        },
+        State {
+            name: "gameOver"
+
+            PropertyChanges {
+                gameScene.opacity: 1
+                gameOverScene.opacity: 1
+                gameWindow.activeScene: gameOverScene
             }
         }
     ]

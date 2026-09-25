@@ -102,6 +102,10 @@ else()
 endif()
 
 set(CoreFiles
+    backend/ai_profile.h
+    backend/ai_profile.cpp
+    backend/ai_planner.h
+    backend/ai_planner.cpp
     backend/debug_console.h
     backend/debug_console.cpp
     backend/creature.h
@@ -120,6 +124,7 @@ set(CoreFiles
     backend/tech_tree.h
     backend/tech_tree.cpp
     backend/base_action.h
+    backend/base_controller.h
     backend/base_orders.h
     backend/base_orders.cpp
     backend/base_type.h
@@ -302,6 +307,7 @@ if(CREATURE_WARS_BUILD_APP)
             data/base_types.json
             data/economy.json
             data/tech_tree.json
+            data/ai_profiles.json
             ${AssetFiles}
     )
 

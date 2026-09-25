@@ -10,12 +10,14 @@
 #include <stop_token>
 #include <string>
 #include <thread>
+#include <unordered_set>
 #include <vector>
 
 #include <unordered_map>
-#include <unordered_set>
-
+#include "ai_planner.h"
+#include "ai_profile.h"
 #include "base.h"
+#include "base_controller.h"
 #include "base_orders.h"
 #include "base_type_registry.h"
 #include "creatures.h"
@@ -38,7 +40,8 @@ public:
         const std::string& creature_types_json_p,
         const std::string& base_types_json_p,
         const std::string& economy_json_p,
-        const std::string& tech_tree_json_p
+        const std::string& tech_tree_json_p,
+        const std::string& ai_profiles_json_p
     );
     ~game_t();
 
@@ -53,7 +56,10 @@ public:
     );
     void request_spawn_base(std::string identifier_p, position_t center_p);
     void request_order_base_action(std::string key_p);
-    void request_start_match(std::string player_base_identifier_p);
+    void request_start_match(
+        std::string player_base_identifier_p,
+        std::unordered_map<std::string, ai_difficulty_t> ai_difficulties_p
+    );
     void request_attack_target(std::uint64_t id_p, std::uint64_t target_id_p);
     void request_walk_to(
         std::uint64_t id_p,
@@ -131,22 +137,58 @@ private:
     std::optional<std::uint64_t> spawn_lair_near_group(std::string_view group_p);
     bool spawn_troll_near_lair(std::uint64_t lair_id_p);
     bool lair_exists(std::uint64_t lair_id_p) const noexcept;
-    std::vector<base_action_state_t> player_base_actions() const;
-    void order_base_action(const std::string& key_p);
-    bool complete_base_order(const std::string& key_p);
+    std::vector<base_action_state_t> base_actions(
+        const base_controller_t& controller_p
+    ) const;
+    bool order_base_action(base_controller_t& controller_p, const std::string& key_p);
+    bool complete_base_order(base_controller_t& controller_p, const std::string& key_p);
     void publish_base_actions();
-    int research_level(const std::string& identifier_p) const;
-    int research_value(research_effect_t effect_p) const;
-    void apply_base_stats(base_t& base_p);
-    void update_income_intervals();
+    void publish_controller(const base_controller_t& controller_p);
+    int research_level(
+        const base_controller_t& controller_p,
+        const std::string& identifier_p
+    ) const;
+    int research_value(
+        const base_controller_t& controller_p,
+        research_effect_t effect_p
+    ) const;
+    void apply_base_stats(base_controller_t& controller_p, base_t& base_p);
+    void update_income_intervals(base_controller_t& controller_p);
     void regenerate_bases();
-    void heal_near_player_base();
+    void heal_near_bases();
     void damage_area(
         const creature_t& attacker_p,
         position_t center_p,
         int radius_p
     );
-    void start_match(const std::string& player_base_identifier_p);
+    void start_match(
+        const std::string& player_base_identifier_p,
+        const std::unordered_map<std::string, ai_difficulty_t>& ai_difficulties_p
+    );
+    base_controller_t& create_controller(
+        const base_t& base_p,
+        bool human_controlled_p,
+        ai_difficulty_t difficulty_p
+    );
+    base_controller_t* controller_for_base(std::uint64_t base_id_p) noexcept;
+    const base_controller_t* controller_for_base(std::uint64_t base_id_p) const noexcept;
+    base_controller_t* controller_for_group(std::string_view group_p) noexcept;
+    base_controller_t* player_controller() noexcept;
+    const base_controller_t* player_controller() const noexcept;
+    void schedule_ai_decision(
+        std::uint64_t base_id_p,
+        game_scheduler_t::time_point_t time_p
+    );
+    void run_ai_decision(base_controller_t& controller_p);
+    std::optional<std::uint64_t> find_neutral_target(
+        const base_controller_t& controller_p
+    ) const;
+    void command_attack(
+        base_controller_t& controller_p,
+        std::uint64_t target_id_p,
+        std::size_t maximum_unit_count_p
+    );
+    void launch_assault(base_controller_t& controller_p);
     void clear_world();
     base_t* find_base(std::uint64_t id_p) noexcept;
     const base_t* find_base(std::uint64_t id_p) const noexcept;
@@ -163,6 +205,9 @@ private:
     void create_corpse(const creature_t& creature_p);
     void remove_corpse(std::uint64_t id_p);
     void remove_dead_bases();
+    void eliminate_group(const std::string& group_p);
+    void check_match_end();
+    void end_match(bool victory_p);
     void set_attack_target(std::uint64_t id_p, std::uint64_t target_id_p);
     bool is_player_creature(const creature_t& creature_p) const noexcept;
     void report_target_changes();
@@ -176,6 +221,7 @@ private:
     void collect_actions();
     void schedule_tick(game_scheduler_t::time_point_t time_p);
     void schedule_income(
+        std::uint64_t base_id_p,
         resource_state_t player_state_t::* resource_p,
         game_scheduler_t::time_point_t time_p
     );
@@ -201,13 +247,15 @@ private:
     wildlife_spawner_t wildlife_spawner_;
     bool tick_scheduled_ = false;
     std::uint64_t match_id_ = 0;
+    bool match_active_ = false;
+    game_clock_t::time_point_t match_started_at_{};
     creature_type_registry_t creature_type_registry_;
     base_type_registry_t base_type_registry_;
     economy_settings_t economy_;
     tech_tree_t tech_tree_;
-    base_orders_t player_orders_;
-    std::unordered_map<std::string, int> research_levels_;
-    std::unordered_set<std::string> trained_units_;
+    ai_profile_registry_t ai_profiles_;
+    std::vector<std::unique_ptr<base_controller_t>> controllers_;
+    std::vector<std::unique_ptr<base_controller_t>> retired_controllers_;
     std::unordered_map<std::string, resource_reward_t> earned_resources_;
     std::unordered_set<std::uint64_t> corpse_ids_;
     creatures_t creatures_;
@@ -215,7 +263,6 @@ private:
     game_map_t game_map_;
     visibility_system_t visibility_system_;
     igame_observer_t* observer_ = nullptr;
-    player_state_t player_state_;
 
     std::mutex actions_mutex_;
     std::condition_variable actions_available_;
