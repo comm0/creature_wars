@@ -42,6 +42,8 @@ QVariant BasesModel::data(const QModelIndex& index_p, int role_p) const
         return base.position_.row_;
     case size_role:
         return base.size_;
+    case level_role:
+        return base.level_;
     case name_role:
         return base.name_;
     case group_role:
@@ -81,6 +83,7 @@ QHash<int, QByteArray> BasesModel::roleNames() const
         {column_role, "column"},
         {row_role, "row"},
         {size_role, "baseSize"},
+        {level_role, "baseLevel"},
         {name_role, "baseName"},
         {group_role, "baseGroup"},
         {color_role, "baseColor"},
@@ -101,6 +104,7 @@ void BasesModel::insert_base(
     std::uint64_t id_p,
     position_t position_p,
     int size_p,
+    int level_p,
     QString identifier_p,
     QString name_p,
     QString group_p,
@@ -122,6 +126,7 @@ void BasesModel::insert_base(
         id_p,
         position_p,
         size_p,
+        level_p,
         std::move(identifier_p),
         std::move(name_p),
         std::move(group_p),

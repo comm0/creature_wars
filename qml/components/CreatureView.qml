@@ -48,15 +48,15 @@ Item {
             || creatureTypeIdentifier === "orc"
             || creatureTypeIdentifier === "dwarf"
             ? creatureTypeIdentifier
-            : ""
-    readonly property bool hasSprite: spriteIdentifier.length > 0
+            : "placeholder"
+    readonly property bool isPlaceholder: spriteIdentifier === "placeholder"
     readonly property int spriteSize: 32
     // Tibia-style anchoring: the sprite's bottom-right corner sits on the
     // tile's bottom-right corner, bigger sprites grow up and to the left.
-    readonly property real visualLeft: hasSprite ? tileSize - spriteSize : 0
-    readonly property real visualTop: hasSprite ? tileSize - spriteSize : 0
-    readonly property real visualWidth: hasSprite ? spriteSize : tileSize
-    readonly property real visualHeight: hasSprite ? spriteSize : tileSize
+    readonly property real visualLeft: tileSize - spriteSize
+    readonly property real visualTop: tileSize - spriteSize
+    readonly property real visualWidth: spriteSize
+    readonly property real visualHeight: spriteSize
     readonly property bool spriteWalking:
         xMovementAnimation.running || yMovementAnimation.running
     readonly property string spriteAnimationName:
@@ -74,8 +74,8 @@ Item {
     y: row * tileSize
     width: tileSize
     height: tileSize
-    // Painter's order: further south is drawn on top, east wins within a row.
-    z: y + x / Math.max(areaWidth, 1)
+    // Oblique depth: south-east in front, row breaks ties.
+    z: (x + y) / tileSize + y / tileSize / 1000
 
     Item {
         id: creatureVisual
@@ -86,29 +86,6 @@ Item {
             id: creatureAttackTranslation
         }
 
-        Rectangle {
-            id: creatureBody
-
-            anchors.fill: parent
-            anchors.margins: 2
-            radius: width / 2
-            color: creatureView.hasSprite
-                ? "transparent"
-                : creatureView.creatureColor
-            border.width: creatureView.hasSprite ? 0 : 1
-            border.color: Qt.darker(creatureView.creatureColor, 1.5)
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: parent.width * 0.35
-                height: width
-                radius: width / 2
-                color: creatureView.markerColor
-                visible: !creatureView.hasSprite
-                    && creatureView.markerColor.a > 0
-            }
-        }
-
         Loader {
             id: creatureSpriteLoader
 
@@ -116,7 +93,10 @@ Item {
             y: creatureView.visualTop
             width: creatureView.spriteSize
             height: creatureView.spriteSize
-            active: creatureView.hasSprite
+            layer.enabled: creatureView.isPlaceholder
+            layer.effect: TintEffect {
+                color: creatureView.creatureColor
+            }
 
             sourceComponent: TexturePackerSpriteSequence {
                 id: creatureSprite
@@ -187,8 +167,17 @@ Item {
             onLoaded: creatureView.showSpriteAnimation()
         }
 
+        Rectangle {
+            x: creatureSpriteLoader.x + 12
+            y: creatureSpriteLoader.y + 12
+            width: 3
+            height: 3
+            color: creatureView.markerColor
+            visible: creatureView.isPlaceholder && creatureView.markerColor.a > 0
+        }
+
         OutlineEffect {
-            source: creatureView.hasSprite ? creatureSpriteLoader : creatureBody
+            source: creatureSpriteLoader
             color: "#f4df5a"
             visible: creatureView.selected
         }

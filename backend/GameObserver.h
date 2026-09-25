@@ -79,6 +79,7 @@ signals:
         std::uint64_t id_p,
         position_t position_p,
         int size_p,
+        int level_p,
         QString identifier_p,
         QString name_p,
         QString group_p,

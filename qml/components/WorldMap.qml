@@ -341,11 +341,12 @@ Item {
         }
     }
 
+    // Creatures and bases are depth-sorted together inside this layer.
     Item {
-        id: baseLayer
+        id: creatureLayer
 
         anchors.fill: parent
-        z: 1
+        z: 2
 
         Repeater {
             id: baseRepeater
@@ -362,14 +363,6 @@ Item {
                 }
             }
         }
-    }
-
-    // Creatures are z-sorted among themselves inside this layer.
-    Item {
-        id: creatureLayer
-
-        anchors.fill: parent
-        z: 2
 
         Repeater {
             id: creatureRepeater

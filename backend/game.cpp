@@ -280,7 +280,11 @@ void game_t::clear_world()
     bases_.clear();
 }
 
-void game_t::spawn_base(std::string identifier_p, position_t center_p)
+void game_t::spawn_base(
+    std::string identifier_p,
+    position_t center_p,
+    int level_p
+)
 {
     const auto& base_type = base_type_registry_.get(identifier_p);
     const auto group_has_base = std::any_of(
@@ -309,7 +313,8 @@ void game_t::spawn_base(std::string identifier_p, position_t center_p)
         creatures_t::allocate_id(),
         base_type,
         creature_type_registry_.get(base_type.spawn_creature()),
-        position
+        position,
+        level_p
     ));
     game_map_.place_base(base);
     observer_->on_base_created(base);

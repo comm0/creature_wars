@@ -190,6 +190,7 @@ void GameObserver::on_base_created(const base_t& base_p)
     const auto position = base_p.position();
     const auto& type = base_p.type();
     const auto size = type.size();
+    const auto level = base_p.level();
     auto identifier = QString::fromStdString(type.identifier());
     auto name = QString::fromStdString(type.name());
     auto group = QString::fromStdString(type.group());
@@ -207,6 +208,7 @@ void GameObserver::on_base_created(const base_t& base_p)
             id,
             position,
             size,
+            level,
             identifier = std::move(identifier),
             name = std::move(name),
             group = std::move(group),
@@ -221,6 +223,7 @@ void GameObserver::on_base_created(const base_t& base_p)
                 id,
                 position,
                 size,
+                level,
                 std::move(identifier),
                 std::move(name),
                 std::move(group),

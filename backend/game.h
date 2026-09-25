@@ -101,7 +101,7 @@ private:
         std::string identifier_p,
         position_t position_p
     );
-    void spawn_base(std::string identifier_p, position_t center_p);
+    void spawn_base(std::string identifier_p, position_t center_p, int level_p = 1);
     void spawn_from_base(std::uint64_t base_id_p);
     void start_match(const std::string& player_base_identifier_p);
     void clear_world();

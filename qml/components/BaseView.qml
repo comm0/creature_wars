@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import Felgo 4.0
 
@@ -9,6 +11,7 @@ Item {
     required property int column
     required property int row
     required property int baseSize
+    required property int baseLevel
     required property string baseName
     required property string baseGroup
     required property color baseColor
@@ -27,29 +30,28 @@ Item {
     property bool rangeVisible: false
     property Item overlayParent: parent
 
+    readonly property int artHeight: [12, 22, 28][Math.max(1, Math.min(baseLevel, 3)) - 1]
+
     signal spawnCreatureRequested(var baseId)
 
     x: column * tileSize
     y: row * tileSize
     width: baseSize * tileSize
     height: baseSize * tileSize
+    z: column + baseSize - 1 + row + row / 1000
 
-    Rectangle {
-        anchors.fill: parent
-        anchors.margins: 1
-        radius: 2
-        color: baseView.baseColor
-        border.width: 2
-        border.color: Qt.darker(baseView.baseColor, 1.6)
-
-        Rectangle {
-            anchors.centerIn: parent
-            width: parent.width / 3
-            height: width
-            radius: 1
-            color: Qt.lighter(baseView.baseColor, 1.4)
-            border.width: 1
-            border.color: Qt.darker(baseView.baseColor, 1.6)
+    MultiResolutionImage {
+        x: -baseView.artHeight
+        y: -baseView.artHeight
+        width: baseView.width + baseView.artHeight
+        height: baseView.height + baseView.artHeight
+        source: "qrc:/assets/structures/base/base_"
+            + Math.max(1, Math.min(baseView.baseLevel, 3))
+            + ".png"
+        smooth: false
+        layer.enabled: true
+        layer.effect: TintEffect {
+            color: baseView.baseColor
         }
     }
 
@@ -78,7 +80,8 @@ Item {
             id: baseIdentity
 
             anchors.horizontalCenter: parent.horizontalCenter
-            y: Math.max(-height - 2, -baseView.y)
+            anchors.horizontalCenterOffset: -baseView.artHeight / 2
+            y: Math.max(-baseView.artHeight - height - 2, -baseView.y)
             width: 72
             height: 16
 
@@ -99,7 +102,7 @@ Item {
 
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
-                width: baseView.width - 8
+                width: (baseView.width - 8) * 1.3
                 health: baseView.health
                 maximumHealth: baseView.maximumHealth
             }

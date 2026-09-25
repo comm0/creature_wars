@@ -17,13 +17,15 @@ base_t::base_t(
     std::uint64_t id_p,
     const base_type_t& type_p,
     const creature_type_t& spawn_type_p,
-    position_t position_p
+    position_t position_p,
+    int level_p
 )
     : id_(id_p)
     , type_(type_p)
     , spawn_type_(spawn_type_p)
     , position_(position_p)
     , health_(type_p.health())
+    , level_(level_p)
 {
 }
 

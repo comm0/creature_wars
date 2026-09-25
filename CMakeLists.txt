@@ -219,6 +219,7 @@ if(CREATURE_WARS_BUILD_APP)
         PREFIX "/"
         FILES
             shaders/outline.frag
+            shaders/tint.frag
     )
 
     felgo_configure_executable(appCreatureWars)

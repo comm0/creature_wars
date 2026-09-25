@@ -16,7 +16,8 @@ public:
         std::uint64_t id_p,
         const base_type_t& type_p,
         const creature_type_t& spawn_type_p,
-        position_t position_p
+        position_t position_p,
+        int level_p
     );
 
     void on_attacking(game_t& game_p, std::chrono::milliseconds interval_p);
@@ -44,6 +45,11 @@ public:
     int health() const noexcept
     {
         return health_;
+    }
+
+    int level() const noexcept
+    {
+        return level_;
     }
 
     bool is_dead() const noexcept
@@ -75,4 +81,5 @@ private:
     std::optional<std::uint64_t> target_id_;
     std::chrono::milliseconds attack_elapsed_{0};
     int health_;
+    int level_;
 };

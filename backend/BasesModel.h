@@ -20,6 +20,7 @@ public:
         column_role,
         row_role,
         size_role,
+        level_role,
         name_role,
         group_role,
         color_role,
@@ -45,6 +46,7 @@ public:
         std::uint64_t id_p,
         position_t position_p,
         int size_p,
+        int level_p,
         QString identifier_p,
         QString name_p,
         QString group_p,
@@ -65,6 +67,7 @@ private:
         std::uint64_t id_;
         position_t position_;
         int size_;
+        int level_;
         QString identifier_;
         QString name_;
         QString group_;
