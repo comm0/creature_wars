@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include "base.h"
@@ -35,6 +36,12 @@ public:
         std::uint64_t spotted_id_p
     ) = 0;
     virtual void on_creature_removed(std::uint64_t id_p) = 0;
+    virtual void on_corpse_created(
+        std::uint64_t id_p,
+        position_t position_p,
+        const std::string& identifier_p
+    ) = 0;
+    virtual void on_corpse_removed(std::uint64_t id_p) = 0;
     virtual void on_base_created(const base_t& base_p) = 0;
     virtual void on_base_health_changed(std::uint64_t id_p, int health_p) = 0;
     virtual void on_base_attack_performed(

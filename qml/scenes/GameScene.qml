@@ -14,6 +14,17 @@ Scene {
         width / (gameBackend.mapColumnCount * mapTileSize),
         mapAreaHeight / (gameBackend.mapRowCount * mapTileSize)
     )
+    property int elapsedGameSeconds: 0
+    readonly property string elapsedGameTime: {
+        const hours = Math.floor(elapsedGameSeconds / 3600)
+        const minutes = Math.floor(elapsedGameSeconds / 60) % 60
+        const seconds = elapsedGameSeconds % 60
+        const clock = String(minutes).padStart(2, "0")
+            + ":" + String(seconds).padStart(2, "0")
+        return hours > 0
+            ? String(hours) + ":" + clock
+            : clock
+    }
 
     width: 640
     height: 360
@@ -44,6 +55,7 @@ Scene {
         scale: gameScene.mapScale
         transformOrigin: Item.TopLeft
         creatureModel: gameScene.gameBackend.creaturesModel
+        corpseModel: gameScene.gameBackend.corpsesModel
         baseModel: gameScene.gameBackend.basesModel
         baseActionsModel: gameScene.gameBackend.baseActionsModel
         playerBaseId: gameScene.gameBackend.playerBaseId
@@ -84,6 +96,12 @@ Scene {
         y: 0
         height: 14
         borderOnTop: false
+
+        HudStat {
+            anchors.centerIn: parent
+            iconType: IconType.clocko
+            text: gameScene.elapsedGameTime
+        }
 
         Row {
             anchors.left: parent.left
@@ -245,6 +263,7 @@ Scene {
         target: gameScene.gameBackend
 
         function onHeartbeat() {
+            gameScene.elapsedGameSeconds += 1
             heartbeatAnimation.restart()
         }
 
@@ -255,5 +274,9 @@ Scene {
         function onCreatureRemoved(creatureId) {
             worldMap.removeSelectedCreature(creatureId)
         }
+    }
+
+    function resetGameTimer() {
+        elapsedGameSeconds = 0
     }
 }

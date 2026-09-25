@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "resource_cost.h"
+#include "resource_reward.h"
 
 struct base_level_stats_t
 {
@@ -32,6 +33,8 @@ public:
         std::uint32_t color_p,
         int size_p,
         int range_p,
+        bool match_base_p,
+        resource_reward_t reward_p,
         std::vector<base_level_stats_t> levels_p,
         std::vector<unit_option_t> units_p
     )
@@ -41,6 +44,8 @@ public:
         , color_(color_p)
         , size_(size_p)
         , range_(range_p)
+        , match_base_(match_base_p)
+        , reward_(reward_p)
         , levels_(std::move(levels_p))
         , units_(std::move(units_p))
     {
@@ -76,6 +81,16 @@ public:
         return range_;
     }
 
+    bool is_match_base() const noexcept
+    {
+        return match_base_;
+    }
+
+    const resource_reward_t& reward() const noexcept
+    {
+        return reward_;
+    }
+
     int max_level() const noexcept
     {
         return static_cast<int>(levels_.size());
@@ -98,6 +113,8 @@ private:
     std::uint32_t color_;
     int size_;
     int range_;
+    bool match_base_;
+    resource_reward_t reward_;
     std::vector<base_level_stats_t> levels_;
     std::vector<unit_option_t> units_;
 };

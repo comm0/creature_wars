@@ -24,6 +24,7 @@ Item {
     required property int attackRevision
     required property int attackTargetColumn
     required property int attackTargetRow
+    required property bool removing
 
     property int tileSize: 16
     property bool rangeVisible: false
@@ -37,11 +38,12 @@ Item {
     property real mapScale: 1
     property bool selected: false
     property bool targeted: false
+    property bool appeared: false
 
     readonly property int artLevel: Math.max(1, Math.min(baseLevel, 4))
     readonly property int artHeight: [12, 22, 28, 34][artLevel - 1]
     readonly property real identityScale: 1 / Math.max(mapScale, 0.01)
-    readonly property bool menuOpen: isPlayerBase
+    readonly property bool menuOpen: !removing && isPlayerBase
         && (selected || baseHover.hovered || radialMenu.hovered || menuCloseTimer.running)
 
     signal actionRequested(string actionKey)
@@ -50,7 +52,19 @@ Item {
     y: row * tileSize
     width: baseSize * tileSize
     height: baseSize * tileSize
+    enabled: !removing
+    opacity: removing ? 0 : (appeared ? 1 : 0)
     z: column + baseSize - 1 + row + row / 1000
+
+    Component.onCompleted: Qt.callLater(function() {
+        baseView.appeared = true
+    })
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 300
+        }
+    }
 
     MultiResolutionImage {
         id: baseImage
@@ -94,6 +108,7 @@ Item {
         y: baseView.y
         width: baseView.width
         height: baseView.height
+        opacity: baseView.opacity
         z: baseHover.hovered || baseView.menuOpen ? 1 : 0
 
         TargetReticle {

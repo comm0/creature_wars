@@ -36,7 +36,8 @@ public:
         damage_revision_role,
         attack_revision_role,
         walk_command_revision_role,
-        target_id_role
+        target_id_role,
+        removing_role
     };
 
     explicit CreaturesModel(QObject* parent_p = nullptr);
@@ -97,6 +98,7 @@ private:
         int attack_revision_;
         int walk_command_revision_;
         std::uint64_t target_id_;
+        bool removing_;
     };
 
     std::vector<creature_entry_t> creatures_;

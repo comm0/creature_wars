@@ -184,6 +184,32 @@ void GameObserver::on_creature_removed(std::uint64_t id_p)
     );
 }
 
+void GameObserver::on_corpse_created(
+    std::uint64_t id_p,
+    position_t position_p,
+    const std::string& identifier_p
+)
+{
+    auto identifier = QString::fromStdString(identifier_p);
+
+    QMetaObject::invokeMethod(
+        this,
+        [this, id_p, position_p, identifier = std::move(identifier)]() mutable {
+            emit corpseCreated(id_p, position_p, std::move(identifier));
+        },
+        Qt::QueuedConnection
+    );
+}
+
+void GameObserver::on_corpse_removed(std::uint64_t id_p)
+{
+    QMetaObject::invokeMethod(
+        this,
+        [this, id_p]() { emit corpseRemoved(id_p); },
+        Qt::QueuedConnection
+    );
+}
+
 void GameObserver::on_base_created(const base_t& base_p)
 {
     const auto id = base_p.id();

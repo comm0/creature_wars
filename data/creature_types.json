@@ -91,7 +91,8 @@
       "attackRange": 0,
       "visionRange": 5,
       "speed": 1.25,
-      "behavior": "fleeing"
+      "behavior": "fleeing",
+      "reward": { "food": 5 }
     },
     {
       "id": "wolf",
@@ -102,7 +103,8 @@
       "attack": 1,
       "attackRange": 1,
       "visionRange": 6,
-      "speed": 1.1
+      "speed": 1.1,
+      "reward": { "gold": 5, "food": 2 }
     },
     {
       "id": "troll",
@@ -113,7 +115,8 @@
       "attack": 3,
       "attackRange": 1,
       "visionRange": 5,
-      "speed": 0.8
+      "speed": 0.8,
+      "reward": { "gold": 5, "food": 2 }
     },
     {
       "id": "orc_shaman",

@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <optional>
 #include <random>
 
@@ -26,6 +27,12 @@ public:
     bool can_place_creature(position_t position_p) const noexcept;
     bool can_place_base(position_t position_p, int size_p) const noexcept;
     std::optional<position_t> free_position_around(const base_t& base_p);
+    std::optional<position_t> random_position_near(
+        const base_t& base_p,
+        int minimum_distance_p,
+        int maximum_distance_p,
+        const std::function<bool(position_t)>& position_allowed_p
+    );
     bool is_position_occupied(position_t position_p) const noexcept;
     creature_t* creature_at(position_t position_p) const noexcept;
     std::optional<position_t> next_step_towards(

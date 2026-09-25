@@ -86,6 +86,20 @@
           "training": { "gold": 150, "timeMs": 60000 }
         }
       ]
+    },
+    {
+      "id": "troll_lair",
+      "name": "Troll Lair",
+      "group": "trolls",
+      "color": "#3b2418",
+      "size": 1,
+      "range": 0,
+      "matchBase": false,
+      "reward": { "gold": 30 },
+      "levels": [
+        { "health": 100, "attack": 0 }
+      ],
+      "units": []
     }
   ]
 }

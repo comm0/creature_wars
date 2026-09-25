@@ -32,7 +32,8 @@ public:
         damage_revision_role,
         attack_revision_role,
         attack_target_column_role,
-        attack_target_row_role
+        attack_target_row_role,
+        removing_role
     };
 
     explicit BasesModel(QObject* parent_p = nullptr);
@@ -86,6 +87,7 @@ private:
         int damage_revision_;
         int attack_revision_;
         position_t attack_target_;
+        bool removing_;
     };
 
     int row_of(std::uint64_t id_p) const;

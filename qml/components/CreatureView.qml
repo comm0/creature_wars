@@ -31,6 +31,7 @@ Item {
     required property int attackRevision
     required property int walkCommandRevision
     required property var targetId
+    required property bool removing
 
     property int tileSize: 16
     property bool selected: false
@@ -48,6 +49,7 @@ Item {
 
     property bool alertVisible: false
     property bool goVisible: false
+    property bool appeared: false
     readonly property bool isPlaceholder:
         CreatureSprites.isPlaceholder(creatureTypeIdentifier)
     readonly property real identityScale: 1 / Math.max(mapScale, 0.01)
@@ -77,8 +79,20 @@ Item {
     y: row * tileSize
     width: tileSize
     height: tileSize
+    enabled: !removing
+    opacity: removing ? 0 : (appeared ? 1 : 0)
     // Oblique depth: south-east in front, row breaks ties.
     z: (x + y) / tileSize + y / tileSize / 1000
+
+    Component.onCompleted: Qt.callLater(function() {
+        creatureView.appeared = true
+    })
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 300
+        }
+    }
 
     Item {
         id: creatureVisual
@@ -374,6 +388,7 @@ Item {
         y: creatureView.y
         width: creatureView.width
         height: creatureView.height
+        opacity: creatureView.opacity
         z: creatureHover.hovered ? 1 : 0
 
         TargetReticle {

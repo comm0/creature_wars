@@ -66,6 +66,12 @@ creature_type_registry_t::creature_type_registry_t(
         const auto area_color = parse_color(
             definition.value("areaColor", std::string("#ffffff"))
         );
+        const auto& reward = definition.value(
+            "reward",
+            nlohmann::json::object()
+        );
+        const auto reward_gold = reward.value("gold", 0);
+        const auto reward_food = reward.value("food", 0);
 
         if (identifier.empty() || name.empty()) {
             throw std::invalid_argument("Creature id and name must not be empty.");
@@ -80,6 +86,8 @@ creature_type_registry_t::creature_type_registry_t(
         require_non_negative(attack_range, "attackRange");
         require_non_negative(vision_range, "visionRange");
         require_non_negative(area_radius, "areaRadius");
+        require_non_negative(reward_gold, "reward.gold");
+        require_non_negative(reward_food, "reward.food");
 
         if (!std::isfinite(speed) || speed <= 0.0) {
             throw std::invalid_argument("Creature speed must be positive.");
@@ -111,7 +119,8 @@ creature_type_registry_t::creature_type_registry_t(
                 speed,
                 behavior,
                 area_radius,
-                area_color
+                area_color,
+                {reward_gold, reward_food}
             }
         );
     }

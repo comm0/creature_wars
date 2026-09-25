@@ -27,6 +27,13 @@ base_type_registry_t::base_type_registry_t(std::string_view base_types_json_p)
         const auto color = parse_color(definition.at("color").get<std::string>());
         const auto size = definition.at("size").get<int>();
         const auto range = definition.at("range").get<int>();
+        const auto match_base = definition.value("matchBase", true);
+        const auto& reward = definition.value(
+            "reward",
+            nlohmann::json::object()
+        );
+        const auto reward_gold = reward.value("gold", 0);
+        const auto reward_food = reward.value("food", 0);
 
         if (identifier.empty() || name.empty() || group.empty()) {
             throw std::invalid_argument("Base id, name and group must not be empty.");
@@ -37,6 +44,8 @@ base_type_registry_t::base_type_registry_t(std::string_view base_types_json_p)
         }
 
         require_non_negative(range, "range");
+        require_non_negative(reward_gold, "reward.gold");
+        require_non_negative(reward_food, "reward.food");
 
         std::vector<base_level_stats_t> levels;
 
@@ -92,6 +101,8 @@ base_type_registry_t::base_type_registry_t(std::string_view base_types_json_p)
             color,
             size,
             range,
+            match_base,
+            resource_reward_t{reward_gold, reward_food},
             std::move(levels),
             std::move(units)
         );

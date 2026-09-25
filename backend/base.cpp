@@ -87,6 +87,16 @@ void base_t::drain_health(int damage_p) noexcept
     health_ = std::max(0, health_ - std::max(0, damage_p));
 }
 
+void base_t::receive_damage(
+    const std::string& attacker_group_p,
+    int damage_p
+) noexcept
+{
+    const auto previous_health = health_;
+    drain_health(damage_p);
+    damage_contributions_.add(attacker_group_p, previous_health - health_);
+}
+
 bool base_t::contains(position_t position_p) const noexcept
 {
     return distance_to(position_p) == 0;

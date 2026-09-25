@@ -10,6 +10,34 @@ option(CREATURE_WARS_BUILD_APP "Build the Felgo application." ON)
 option(CREATURE_WARS_WARNINGS_AS_ERRORS "Treat project warnings as errors." OFF)
 option(CREATURE_WARS_ENABLE_CLANG_TIDY "Run clang-tidy while building project targets." OFF)
 option(CREATURE_WARS_ENABLE_CPPCHECK "Run cppcheck while building project targets." OFF)
+option(CREATURE_WARS_USE_CCACHE "Use ccache when available." ON)
+option(CREATURE_WARS_USE_LLD "Link with lld when available." ON)
+
+if(CREATURE_WARS_ENABLE_CLANG_TIDY OR CREATURE_WARS_ENABLE_CPPCHECK)
+    set(CMAKE_DISABLE_PRECOMPILE_HEADERS ON)
+endif()
+
+if(CREATURE_WARS_USE_CCACHE AND NOT CMAKE_CXX_COMPILER_LAUNCHER)
+    find_program(CCACHE_EXECUTABLE ccache)
+
+    if(CCACHE_EXECUTABLE)
+        set(CMAKE_CXX_COMPILER_LAUNCHER
+            ${CMAKE_COMMAND} -E env CCACHE_SLOPPINESS=pch_defines,time_macros ${CCACHE_EXECUTABLE}
+        )
+
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            add_compile_options(-fpch-preprocess)
+        endif()
+    endif()
+endif()
+
+if(CREATURE_WARS_USE_LLD AND NOT MSVC)
+    find_program(LLD_EXECUTABLE ld.lld)
+
+    if(LLD_EXECUTABLE)
+        add_link_options(-fuse-ld=lld)
+    endif()
+endif()
 
 set(CREATURE_WARS_MAP_SIZE "64x32" CACHE STRING "Map size preset.")
 set_property(CACHE CREATURE_WARS_MAP_SIZE PROPERTY STRINGS
@@ -87,6 +115,8 @@ set(CoreFiles
     backend/economy_settings.h
     backend/economy_settings.cpp
     backend/resource_cost.h
+    backend/resource_reward.h
+    backend/damage_contributions.h
     backend/tech_tree.h
     backend/tech_tree.cpp
     backend/base_action.h
@@ -116,6 +146,8 @@ set(CoreFiles
     backend/game_event_dispatcher.cpp
     backend/game_scheduler.h
     backend/game_scheduler.cpp
+    backend/wildlife_spawner.h
+    backend/wildlife_spawner.cpp
 )
 
 add_library(creature_wars_core STATIC ${CoreFiles})
@@ -135,6 +167,20 @@ target_link_libraries(creature_wars_core
 if(WIN32)
     target_link_libraries(creature_wars_core PRIVATE $<$<CONFIG:Debug>:psapi>)
 endif()
+
+target_precompile_headers(creature_wars_core PRIVATE
+    <algorithm>
+    <chrono>
+    <cstdint>
+    <functional>
+    <optional>
+    <string>
+    <string_view>
+    <unordered_map>
+    <utility>
+    <vector>
+    <nlohmann/json.hpp>
+)
 
 if(CREATURE_WARS_ENABLE_CLANG_TIDY)
     find_program(CLANG_TIDY_EXECUTABLE clang-tidy)
@@ -235,6 +281,8 @@ if(CREATURE_WARS_BUILD_APP)
         backend/BasesModel.cpp
         backend/CreaturesModel.h
         backend/CreaturesModel.cpp
+        backend/CorpsesModel.h
+        backend/CorpsesModel.cpp
         backend/GameBackend.h
         backend/GameBackend.cpp
         backend/GameObserver.h
@@ -270,6 +318,12 @@ if(CREATURE_WARS_BUILD_APP)
 
     deploy_resources("${QmlFiles}")
 
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set_target_properties(appCreatureWars PROPERTIES
+            QT_QMLCACHEGEN_ARGUMENTS "--only-bytecode"
+        )
+    endif()
+
     qt_add_qml_module(appCreatureWars
         URI CreatureWars
         VERSION 1.0
@@ -281,6 +335,16 @@ if(CREATURE_WARS_BUILD_APP)
         PRIVATE
             $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>
             CREATURE_WARS_BUILD_BRANCH="${CREATURE_WARS_BUILD_BRANCH}"
+    )
+
+    target_precompile_headers(appCreatureWars PRIVATE
+        <QAbstractListModel>
+        <QColor>
+        <QHash>
+        <QObject>
+        <QString>
+        <QVariant>
+        <QtQml/qqml.h>
     )
 
     target_link_libraries(appCreatureWars

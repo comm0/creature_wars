@@ -29,6 +29,11 @@ public:
         creature_t& creature_p,
         creatures_t& creatures_p
     );
+    bool is_visible_to_enemy(
+        position_t position_p,
+        const std::string& group_p,
+        const creatures_t& creatures_p
+    ) const noexcept;
 
 private:
     void register_full_range(

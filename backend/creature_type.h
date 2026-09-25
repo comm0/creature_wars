@@ -4,6 +4,8 @@
 #include <optional>
 #include <string>
 
+#include "resource_reward.h"
+
 enum class creature_behavior_t
 {
     aggressive,
@@ -20,6 +22,7 @@ struct creature_attributes_t
     creature_behavior_t behavior_ = creature_behavior_t::aggressive;
     int area_radius_ = 0;
     std::uint32_t area_color_ = 0xffffff;
+    resource_reward_t reward_;
 };
 
 class creature_type_t
@@ -97,6 +100,11 @@ public:
     std::uint32_t area_color() const noexcept
     {
         return attributes_.area_color_;
+    }
+
+    const resource_reward_t& reward() const noexcept
+    {
+        return attributes_.reward_;
     }
 
 private:

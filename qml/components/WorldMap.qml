@@ -13,6 +13,7 @@ Item {
     property bool gridVisible: true
     property bool visionRangesVisible: false
     property var creatureModel
+    property var corpseModel
     property var baseModel
     property var baseActionsModel
     property var playerBaseId: 0
@@ -97,7 +98,9 @@ Item {
         for (let index = 0; index < creatureRepeater.count; ++index) {
             const creature = creatureRepeater.itemAt(index) as CreatureView
 
-            if (creature === null || root.isOwn(creature.creatureGroup) !== own) {
+            if (creature === null
+                    || creature.removing
+                    || root.isOwn(creature.creatureGroup) !== own) {
                 continue
             }
 
@@ -435,6 +438,14 @@ Item {
                 onActionRequested: function(actionKey) {
                     root.baseActionRequested(actionKey)
                 }
+            }
+        }
+
+        Repeater {
+            model: root.corpseModel
+
+            delegate: CreatureCorpseView {
+                tileSize: root.tileSize
             }
         }
 

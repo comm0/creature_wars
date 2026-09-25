@@ -125,6 +125,18 @@ GameBackend::GameBackend(QObject* parent_p)
             emit creatureRemoved(id_p);
         }
     );
+    connect(
+        &game_observer_,
+        &GameObserver::corpseCreated,
+        &corpses_model_,
+        &CorpsesModel::insert_corpse
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::corpseRemoved,
+        &corpses_model_,
+        &CorpsesModel::remove_corpse
+    );
 
     connect(
         &game_observer_,
@@ -194,6 +206,11 @@ GameBackend::~GameBackend()
 CreaturesModel* GameBackend::creaturesModel()
 {
     return &creatures_model_;
+}
+
+CorpsesModel* GameBackend::corpsesModel()
+{
+    return &corpses_model_;
 }
 
 BasesModel* GameBackend::basesModel()

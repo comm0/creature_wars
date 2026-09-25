@@ -150,6 +150,39 @@ std::optional<position_t> game_map_t::free_position_around(const base_t& base_p)
     return free_positions[index_distribution(random_generator_)];
 }
 
+std::optional<position_t> game_map_t::random_position_near(
+    const base_t& base_p,
+    int minimum_distance_p,
+    int maximum_distance_p,
+    const std::function<bool(position_t)>& position_allowed_p
+)
+{
+    std::vector<position_t> positions;
+
+    for (auto row = 0; row < game_constants::map_row_count; ++row) {
+        for (auto column = 0; column < game_constants::map_column_count; ++column) {
+            const position_t position{column, row};
+            const auto distance = base_p.distance_to(position);
+
+            if (distance >= minimum_distance_p
+                && distance <= maximum_distance_p
+                && position_allowed_p(position)) {
+                positions.push_back(position);
+            }
+        }
+    }
+
+    if (positions.empty()) {
+        return std::nullopt;
+    }
+
+    auto position_distribution = std::uniform_int_distribution<std::size_t>(
+        0,
+        positions.size() - 1
+    );
+    return positions[position_distribution(random_generator_)];
+}
+
 bool game_map_t::is_position_occupied(position_t position_p) const noexcept
 {
     if (!is_position_inside(position_p)) {

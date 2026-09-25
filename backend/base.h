@@ -6,6 +6,7 @@
 
 #include "base_type.h"
 #include "creature.h"
+#include "damage_contributions.h"
 
 class game_t;
 
@@ -67,8 +68,13 @@ public:
     }
 
     void apply_stats(const base_stats_t& stats_p) noexcept;
-    void drain_health(int damage_p) noexcept;
+    void receive_damage(const std::string& attacker_group_p, int damage_p) noexcept;
     bool regenerate() noexcept;
+
+    const damage_contributions_t& damage_contributions() const noexcept
+    {
+        return damage_contributions_;
+    }
     bool contains(position_t position_p) const noexcept;
     position_t closest_position_to(position_t position_p) const noexcept;
     int distance_to(position_t position_p) const noexcept;
@@ -85,6 +91,8 @@ private:
         return position_.row_ + type_.size() - 1;
     }
 
+    void drain_health(int damage_p) noexcept;
+
     std::uint64_t id_;
     const base_type_t& type_;
     position_t position_;
@@ -93,4 +101,5 @@ private:
     base_stats_t stats_;
     int health_;
     int level_ = 1;
+    damage_contributions_t damage_contributions_;
 };

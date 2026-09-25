@@ -2,6 +2,7 @@
 
 #include <QByteArray>
 #include <QHash>
+#include <QTimer>
 #include <QVariant>
 
 #include <algorithm>
@@ -76,6 +77,8 @@ QVariant CreaturesModel::data(const QModelIndex& index_p, int role_p) const
         return creature.walk_command_revision_;
     case target_id_role:
         return QVariant::fromValue(creature.target_id_);
+    case removing_role:
+        return creature.removing_;
     default:
         return {};
     }
@@ -105,7 +108,8 @@ QHash<int, QByteArray> CreaturesModel::roleNames() const
         {damage_revision_role, "damageRevision"},
         {attack_revision_role, "attackRevision"},
         {walk_command_revision_role, "walkCommandRevision"},
-        {target_id_role, "targetId"}
+        {target_id_role, "targetId"},
+        {removing_role, "removing"}
     };
 }
 
@@ -157,7 +161,8 @@ void CreaturesModel::update_or_insert_creature(
             0,
             0,
             0,
-            0
+            0,
+            false
         });
         endInsertRows();
         return;
@@ -351,10 +356,35 @@ void CreaturesModel::remove_creature(std::uint64_t id_p)
         return;
     }
 
+    if (creature->removing_) {
+        return;
+    }
+
+    creature->removing_ = true;
     const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
-    beginRemoveRows({}, row, row);
-    creatures_.erase(creature);
-    endRemoveRows();
+    const auto model_index = createIndex(row, 0);
+    emit dataChanged(model_index, model_index, {removing_role});
+
+    QTimer::singleShot(300, this, [this, id_p]() {
+        const auto removed_creature = std::find_if(
+            creatures_.begin(),
+            creatures_.end(),
+            [id_p](const auto& entry_p) {
+                return entry_p.id_ == id_p;
+            }
+        );
+
+        if (removed_creature == creatures_.end() || !removed_creature->removing_) {
+            return;
+        }
+
+        const auto removed_row = static_cast<int>(
+            std::distance(creatures_.begin(), removed_creature)
+        );
+        beginRemoveRows({}, removed_row, removed_row);
+        creatures_.erase(removed_creature);
+        endRemoveRows();
+    });
 }
 
 void CreaturesModel::update_creature_target(

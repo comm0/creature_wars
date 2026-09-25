@@ -16,6 +16,9 @@ namespace
 {
 constexpr int start_base_edge_gap = 3;
 constexpr int max_spawn_queue = 9;
+constexpr int wildlife_minimum_base_distance = 6;
+constexpr int wildlife_maximum_base_distance = 10;
+constexpr std::chrono::seconds corpse_lifetime{30};
 const std::string spawn_prefix = "spawn:";
 const std::string training_prefix = "training:";
 const std::string research_prefix = "research:";
@@ -51,6 +54,55 @@ int position_distance(position_t left_p, position_t right_p) noexcept
         std::abs(left_p.row_ - right_p.row_)
     );
 }
+
+struct reward_share_t
+{
+    std::string group_;
+    int amount_;
+    int remainder_;
+};
+
+std::vector<reward_share_t> split_reward(
+    int amount_p,
+    const std::unordered_map<std::string, int>& damage_by_group_p
+)
+{
+    std::vector<reward_share_t> shares;
+    auto total_damage = 0;
+
+    for (const auto& [group, damage] : damage_by_group_p) {
+        total_damage += damage;
+    }
+
+    if (amount_p <= 0 || total_damage <= 0) {
+        return shares;
+    }
+
+    auto assigned = 0;
+
+    for (const auto& [group, damage] : damage_by_group_p) {
+        const auto weighted_reward = amount_p * damage;
+        const auto share = weighted_reward / total_damage;
+        shares.push_back({group, share, weighted_reward % total_damage});
+        assigned += share;
+    }
+
+    std::sort(
+        shares.begin(),
+        shares.end(),
+        [](const auto& left_p, const auto& right_p) {
+            return left_p.remainder_ != right_p.remainder_
+                ? left_p.remainder_ > right_p.remainder_
+                : left_p.group_ < right_p.group_;
+        }
+    );
+
+    for (auto index = 0; index < amount_p - assigned; ++index) {
+        ++shares[static_cast<std::size_t>(index)].amount_;
+    }
+
+    return shares;
+}
 }
 
 /*! 
@@ -66,7 +118,24 @@ game_t::game_t(
     const std::string& economy_json_p,
     const std::string& tech_tree_json_p
 )
-    : creature_type_registry_(creature_types_json_p)
+    : wildlife_spawner_(
+        scheduler_,
+        {
+            [this](std::string_view identifier_p, std::string_view group_p) {
+                spawn_creature_near_group(identifier_p, group_p);
+            },
+            [this](std::string_view group_p) {
+                return spawn_lair_near_group(group_p);
+            },
+            [this](std::uint64_t lair_id_p) {
+                return spawn_troll_near_lair(lair_id_p);
+            },
+            [this](std::uint64_t lair_id_p) {
+                return lair_exists(lair_id_p);
+            }
+        }
+    )
+    , creature_type_registry_(creature_types_json_p)
     , base_type_registry_(base_types_json_p)
     , economy_(parse_economy_settings(economy_json_p))
     , tech_tree_(tech_tree_json_p)
@@ -276,6 +345,11 @@ void game_t::start_match(const std::string& player_base_identifier_p)
     trained_units_.clear();
 
     const auto& player_base = base_type_registry_.get(player_base_identifier_p);
+
+    if (!player_base.is_match_base()) {
+        throw std::invalid_argument("Player base must be a match base.");
+    }
+
     const auto now = game_clock_.now();
     ++match_id_;
     player_state_ = player_state_t{
@@ -300,8 +374,15 @@ void game_t::start_match(const std::string& player_base_identifier_p)
     schedule_income(&player_state_t::gold_, now + economy_.gold_income_.interval_);
     schedule_income(&player_state_t::food_, now + economy_.food_income_.interval_);
     std::vector<const base_type_t*> enemy_bases;
+    earned_resources_.clear();
 
     for (const auto& base_type : base_type_registry_.all()) {
+        if (!base_type.is_match_base()) {
+            continue;
+        }
+
+        earned_resources_.emplace(base_type.group(), resource_reward_t{});
+
         if (&base_type != &player_base) {
             enemy_bases.push_back(&base_type);
         }
@@ -338,10 +419,18 @@ void game_t::start_match(const std::string& player_base_identifier_p)
         : 0;
     observer_->on_player_state_changed(player_state_);
     publish_base_actions();
+    wildlife_spawner_.start(now);
 }
 
 void game_t::clear_world()
 {
+    wildlife_spawner_.reset();
+
+    for (const auto id : corpse_ids_) {
+        observer_->on_corpse_removed(id);
+    }
+
+    corpse_ids_.clear();
     std::vector<std::uint64_t> creature_ids;
     creatures_.for_each([&creature_ids](const creature_t& creature_p) {
         creature_ids.push_back(creature_p.id());
@@ -363,12 +452,13 @@ void game_t::clear_world()
     }
 
     bases_.clear();
+    earned_resources_.clear();
 }
 
 base_t* game_t::spawn_base(const std::string& identifier_p, position_t center_p)
 {
     const auto& base_type = base_type_registry_.get(identifier_p);
-    const auto group_has_base = std::any_of(
+    const auto group_has_base = base_type.is_match_base() && std::any_of(
         bases_.begin(),
         bases_.end(),
         [&base_type](const auto& base_p) {
@@ -703,7 +793,7 @@ void game_t::damage_area(
     const auto damage = attacker_p.type().attack();
 
     for (const auto id : target_ids) {
-        damage_target(id, damage);
+        damage_target(id, damage, group);
     }
 
     observer_->on_area_attack(center_p, radius_p, attacker_p.type().area_color());
@@ -735,14 +825,29 @@ const base_t* game_t::find_base(std::uint64_t id_p) const noexcept
     return base == bases_.end() ? nullptr : base->get();
 }
 
+const base_t* game_t::find_match_base(std::string_view group_p) const noexcept
+{
+    const auto base = std::find_if(
+        bases_.begin(),
+        bases_.end(),
+        [group_p](const auto& base_p) {
+            return !base_p->is_dead()
+                && base_p->type().is_match_base()
+                && base_p->type().group() == group_p;
+        }
+    );
+
+    return base == bases_.end() ? nullptr : base->get();
+}
+
 /*! Creates a creature of the requested type at a map position. */
-void game_t::spawn_creature(
+creature_t* game_t::spawn_creature(
     std::string identifier_p,
     position_t position_p
 )
 {
     if (!game_map_.can_place_creature(position_p)) {
-        return;
+        return nullptr;
     }
 
     const auto& creature_type = creature_type_registry_.get(identifier_p);
@@ -761,6 +866,91 @@ void game_t::spawn_creature(
             notify_creature_spotted(observer_id_p, spotted_id_p);
         }
     );
+
+    return &creature;
+}
+
+void game_t::spawn_creature_near_group(
+    std::string_view identifier_p,
+    std::string_view group_p
+)
+{
+    const auto* base = find_match_base(group_p);
+
+    if (base == nullptr) {
+        return;
+    }
+
+    const auto& creature_type = creature_type_registry_.get(identifier_p);
+    const auto position = game_map_.random_position_near(
+        *base,
+        wildlife_minimum_base_distance,
+        wildlife_maximum_base_distance,
+        [this, &creature_type](position_t position_p) {
+            return game_map_.can_place_creature(position_p)
+                && !visibility_system_.is_visible_to_enemy(
+                    position_p,
+                    creature_type.group(),
+                    creatures_
+                );
+        }
+    );
+
+    if (position.has_value()) {
+        spawn_creature(std::string(identifier_p), *position);
+    }
+}
+
+std::optional<std::uint64_t> game_t::spawn_lair_near_group(
+    std::string_view group_p
+)
+{
+    const auto* base = find_match_base(group_p);
+
+    if (base == nullptr) {
+        return std::nullopt;
+    }
+
+    const auto position = game_map_.random_position_near(
+        *base,
+        wildlife_minimum_base_distance,
+        wildlife_maximum_base_distance,
+        [this](position_t position_p) {
+            return game_map_.can_place_base(position_p, 1);
+        }
+    );
+
+    if (!position.has_value()) {
+        return std::nullopt;
+    }
+
+    auto* lair = spawn_base("troll_lair", *position);
+    return lair == nullptr
+        ? std::nullopt
+        : std::optional<std::uint64_t>(lair->id());
+}
+
+bool game_t::spawn_troll_near_lair(std::uint64_t lair_id_p)
+{
+    const auto* lair = find_base(lair_id_p);
+
+    if (lair == nullptr
+        || lair->is_dead()
+        || lair->type().identifier() != "troll_lair") {
+        return false;
+    }
+
+    const auto position = game_map_.free_position_around(*lair);
+    return position.has_value()
+        && spawn_creature("troll", *position) != nullptr;
+}
+
+bool game_t::lair_exists(std::uint64_t lair_id_p) const noexcept
+{
+    const auto* lair = find_base(lair_id_p);
+    return lair != nullptr
+        && !lair->is_dead()
+        && lair->type().identifier() == "troll_lair";
 }
 
 void game_t::schedule_tick(game_scheduler_t::time_point_t time_p)
@@ -1166,7 +1356,11 @@ std::optional<target_t> game_t::find_nearest_base_target(
 void game_t::perform_base_attack(const base_t& base_p, const target_t& target_p)
 {
     observer_->on_base_attack_performed(base_p.id(), target_p.position_);
-    damage_target(target_p.id_, base_p.stats().attack_);
+    damage_target(
+        target_p.id_,
+        base_p.stats().attack_,
+        base_p.type().group()
+    );
 }
 
 bool game_t::move_creature_towards(
@@ -1307,17 +1501,25 @@ bool game_t::check_creature_attack(
     if (attacker->type().area_radius() > 0) {
         damage_area(*attacker, target->position_, attacker->type().area_radius());
     } else {
-        damage_target(target_id_p, attacker->type().attack());
+        damage_target(
+            target_id_p,
+            attacker->type().attack(),
+            attacker->type().group()
+        );
     }
 
     return true;
 }
 
-void game_t::damage_target(std::uint64_t target_id_p, int damage_p)
+void game_t::damage_target(
+    std::uint64_t target_id_p,
+    int damage_p,
+    const std::string& attacker_group_p
+)
 {
     if (auto* creature = creatures_.find(target_id_p); creature != nullptr) {
         const auto previous_health = creature->health();
-        creature->drain_health(damage_p);
+        creature->receive_damage(attacker_group_p, damage_p);
 
         if (creature->health() != previous_health) {
             creature->register_hit(current_time());
@@ -1333,11 +1535,79 @@ void game_t::damage_target(std::uint64_t target_id_p, int damage_p)
 
     if (auto* base = find_base(target_id_p); base != nullptr) {
         const auto previous_health = base->health();
-        base->drain_health(damage_p);
+        base->receive_damage(attacker_group_p, damage_p);
 
         if (base->health() != previous_health) {
             observer_->on_base_health_changed(base->id(), base->health());
         }
+    }
+}
+
+void game_t::award_reward(
+    const resource_reward_t& reward_p,
+    const damage_contributions_t& contributions_p
+)
+{
+    std::unordered_map<std::string, int> eligible_damage;
+
+    for (const auto& [group, damage] : contributions_p.by_group()) {
+        if (earned_resources_.contains(group)) {
+            eligible_damage.emplace(group, damage);
+        }
+    }
+
+    auto player_rewarded = false;
+    const auto award = [this, &eligible_damage, &player_rewarded](
+        int amount_p,
+        int resource_reward_t::* resource_p
+    ) {
+        for (const auto& share : split_reward(amount_p, eligible_damage)) {
+            earned_resources_[share.group_].*resource_p += share.amount_;
+
+            if (share.group_ == player_state_.base_group_) {
+                auto& resource = resource_p == &resource_reward_t::gold_
+                    ? player_state_.gold_.amount_
+                    : player_state_.food_.amount_;
+                resource += share.amount_;
+                player_rewarded = player_rewarded || share.amount_ > 0;
+            }
+        }
+    };
+
+    award(reward_p.gold_, &resource_reward_t::gold_);
+    award(reward_p.food_, &resource_reward_t::food_);
+
+    if (player_rewarded) {
+        observer_->on_player_state_changed(player_state_);
+        publish_base_actions();
+    }
+}
+
+void game_t::create_corpse(const creature_t& creature_p)
+{
+    if (!corpse_ids_.insert(creature_p.id()).second) {
+        return;
+    }
+
+    observer_->on_corpse_created(
+        creature_p.id(),
+        creature_p.position(),
+        creature_p.type().identifier()
+    );
+    scheduler_.schedule(
+        game_clock_.now() + corpse_lifetime,
+        [this, id = creature_p.id(), match_id = match_id_](auto) {
+            if (match_id == match_id_) {
+                remove_corpse(id);
+            }
+        }
+    );
+}
+
+void game_t::remove_corpse(std::uint64_t id_p)
+{
+    if (corpse_ids_.erase(id_p) > 0) {
+        observer_->on_corpse_removed(id_p);
     }
 }
 
@@ -1348,6 +1618,7 @@ void game_t::remove_dead_bases()
             return false;
         }
 
+        award_reward(base_p->type().reward(), base_p->damage_contributions());
         game_map_.remove_base(*base_p);
         observer_->on_base_removed(base_p->id());
         return true;
@@ -1367,6 +1638,8 @@ void game_t::remove_dead_creatures()
             continue;
         }
 
+        award_reward(creature->type().reward(), creature->damage_contributions());
+        create_corpse(*creature);
         visibility_system_.remove_creature(*creature, creatures_);
         observer_->on_creature_removed(id);
         creatures_.remove(id);

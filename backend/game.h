@@ -26,8 +26,10 @@
 #include "game_map.h"
 #include "game_observer.h"
 #include "game_scheduler.h"
+#include "resource_reward.h"
 #include "tech_tree.h"
 #include "visibility_system.h"
+#include "wildlife_spawner.h"
 
 class game_t
 {
@@ -117,11 +119,18 @@ public:
 
 private:
     void post(std::function<void()> event_p);
-    void spawn_creature(
+    creature_t* spawn_creature(
         std::string identifier_p,
         position_t position_p
     );
     base_t* spawn_base(const std::string& identifier_p, position_t center_p);
+    void spawn_creature_near_group(
+        std::string_view identifier_p,
+        std::string_view group_p
+    );
+    std::optional<std::uint64_t> spawn_lair_near_group(std::string_view group_p);
+    bool spawn_troll_near_lair(std::uint64_t lair_id_p);
+    bool lair_exists(std::uint64_t lair_id_p) const noexcept;
     std::vector<base_action_state_t> player_base_actions() const;
     void order_base_action(const std::string& key_p);
     bool complete_base_order(const std::string& key_p);
@@ -141,7 +150,18 @@ private:
     void clear_world();
     base_t* find_base(std::uint64_t id_p) noexcept;
     const base_t* find_base(std::uint64_t id_p) const noexcept;
-    void damage_target(std::uint64_t target_id_p, int damage_p);
+    const base_t* find_match_base(std::string_view group_p) const noexcept;
+    void damage_target(
+        std::uint64_t target_id_p,
+        int damage_p,
+        const std::string& attacker_group_p
+    );
+    void award_reward(
+        const resource_reward_t& reward_p,
+        const damage_contributions_t& contributions_p
+    );
+    void create_corpse(const creature_t& creature_p);
+    void remove_corpse(std::uint64_t id_p);
     void remove_dead_bases();
     void set_attack_target(std::uint64_t id_p, std::uint64_t target_id_p);
     bool is_player_creature(const creature_t& creature_p) const noexcept;
@@ -178,6 +198,7 @@ private:
     game_event_dispatcher_t dispatcher_;
     game_scheduler_t scheduler_;
     game_clock_t game_clock_;
+    wildlife_spawner_t wildlife_spawner_;
     bool tick_scheduled_ = false;
     std::uint64_t match_id_ = 0;
     creature_type_registry_t creature_type_registry_;
@@ -187,6 +208,8 @@ private:
     base_orders_t player_orders_;
     std::unordered_map<std::string, int> research_levels_;
     std::unordered_set<std::string> trained_units_;
+    std::unordered_map<std::string, resource_reward_t> earned_resources_;
+    std::unordered_set<std::uint64_t> corpse_ids_;
     creatures_t creatures_;
     std::vector<std::unique_ptr<base_t>> bases_;
     game_map_t game_map_;

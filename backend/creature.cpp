@@ -134,6 +134,16 @@ void creature_t::drain_health(int damage_p) noexcept
     health_ = std::max(0, health_ - std::max(0, damage_p));
 }
 
+void creature_t::receive_damage(
+    const std::string& attacker_group_p,
+    int damage_p
+) noexcept
+{
+    const auto previous_health = health_;
+    drain_health(damage_p);
+    damage_contributions_.add(attacker_group_p, previous_health - health_);
+}
+
 bool creature_t::heal(int amount_p) noexcept
 {
     if (is_dead() || amount_p <= 0 || health_ >= type_.health()) {

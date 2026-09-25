@@ -5,6 +5,7 @@
 #include "BaseActionsModel.h"
 #include "BasesModel.h"
 #include "CreaturesModel.h"
+#include "CorpsesModel.h"
 #include "GameObserver.h"
 #include "game.h"
 
@@ -12,6 +13,7 @@ class GameBackend : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(CreaturesModel* creaturesModel READ creaturesModel CONSTANT)
+    Q_PROPERTY(CorpsesModel* corpsesModel READ corpsesModel CONSTANT)
     Q_PROPERTY(BasesModel* basesModel READ basesModel CONSTANT)
     Q_PROPERTY(BaseActionsModel* baseActionsModel READ baseActionsModel CONSTANT)
     Q_PROPERTY(qulonglong playerBaseId READ playerBaseId NOTIFY playerStateChanged)
@@ -37,6 +39,7 @@ public:
     ~GameBackend() override;
 
     CreaturesModel* creaturesModel();
+    CorpsesModel* corpsesModel();
     BasesModel* basesModel();
     BaseActionsModel* baseActionsModel();
     qulonglong playerBaseId() const;
@@ -117,6 +120,7 @@ private:
     GameObserver game_observer_;
     game_t game_;
     CreaturesModel creatures_model_;
+    CorpsesModel corpses_model_;
     BasesModel bases_model_;
     BaseActionsModel base_actions_model_;
     bool game_running_ = false;

@@ -17,6 +17,7 @@ GameWindow {
         id: menuScene
 
         onStartRequested: function(baseIdentifier) {
+            gameScene.resetGameTimer()
             gameWindow.gameBackend.startMatch(baseIdentifier)
             gameWindow.state = "game"
         }

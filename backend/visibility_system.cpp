@@ -119,6 +119,29 @@ void visibility_system_t::remove_creature(
     }
 }
 
+bool visibility_system_t::is_visible_to_enemy(
+    position_t position_p,
+    const std::string& group_p,
+    const creatures_t& creatures_p
+) const noexcept
+{
+    if (!is_position_inside(position_p)) {
+        return false;
+    }
+
+    for (const auto observer_id : observers_by_position_[position_index(position_p)]) {
+        const auto* observer = creatures_p.find(observer_id);
+
+        if (observer != nullptr
+            && !observer->is_dead()
+            && observer->type().group() != group_p) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void visibility_system_t::register_full_range(
     creature_t& observer_p,
     const game_map_t& game_map_p,

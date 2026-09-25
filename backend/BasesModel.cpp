@@ -2,6 +2,7 @@
 
 #include <QByteArray>
 #include <QHash>
+#include <QTimer>
 #include <QVariant>
 
 #include <algorithm>
@@ -68,6 +69,8 @@ QVariant BasesModel::data(const QModelIndex& index_p, int role_p) const
         return base.attack_target_.column_;
     case attack_target_row_role:
         return base.attack_target_.row_;
+    case removing_role:
+        return base.removing_;
     default:
         return {};
     }
@@ -93,7 +96,8 @@ QHash<int, QByteArray> BasesModel::roleNames() const
         {damage_revision_role, "damageRevision"},
         {attack_revision_role, "attackRevision"},
         {attack_target_column_role, "attackTargetColumn"},
-        {attack_target_row_role, "attackTargetRow"}
+        {attack_target_row_role, "attackTargetRow"},
+        {removing_role, "removing"}
     };
 }
 
@@ -134,7 +138,8 @@ void BasesModel::insert_base(
         0,
         0,
         0,
-        position_p
+        position_p,
+        false
     });
     endInsertRows();
 }
@@ -217,9 +222,27 @@ void BasesModel::remove_base(std::uint64_t id_p)
         return;
     }
 
-    beginRemoveRows({}, row, row);
-    bases_.erase(bases_.begin() + row);
-    endRemoveRows();
+    auto& base = bases_[static_cast<std::size_t>(row)];
+
+    if (base.removing_) {
+        return;
+    }
+
+    base.removing_ = true;
+    notify_row_changed(row, {removing_role});
+
+    QTimer::singleShot(300, this, [this, id_p]() {
+        const auto removed_row = row_of(id_p);
+
+        if (removed_row < 0
+            || !bases_[static_cast<std::size_t>(removed_row)].removing_) {
+            return;
+        }
+
+        beginRemoveRows({}, removed_row, removed_row);
+        bases_.erase(bases_.begin() + removed_row);
+        endRemoveRows();
+    });
 }
 
 int BasesModel::row_of(std::uint64_t id_p) const

@@ -7,6 +7,7 @@
 #include <unordered_set>
 
 #include "creature_type.h"
+#include "damage_contributions.h"
 
 struct position_t
 {
@@ -139,13 +140,18 @@ public:
         return health_ == 0;
     }
 
-    void drain_health(int damage_p) noexcept;
-
     void register_hit(std::chrono::steady_clock::time_point time_p) noexcept
     {
         last_hit_time_ = time_p;
     }
+
+    void receive_damage(const std::string& attacker_group_p, int damage_p) noexcept;
     bool heal(int amount_p) noexcept;
+
+    const damage_contributions_t& damage_contributions() const noexcept
+    {
+        return damage_contributions_;
+    }
 
     creature_state_t state() const noexcept
     {
@@ -205,6 +211,7 @@ private:
     std::optional<target_t> current_target(const game_t& game_p) const;
     bool recently_hit(std::chrono::steady_clock::time_point now_p) const noexcept;
     std::chrono::steady_clock::duration movement_interval() const;
+    void drain_health(int damage_p) noexcept;
 
     std::uint64_t id_;
     const creature_type_t& type_;
@@ -225,4 +232,5 @@ private:
     std::chrono::milliseconds attack_elapsed_{0};
     int blocked_path_retry_count_ = 0;
     int health_;
+    damage_contributions_t damage_contributions_;
 };
