@@ -18,7 +18,7 @@ and write a tutorial about it. The tutorial is written in QDoc and you can find 
 
 ![Battle between three races around the bases](docs/images/readme-gameplay.png)
 
-![Screenshot placeholder: radial base menu with research and units](docs/images/readme-base-menu.png)
+![Radial base menu with unit production, research and a running queue](docs/images/readme-base-menu.png)
 
 ![Victory screen after all enemy bases are destroyed](docs/images/readme-victory.png)
 
