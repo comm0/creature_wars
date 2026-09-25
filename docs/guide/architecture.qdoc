@@ -1,0 +1,99 @@
+/*!
+    \page guide-architecture.html
+    \title Architecture
+    \previouspage {Building and Running}
+    \nextpage {Coding Conventions}
+
+    Creature Wars is built like an MMORPG server monolith. One core owns the game world and
+    the client only shows it. Right now both live in one process, but they only talk through
+    a narrow interface, so the core could move into a server without big changes.
+
+    \section1 Layers
+
+    \table
+        \header \li Layer \li Where \li Knows about
+        \row \li Game core
+             \li \c backend/*.h, \c backend/*.cpp with \c _t types
+             \li Plain C++20 and nlohmann/json. No Qt.
+        \row \li Qt bridge
+             \li \l GameObserver, \l GameBackend and the list models
+             \li The core and Qt, but not the QML files.
+        \row \li Client
+             \li \c qml/
+             \li Felgo, QML and the properties and models of \l GameBackend.
+    \endtable
+
+    \section1 Threads
+
+    There are two threads. The GUI thread runs QML, Felgo and the bridge. The game thread
+    belongs to \l game_t and is the only thread that ever reads or writes the game state.
+    The two meet in exactly two places:
+
+    \list
+        \li Commands. \c request_* functions of \l game_t take a small lambda, push it into
+            a mutex protected queue and wake the game thread.
+        \li Events. The game thread calls \l igame_observer_t. \l GameObserver copies the data
+            and posts it to the GUI thread with \c Qt::QueuedConnection.
+    \endlist
+
+    Nothing else is shared, so the game logic needs no locking at all.
+
+    \section1 Inside the game thread
+
+    \list 1
+        \li Sleep until the next scheduled event or creature step, or until a command arrives.
+        \li Move queued commands into \l game_event_dispatcher_t.
+        \li Move every event from \l game_scheduler_t whose time has come into the dispatcher.
+        \li Run the dispatcher, which executes everything in arrival order.
+        \li Advance creature movement that is due.
+    \endlist
+
+    The game tick is itself a scheduled event that runs once per second of game time and
+    reschedules itself. It lets creatures think, attack, regenerate and removes the dead.
+    Income, base orders, AI decisions and wildlife spawns are scheduled events too.
+
+    \l game_clock_t sits between the wall clock and the scheduler. Pausing stops game time and
+    changing the speed scales it, and scheduled events simply follow.
+
+    \section1 Controllers
+
+    Each race in a match has a controller with its resources, research, order queues and a
+    flag that says whether a human plays it. Player input and AI decisions end up in the same
+    functions, so both follow the same rules. \l ai_planner_t decides for the computer
+    controlled races, with numbers from \c data/ai_profiles.json.
+
+    \section1 Data
+
+    \table
+        \header \li File \li Content
+        \row \li \c data/creature_types.json \li Creature stats, colours, behaviour, area damage
+        \row \li \c data/base_types.json \li Base stats per level, units with training costs, rewards
+        \row \li \c data/tech_tree.json \li Base upgrade costs and research paths
+        \row \li \c data/economy.json \li Starting resources, income and the income bonus per level
+        \row \li \c data/ai_profiles.json \li Easy, normal and hard AI settings
+    \endtable
+
+    All files are loaded once when \l GameBackend creates the game. Invalid values throw an
+    exception with a message, so mistakes show up right at start.
+
+    \section1 Client structure
+
+    \table
+        \header \li File \li Role
+        \row \li \c qml/Main.qml \li \c GameWindow with the three scenes and the state machine between them
+        \row \li \c qml/scenes/MenuScene.qml \li Race and difficulty selection
+        \row \li \c qml/scenes/GameScene.qml \li Map, HUD bars and connections to \l GameBackend
+        \row \li \c qml/scenes/GameOverScene.qml \li Result screen
+        \row \li \c qml/components/WorldMap.qml \li Tiles, layers, selection, orders and effects
+        \row \li \c qml/components/CreatureView.qml \li One creature: sprite, walk, health bar, outlines
+        \row \li \c qml/components/BaseView.qml \li One base: tinted art, range, radial menu
+    \endtable
+
+    \section1 Toward online play
+
+    To split the game into a server and clients, the plan is to keep \l game_t as it is and
+    replace the two meeting points. The observer would serialize events into messages and
+    send them to connected clients. The \c request_* calls would come from network messages.
+    The QML client would keep its models and simply fill them from the network instead of
+    from a local \l GameObserver.
+*/

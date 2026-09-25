@@ -1,0 +1,74 @@
+/*!
+    \page tutorial-game-core.html
+    \title Tutorial 5: A Game Core Like an MMORPG Server
+    \previouspage {Tutorial 4: Scenes and the Game Window}
+    \nextpage {Tutorial 6: Connecting the Core to QML}
+
+    All rules live in a C++ core without Qt. It works like the server of an online RPG such
+    as \l {https://github.com/otland/forgottenserver}{The Forgotten Server}.
+
+    \b {Why not in QML?} A usual Felgo game would use a \c Timer and JavaScript. That is
+    faster to write. We use a separate core because it can be tested without a window, it
+    treats the player and the AI exactly the same, and it can move to a real server later.
+
+    \section1 One game thread
+
+    \l game_t runs the game in its own thread. QML never touches the game state. It only
+    sends commands:
+
+    \quotefromfile backend/game.h
+    \skipto void request_spawn_creature(
+    \printuntil void request_set_time_scale
+
+    Example from the bridge:
+
+    \code
+    game_.request_walk_to(creature_id, position_t{column, row});
+    \endcode
+
+    Each call only queues a task. The game thread runs the tasks one by one, so the game
+    logic needs no locks.
+
+    \section1 Dispatcher and scheduler
+
+    \list
+        \li \l game_event_dispatcher_t runs tasks in the order they arrive.
+        \li \l game_scheduler_t keeps tasks for a point in time: the game tick, income,
+            production, research, wildlife.
+    \endlist
+
+    \quotefromfile backend/game_scheduler.h
+    \skipto class game_scheduler_t
+    \printuntil std::vector<std::function<void()>> take_due
+
+    Example: run something in two seconds and cancel it again:
+
+    \code
+    const auto id = scheduler_.schedule(now + std::chrono::seconds{2}, [](auto time) {
+        // happens two seconds later
+    });
+    scheduler_.cancel(id);
+    \endcode
+
+    In the game loop, due events go to the dispatcher. The scheduler never runs game code
+    itself, like in TFS:
+
+    \quotefromfile backend/game.cpp
+    \skipto collect_actions();
+    \printuntil dispatcher_.dispatch_pending();
+
+    \section1 Game time
+
+    \l game_clock_t turns real time into game time. Pause stops it, 2x and 5x speed it up.
+    Scheduled events just follow.
+
+    \section1 Rules as data
+
+    Numbers live in \c data, not in code:
+
+    \quotefromfile data/economy.json
+    \skipto "income": {
+    \printuntil "levelIncomeBonusPercent"
+
+    Change a value, restart the game, done. No rebuild.
+*/

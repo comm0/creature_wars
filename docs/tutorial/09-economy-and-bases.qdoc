@@ -1,0 +1,80 @@
+/*!
+    \page tutorial-economy-and-bases.html
+    \title Tutorial 9: Economy, Bases and the Radial Menu
+    \previouspage {Tutorial 8: Selecting Units and Giving Orders}
+    \nextpage {Tutorial 10: AI Opponents and Wildlife}
+
+    \section1 Income
+
+    Income is a scheduler event that repeats itself:
+
+    \quotefromfile backend/game.cpp
+    \skipto void game_t::schedule_income(
+    \printuntil resource.amount_ += resource.income_;
+
+    Old events check the match id and stop after a new match starts, so we do not have to
+    cancel them by hand.
+
+    The HUD shows a bar that fills until the next income. The core only sends a counter,
+    QML animates the bar.
+
+    \section1 What a base can do
+
+    Units, research and upgrades come from data. A unit in \c data/base_types.json:
+
+    \code
+    {
+      "creature": "orc_spearman", "tier": 2, "gold": 25, "food": 1, "timeMs": 12000,
+      "training": { "gold": 30, "timeMs": 30000 }
+    }
+    \endcode
+
+    Tier 2 units need base level 2 and a training research first. A research path in
+    \c data/tech_tree.json:
+
+    \quotefromfile data/tech_tree.json
+    \skipto "id": "base_regeneration",
+    \printuntil ]
+
+    \section1 Orders
+
+    Each action has its own queue in \l base_orders_t, so a base can research and produce
+    at the same time. An order ends with a scheduler event:
+
+    \quotefromfile backend/base_orders.cpp
+    \skipto void base_orders_t::complete(
+    \printuntil change_();
+
+    If there is no free tile for a new unit, the order retries one second later.
+
+    \section1 The radial menu
+
+    Felgo has no radial menu, so we build one from a \c Repeater. Each circle goes on a ring
+    around the base:
+
+    \quotefromfile qml/components/RadialMenu.qml
+    \skipto readonly property real angle:
+    \printuntil y: radialMenu.height
+
+    The progress ring is a Qt Quick \c Shape:
+
+    \quotefromfile qml/components/ActionCircle.qml
+    \skipto PathAngleArc {
+    \printuntil }
+
+    Research icons use Felgo \c AppIcon. Actions you cannot use yet turn grey with
+    \c MultiEffect:
+
+    \code
+    MultiEffect {
+        source: circleContent
+        saturation: actionCircle.clickable ? 0 : -1
+    }
+    \endcode
+
+    \b {Why not AppToolTip for the cost?} Felgo's \c AppToolTip is a tutorial overlay that
+    dims the screen. A small \c Rectangle works better for hover tips.
+
+    \image readme-base-menu.png
+    \caption The radial menu with a unit queue and running research.
+*/

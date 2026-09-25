@@ -95,7 +95,7 @@ You need the Felgo 4 SDK (Qt 6.8.3), CMake 3.16 or newer and a C++20 compiler
 (MinGW 13 on Windows).
 
 1. Open CMakeLists.txt in the Qt Creator that comes with Felgo.
-2. Pick the Felgo desktop kit or an Android kit and build appCreatureWars.
+2. Pick the Felgo desktop kit and build appCreatureWars.
 
 To build only the core and run the unit tests:
 
@@ -103,8 +103,23 @@ To build only the core and run the unit tests:
     cmake --build build/core
     ctest --test-dir build/core --output-on-failure
 
-The documentation is built with the docs target (qdoc has to be in your PATH).
-The HTML ends up in docs/html.
+Android is on the todo list. It is not tested yet.
+
+## Documentation
+
+The docs folder has a developer tutorial written in QDoc, as asked by the Felgo challenge:
+
+- Tutorial in 11 short chapters, from installing Felgo and running the game to AI
+  opponents and the end of a match, with code snippets and usage examples
+- Developer guide with build options, architecture, coding conventions and recipes
+- Reference for the main classes of the game core and the Qt bridge
+
+Build it with the docs target (qdoc has to be in your PATH) or by hand:
+
+    cd docs
+    qdoc creature_wars.qdocconf
+
+Then open docs/html/index.html in a browser.
 
 ## Project structure
 
@@ -117,7 +132,7 @@ The HTML ends up in docs/html.
 | shaders | Outline and tint shaders |
 | scripts | Placeholder art generator and CI helpers |
 | tests | GoogleTest unit tests for the core |
-| docs | QDoc tutorial |
+| docs | QDoc tutorial, developer guide and reference |
 
 ## Plans
 
@@ -126,7 +141,7 @@ The HTML ends up in docs/html.
 - Many more races, each with its own units, strengths and play style
 - Online mode with a standalone server (a few instances on a VPS) and thin clients that
   reuse the command and event protocol of the core
-- Mobile release for Android and iOS with controls designed for touch
+- Android and iOS builds with controls designed for touch (not tested yet)
 - Cross platform development stays the base for every new feature
 - Dragon Lair, a strong neutral creature: will you fight the dragon for resources or go after your opponent?
 - Music and sound effects

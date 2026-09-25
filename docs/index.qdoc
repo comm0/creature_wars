@@ -1,15 +1,52 @@
 /*!
     \module CreatureWars
-    \title Creature Wars
-    \brief Backend API for Creature Wars.
+    \title Creature Wars Core
+    \brief The C++ game core and the Qt bridge of Creature Wars.
 */
 
 /*!
     \page index.html
     \title Creature Wars
 
-    \list
-        \li \l game_t
-        \li \l game_event_dispatcher_t
+    A small real time strategy game made with Felgo 4 and Qt 6. Pick a race, grow your base,
+    train an army and destroy the enemy bases before they destroy yours.
+
+    \image readme-gameplay.png
+    \caption Three races fighting around their bases.
+
+    Made for the Felgo developer challenge: a complete game in one week plus a tutorial.
+
+    \section1 Tutorial
+
+    Start here. From installing Felgo to a finished match with AI opponents.
+
+    \list 1
+        \li \l {Tutorial 1: What We Build}
+        \li \l {Tutorial 2: Install Felgo and Run the Game}
+        \li \l {Tutorial 3: The Felgo Project}
+        \li \l {Tutorial 4: Scenes and the Game Window}
+        \li \l {Tutorial 5: A Game Core Like an MMORPG Server}
+        \li \l {Tutorial 6: Connecting the Core to QML}
+        \li \l {Tutorial 7: The Map, Sprites and Oblique Projection}
+        \li \l {Tutorial 8: Selecting Units and Giving Orders}
+        \li \l {Tutorial 9: Economy, Bases and the Radial Menu}
+        \li \l {Tutorial 10: AI Opponents and Wildlife}
+        \li \l {Tutorial 11: Ending the Match}
     \endlist
+
+    \section1 Developer Guide
+
+    For people who work on the project: build options, architecture, code rules and
+    recipes for common changes.
+
+    \list
+        \li \l {Building and Running}
+        \li \l {Architecture}
+        \li \l {Coding Conventions}
+        \li \l {Recipes}
+    \endlist
+
+    \section1 Reference
+
+    \l {Core Reference}: the main classes of the C++ core and the Qt bridge.
 */

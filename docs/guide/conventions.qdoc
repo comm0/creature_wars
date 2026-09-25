@@ -1,0 +1,58 @@
+/*!
+    \page guide-conventions.html
+    \title Coding Conventions
+    \previouspage {Architecture}
+    \nextpage {Recipes}
+
+    \section1 C++
+
+    \list
+        \li Everything in the core uses \c snake_case.
+        \li Classes, structs, enums and type aliases end with \c _t, for example \l game_t
+            or \c position_t.
+        \li Function parameters end with \c _p and data members end with \c _.
+        \li The core must not include Qt headers. If you need Qt, the code belongs in the bridge.
+        \li Numbers a designer might want to change go to \c data, not into the code.
+        \li New logic in the core comes with a GoogleTest test when it can be tested in isolation.
+    \endlist
+
+    \section1 Qt bridge and QML
+
+    \list
+        \li The bridge and everything QML sees use the usual Qt \c camelCase.
+        \li Import Qt modules without a version, for example \c {import QtQuick}. A versioned
+            import hides newer properties.
+        \li Add \c {pragma ComponentBehavior: Bound} to files where a delegate, \c Loader
+            component or \c layer.effect uses ids from outside.
+        \li Do not name your own properties like built in ones. \c Item already has \c left,
+            \c top and similar anchor lines, and redefining them fails when the file loads.
+        \li Inside a scaled \c Scene give sizes in scene units with \c font.pixelSize and
+            \c size. Felgo's \c sp() and \c dp() would scale a second time on phones.
+    \endlist
+
+    \section1 Comments
+
+    Code should explain itself through names and structure. When something really is not
+    obvious, a comment of a few words is enough, one sentence at most. Longer explanations
+    belong in this documentation.
+
+    \section1 Graphics
+
+    \list
+        \li Everything uses the oblique projection: an object stands on its tiles anchored at
+            the bottom right, height goes up and to the left at 45 degrees.
+        \li The light comes from the top left. Top faces are the brightest, east faces darker,
+            south faces the darkest.
+        \li One pixel of art is one scene unit. A tile is 16 by 16, a creature frame 32 by 32.
+        \li Every image has a base version, a \c +hd version at twice the size and a \c +hd2
+            version at four times the size, scaled without smoothing.
+        \li Sprite sheets use TexturePacker JSON (Hash) with frames named
+            \c {<direction>_<index>.png}, rows in the order north, south, west, east, one pixel
+            of extrude and two pixels of padding.
+    \endlist
+
+    \section1 Commits
+
+    Write commit messages in English with a short title and a few lines about what changed
+    and why. The history is public, so it should read well to someone new to the project.
+*/

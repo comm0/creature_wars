@@ -1,0 +1,64 @@
+/*!
+    \page tutorial-game-end.html
+    \title Tutorial 11: Ending the Match
+    \previouspage {Tutorial 10: AI Opponents and Wildlife}
+
+    \section1 Rules
+
+    A destroyed base knocks its race out and kills its creatures. Troll lairs do not count.
+    After each destroyed base the core checks:
+
+    \quotefromfile backend/game.cpp
+    \skipto if (!player_base_alive) {
+    \printuntil }
+    \printuntil }
+
+    Ending the match stops wildlife and all order queues, then reports the result:
+
+    \quotefromfile backend/game.cpp
+    \skipto void game_t::end_match(bool victory_p)
+    \printuntil }
+    \printuntil }
+
+    \section1 The game over scene
+
+    QML gets the \c matchEnded signal and switches state:
+
+    \quotefromfile qml/Main.qml
+    \skipto function onMatchEnded(victory, durationMs) {
+    \printuntil }
+
+    \c GameOverScene is a third scene with a see through background, so the battle stays
+    visible behind it. Two \c AppButton items offer \uicontrol {Play again} and
+    \uicontrol {Main menu}.
+
+    \image readme-victory.png
+    \caption Victory.
+
+    \section1 Effects with EntityManager
+
+    Mages hit a 3 by 3 area. Each hit spawns a short explosion through Felgo's
+    \c EntityManager:
+
+    \quotefromfile qml/components/WorldMap.qml
+    \skipto function showAreaAttack(column, row, radius, color) {
+    \printuntil })
+
+    The explosion is an \c EntityBase that removes itself when its animation ends:
+
+    \quotefromfile qml/components/AreaExplosion.qml
+    \skipto ScriptAction {
+    \printuntil }
+
+    \section1 Next steps
+
+    \list
+        \li Android and iOS builds with touch controls. Not tested yet.
+        \li A standalone server and network clients.
+        \li More races and a strong neutral boss.
+        \li Music and sounds with \c GameSoundEffect and \c BackgroundMusic.
+        \li Original pixel art.
+    \endlist
+
+    More details: \l {Developer Guide}.
+*/

@@ -1,0 +1,57 @@
+/*!
+    \page tutorial-selection-and-orders.html
+    \title Tutorial 8: Selecting Units and Giving Orders
+    \previouspage {Tutorial 7: The Map, Sprites and Oblique Projection}
+    \nextpage {Tutorial 9: Economy, Bases and the Radial Menu}
+
+    \section1 Selecting
+
+    Left click selects one unit, a drag selects many. Only your own race can be selected:
+
+    \quotefromfile qml/components/WorldMap.qml
+    \skipto function isOwn(group) {
+    \printuntil }
+
+    Clicking your base selects it and keeps its menu open.
+
+    \section1 Move or attack
+
+    Right click on an enemy attacks it, right click on the ground moves there:
+
+    \quotefromfile qml/components/WorldMap.qml
+    \skipto const enemy = root.creatureAt(eventPoint.position, false)
+    \printuntil return
+
+    \section1 Attack move
+
+    The \uicontrol {Attack move} toggle in the bottom bar decides what a move order does:
+
+    \list
+        \li On: units fight enemies on the way and then go on.
+        \li Off: units drop their target and just walk. Use it to retreat.
+    \endlist
+
+    A unit that only walks could get stuck and be killed without fighting back. So a
+    blocked unit that was hit in the last two seconds gives up the move and fights:
+
+    \quotefromfile backend/creature.cpp
+    \skipto if (game_p.move_creature_towards(id_, *destination))
+    \skipto if (active_movement_goal_ == movement_goal_t::manual
+    \printuntil }
+
+    \section1 Outlines
+
+    Selected units get a yellow outline around the sprite shape. Their target gets a red one:
+
+    \code
+    OutlineEffect {
+        source: creatureSprite
+        color: "#ff4a3d"
+        visible: creatureView.targeted
+    }
+    \endcode
+
+    \c OutlineEffect captures the source with \c ShaderEffectSource and a shader colours
+    transparent pixels next to opaque ones.
+
+*/

@@ -1,0 +1,55 @@
+/*!
+    \page tutorial-install-and-run.html
+    \title Tutorial 2: Install Felgo and Run the Game
+    \previouspage {Tutorial 1: What We Build}
+    \nextpage {Tutorial 3: The Felgo Project}
+
+    This chapter takes you from nothing to a running game.
+
+    \section1 1. Install Felgo
+
+    \list 1
+        \li Go to \l {https://felgo.com/download}{felgo.com/download} and create a free account.
+        \li Download and start the Felgo installer.
+        \li Select Felgo 4 with Qt 6.8.3. On Windows pick the \b {MinGW 64-bit} desktop kit.
+        \li Finish the installation. It includes Qt Creator, CMake, Ninja and the compiler.
+    \endlist
+
+    \section1 2. Get the code
+
+    \badcode
+    git clone https://github.com/comm0/creature_wars.git
+    \endcode
+
+    \section1 3. Open the project
+
+    \list 1
+        \li Start Qt Creator from the Felgo installation.
+        \li \uicontrol {File > Open File or Project} and select \c CMakeLists.txt.
+        \li Select the \b {Felgo Desktop Qt 6.8.3 MinGW 64-bit} kit and click
+            \uicontrol {Configure Project}.
+    \endlist
+
+    The first configure downloads nlohmann/json from GitHub, so you need internet.
+
+    \section1 4. Build and run
+
+    Select the \c appCreatureWars target and press \uicontrol Run (Ctrl+R). You get the start
+    screen. Pick a race and press \uicontrol Start.
+
+    In Debug builds a second window, \e {Creature Wars Debug}, shows log messages and the
+    game tick time. That is normal.
+
+    \note Android is on the todo list. It is not tested yet, so this tutorial covers the
+    desktop build only.
+
+    \section1 5. Run the unit tests (optional)
+
+    The core has its own tests that need no Felgo:
+
+    \badcode
+    cmake -S . -B build/core -DCREATURE_WARS_BUILD_APP=OFF -DBUILD_TESTING=ON
+    cmake --build build/core
+    ctest --test-dir build/core
+    \endcode
+*/

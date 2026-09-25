@@ -1,0 +1,70 @@
+/*!
+    \page tutorial-scenes.html
+    \title Tutorial 4: Scenes and the Game Window
+    \previouspage {Tutorial 3: The Felgo Project}
+    \nextpage {Tutorial 5: A Game Core Like an MMORPG Server}
+
+    Felgo splits a game into one \c GameWindow and several \c Scene items. We have three
+    scenes: menu, game and game over.
+
+    \section1 GameWindow
+
+    \quotefromfile qml/Main.qml
+    \skipto GameWindow {
+    \printuntil state: "menu"
+
+    \c screenWidth and \c screenHeight only matter on desktop. On phones the window fills
+    the screen.
+
+    \section1 A scene with a fixed size
+
+    Design every scene for one size. Felgo scales it to the screen:
+
+    \quotefromfile qml/scenes/GameScene.qml
+    \skipto width: 640
+    \printuntil scaleMode
+
+    With \c letterbox the aspect ratio stays the same and free space becomes bars. To fill
+    the bars too, anchor backgrounds to \c gameWindowAnchorItem:
+
+    \code
+    Rectangle {
+        anchors.fill: gameScene.gameWindowAnchorItem
+        color: "#111814"
+    }
+    \endcode
+
+    \section1 Switching scenes
+
+    Hide every scene by default and show the right one with a state on the window:
+
+    \quotefromfile qml/Main.qml
+    \skipto states: [
+    \printuntil ]
+
+    Each scene has this, so the change fades in and out:
+
+    \code
+    opacity: 0
+    visible: opacity > 0
+    Behavior on opacity { NumberAnimation { duration: 250 } }
+    \endcode
+
+    Switching is one line:
+
+    \code
+    gameWindow.state = "game"
+    \endcode
+
+    \section1 The menu
+
+    The menu shows one card per race and a Felgo \c AppButton. Each card shows the first
+    frame of a sprite sheet:
+
+    \code
+    TexturePackerAnimatedSprite {
+        source: "qrc:/assets/creatures/orc/orc.json"
+        frameNames: ["south_0.png"]
+    }
+    \endcode
+*/

@@ -1,0 +1,84 @@
+/*!
+    \page guide-building.html
+    \title Building and Running
+    \nextpage {Architecture}
+
+    \section1 Requirements
+
+    \list
+        \li Felgo 4 SDK with Qt 6.8.3 and Qt Creator.
+        \li CMake 3.16 or newer and Ninja (both come with the SDK).
+        \li A C++20 compiler. On Windows the SDK ships MinGW 13.
+        \li Optional: \c ccache and \c lld are used automatically when they are installed.
+        \li Optional: Python 3 with Pillow for \c scripts/generate_placeholders.py.
+    \endlist
+
+    \section1 The game
+
+    Open \c CMakeLists.txt in the Qt Creator from the Felgo SDK, select the Felgo desktop kit
+    and run the \c appCreatureWars target. The first configure step downloads nlohmann/json,
+    and GoogleTest when tests are enabled, so it needs a network connection.
+
+    Debug builds open a second console window called \e {Creature Wars Debug}. It shows log
+    messages and a line with the game tick time, the creature count and the dispatcher queue,
+    which helps a lot when you look at performance.
+
+    \section1 CMake options
+
+    \table
+        \header \li Option \li Default \li Effect
+        \row \li \c CREATURE_WARS_BUILD_APP \li \c ON
+             \li Build the Felgo application. Turn it off to build only the core and tests.
+        \row \li \c CREATURE_WARS_MAP_SIZE \li \c 64x32
+             \li Map size preset: \c 40x20, \c 48x24, \c 56x28 or \c 64x32.
+        \row \li \c CREATURE_WARS_WARNINGS_AS_ERRORS \li \c OFF
+             \li Treat compiler warnings as errors, as the CI does.
+        \row \li \c CREATURE_WARS_ENABLE_CLANG_TIDY \li \c OFF
+             \li Run clang-tidy on the core while building.
+        \row \li \c CREATURE_WARS_ENABLE_CPPCHECK \li \c OFF
+             \li Run cppcheck on the core while building.
+        \row \li \c CREATURE_WARS_USE_CCACHE \li \c ON \li Use ccache when it is found.
+        \row \li \c CREATURE_WARS_USE_LLD \li \c ON \li Link with lld when it is found.
+    \endtable
+
+    \section1 Core and unit tests
+
+    The core builds without Qt and Felgo. That is also how the CI builds it:
+
+    \badcode
+    cmake -S . -B build/core -G Ninja -DCREATURE_WARS_BUILD_APP=OFF \
+        -DCREATURE_WARS_WARNINGS_AS_ERRORS=ON -DBUILD_TESTING=ON
+    cmake --build build/core
+    ctest --test-dir build/core --output-on-failure
+    \endcode
+
+    The tests live in \c tests/ and use GoogleTest. They cover the dispatcher, the
+    scheduler, the game clock, base orders, the map, the pathfinder, the AI planner and a
+    few full games between AI players. Scheduler based logic is tested with fixed points in
+    time, so the tests do not wait for real time to pass.
+
+    \section1 Continuous integration
+
+    \c .github/workflows/ci.yml builds the core with GCC and Clang, runs the tests under
+    AddressSanitizer and UndefinedBehaviorSanitizer and runs clang-tidy and cppcheck. Warnings
+    count as errors there, so build with \c CREATURE_WARS_WARNINGS_AS_ERRORS=ON before you
+    push.
+
+    \section1 Android
+
+    On the todo list. The Android build is not tested yet, so there are no build steps here.
+
+    \section1 This documentation
+
+    The documentation is written in QDoc and lives in \c docs. With \c qdoc in your \c PATH
+    (it comes with the SDK) build the \c docs target, or run it by hand:
+
+    \badcode
+    cd docs
+    qdoc creature_wars.qdocconf
+    \endcode
+
+    The HTML ends up in \c docs/html. Code snippets in the tutorial are quoted straight from
+    the source files with \c \\quotefromfile, so they stay in sync with the code as long as
+    the quoted lines keep existing.
+*/

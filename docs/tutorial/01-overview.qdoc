@@ -1,0 +1,39 @@
+/*!
+    \page tutorial-overview.html
+    \title Tutorial 1: What We Build
+    \nextpage {Tutorial 2: Install Felgo and Run the Game}
+
+    We build a small real time strategy game with Felgo. Three races share one map. Each
+    race has a base that makes units, researches upgrades and shoots at enemies. You play
+    one race, the computer plays the others. The last base standing wins.
+
+    \image readme-start-screen.png
+    \caption The start screen.
+
+    \section1 What you learn
+
+    \list
+        \li Setting up a Felgo game with CMake.
+        \li Scenes, scaling and switching screens with \c GameWindow and \c Scene.
+        \li Animated sprites with TexturePacker and images for several screen densities.
+        \li Short lived effects with \c EntityManager.
+        \li Keeping game rules in a C++ core and showing them in QML.
+    \endlist
+
+    \section1 How the game is split
+
+    \list
+        \li \b {C++ core} in \c backend. Owns the game state and all rules. No Qt inside.
+        \li \b {Felgo client} in \c qml. Draws what the core reports and sends player input.
+    \endlist
+
+    \b {Why not only QML?} Most Felgo games keep their logic in QML, often with
+    \c EntityManager and physics. That is the fastest way for a small game. We put the rules
+    in C++ because the game should later run on a server, like an online RPG. Chapter 5
+    explains it.
+
+    \section1 How to use this tutorial
+
+    Every code block comes straight from the repository, with the file name. Read a chapter,
+    open the file, run the game and compare.
+*/

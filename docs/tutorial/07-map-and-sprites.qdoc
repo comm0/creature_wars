@@ -1,0 +1,81 @@
+/*!
+    \page tutorial-map-and-sprites.html
+    \title Tutorial 7: The Map, Sprites and Oblique Projection
+    \previouspage {Tutorial 6: Connecting the Core to QML}
+    \nextpage {Tutorial 8: Selecting Units and Giving Orders}
+
+    \section1 The tile map
+
+    Tiles are 16 by 16 units. Each creature item covers one tile:
+
+    \quotefromfile qml/components/CreatureView.qml
+    \skipto x: column * tileSize
+    \printuntil height: tileSize
+
+    A \c Behavior on \c x and \c y turns tile jumps into a smooth walk.
+
+    \b {Why Repeater and not a tile map editor?} Felgo games often use Tiled maps. Our map
+    is plain grass for now, so a \c Repeater is enough. A Tiled map is the way to go once
+    the map gets terrain.
+
+    \section1 Oblique projection
+
+    Like in many classic 2D RPGs, height is drawn up and to the left. A sprite is 32 by 32, a tile 16 by 16,
+    so we anchor the sprite's bottom right corner to the tile:
+
+    \quotefromfile qml/components/CreatureView.qml
+    \skipto readonly property real visualLeft
+    \printuntil visualTop
+
+    Objects further south or east are closer to the viewer and must be drawn on top:
+
+    \quotefromfile qml/components/CreatureView.qml
+    \skipto z: (x + y)
+    \printline z:
+
+    \section1 Sprite sheets
+
+    Each creature has 12 frames: 4 directions, one idle and two walking frames each.
+    Felgo reads TexturePacker sheets directly:
+
+    \quotefromfile qml/components/CreatureView.qml
+    \skipto sourceComponent: TexturePackerSpriteSequence {
+    \printuntil frameNames: ["north_0.png"]
+    \printline }
+
+    Switch animations by name:
+
+    \code
+    creatureSprite.jumpTo("south_walk")
+    \endcode
+
+    \note Pack sheets with 1 pixel extrude and 2 pixels padding. Without it scaled pixel art
+    shows thin lines at the frame edges.
+
+    \section1 Screen densities
+
+    Put each image in three sizes: normal, \c +hd (2x) and \c +hd2 (4x). Felgo picks one:
+
+    \code
+    assets/structures/base/base_1.png
+    assets/structures/base/+hd/base_1.png
+    assets/structures/base/+hd2/base_1.png
+    \endcode
+
+    Use the normal path in QML:
+
+    \quotefromfile qml/components/BaseView.qml
+    \skipto MultiResolutionImage {
+    \printuntil }
+    \printuntil }
+
+    \section1 One grey image, many colours
+
+    Bases are grey. A tiny shader multiplies them with the race colour:
+
+    \quotefromfile shaders/tint.frag
+    \skipto void main()
+    \printuntil }
+
+    The grey art comes from \c scripts/generate_placeholders.py.
+*/

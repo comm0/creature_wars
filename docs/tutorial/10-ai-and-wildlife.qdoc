@@ -1,0 +1,57 @@
+/*!
+    \page tutorial-ai-and-wildlife.html
+    \title Tutorial 10: AI Opponents and Wildlife
+    \previouspage {Tutorial 9: Economy, Bases and the Radial Menu}
+    \nextpage {Tutorial 11: Ending the Match}
+
+    The computer races use the same economy, actions and orders as the player. Only the
+    decisions come from code.
+
+    \section1 Facts
+
+    Before each decision the core collects what the AI needs:
+
+    \quotefromfile backend/game.cpp
+    \skipto ai_context_t context{
+    \printuntil };
+
+    \section1 Decisions
+
+    \l ai_planner_t is a pure function. The rules in short:
+
+    \list 1
+        \li Enemies near the base: defend, spawn units.
+        \li Army too small: spawn more.
+        \li Low on resources and a wild creature close by: go hunting.
+        \li Army big enough: attack an enemy base.
+        \li Spare resources: training, upgrades, research.
+    \endlist
+
+    The first rule in code:
+
+    \quotefromfile backend/ai_planner.cpp
+    \skipto const auto under_attack
+    \printuntil return decision;
+
+    \section1 Difficulty
+
+    Easy, normal and hard use the same planner with other numbers from
+    \c data/ai_profiles.json:
+
+    \quotefromfile data/ai_profiles.json
+    \skipto "hard": {
+    \printuntil }
+
+    \section1 Wildlife
+
+    \l wildlife_spawner_t plans deer, wolves and troll lairs on the scheduler, each time
+    near another race:
+
+    \quotefromfile backend/wildlife_spawner.cpp
+    \skipto void wildlife_spawner_t::start(
+    \printuntil }
+
+    A killed wild creature pays a reward. It is split between the races by the damage
+    they dealt. Hunting pays, but it leaves your base open.
+
+*/

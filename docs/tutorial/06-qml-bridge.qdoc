@@ -1,0 +1,62 @@
+/*!
+    \page tutorial-qml-bridge.html
+    \title Tutorial 6: Connecting the Core to QML
+    \previouspage {Tutorial 5: A Game Core Like an MMORPG Server}
+    \nextpage {Tutorial 7: The Map, Sprites and Oblique Projection}
+
+    The core runs in its own thread and knows no Qt. QML runs in the GUI thread. A thin
+    bridge connects them.
+
+    \section1 Events out
+
+    The core reports changes through a plain C++ interface:
+
+    \quotefromfile backend/game_observer.h
+    \skipto class igame_observer_t
+    \printuntil virtual void on_creature_created
+
+    \section1 Changing threads
+
+    \l GameObserver implements it and moves each event to the GUI thread:
+
+    \quotefromfile backend/GameObserver.cpp
+    \skipto void GameObserver::on_creature_health_changed(
+    \printuntil Qt::QueuedConnection
+    \printuntil }
+
+    \c Qt::QueuedConnection runs the lambda in the GUI thread, so QML never sees half
+    updated data.
+
+    \section1 Models and commands
+
+    \l GameBackend owns one list model per kind of object (creatures, bases, base actions,
+    corpses) and forwards input to the core:
+
+    \quotefromfile backend/GameBackend.h
+    \skipto Q_INVOKABLE void orderBaseAction
+    \printline orderBaseAction
+
+    Example use in QML:
+
+    \code
+    Repeater {
+        model: gameBackend.creaturesModel
+        delegate: CreatureView {}
+    }
+
+    onClicked: gameBackend.orderBaseAction("spawn:orc")
+    \endcode
+
+    The core checks every command. QML cannot, for example, move the units of another race.
+
+    \section1 Adding new data to the screen
+
+    Always the same path:
+
+    \list 1
+        \li Add a function to \l igame_observer_t and call it in the core.
+        \li Emit a signal from \l GameObserver.
+        \li Update a model or a property in \l GameBackend.
+        \li Bind to it in QML.
+    \endlist
+*/

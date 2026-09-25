@@ -1,0 +1,118 @@
+/*!
+    \page core-reference.html
+    \title Core Reference
+
+    The most important classes of Creature Wars, grouped by layer. The game core uses
+    \c snake_case names with a \c _t suffix, the Qt bridge uses Qt style names.
+
+    \section1 Game core
+
+    \table
+        \header \li Class \li Role
+        \row \li \l game_t \li Owns the game thread, the world and the match rules.
+        \row \li \l game_event_dispatcher_t \li Runs queued tasks in arrival order.
+        \row \li \l game_scheduler_t \li Holds events planned for a point in game time.
+        \row \li \l game_clock_t \li Turns wall time into game time with pause and speed.
+        \row \li \l base_orders_t \li Runs timed base orders with one queue per action.
+        \row \li \l tech_tree_t \li Base upgrades and research paths loaded from data.
+        \row \li \l ai_planner_t \li Picks the next strategy and action for a computer race.
+        \row \li \l wildlife_spawner_t \li Schedules deer, wolves and troll lairs during a match.
+        \row \li \l igame_observer_t \li Interface through which the core reports changes.
+    \endtable
+
+    \section1 Qt bridge
+
+    \table
+        \header \li Class \li Role
+        \row \li \l GameObserver \li Moves core events to the GUI thread as Qt signals.
+        \row \li \l GameBackend \li The object QML talks to: properties, models and commands.
+    \endtable
+*/
+
+/*!
+    \class igame_observer_t
+    \inmodule CreatureWars
+    \brief The interface through which the game core reports every change of the world.
+
+    The core calls these functions on the game thread whenever something changes: a creature
+    appears, moves, gets hit or dies, a base changes, a player's resources change or the match
+    ends. The interface uses plain C++ types only, so the core stays independent of Qt.
+
+    \l GameObserver implements it for the QML client. A network server could implement it by
+    serializing the events for connected clients.
+
+    \sa GameObserver, game_t
+*/
+
+/*!
+    \class game_clock_t
+    \inmodule CreatureWars
+    \brief Translates wall time into game time.
+
+    The scheduler and creature movement work in game time. The clock starts paused, follows
+    the wall clock while the game runs, stops while it is paused and runs faster or slower
+    when the time scale changes. \c wall_time_for() converts a game time back to the wall
+    time the game thread has to sleep until.
+
+    \sa game_scheduler_t
+*/
+
+/*!
+    \class tech_tree_t
+    \inmodule CreatureWars
+    \brief Base upgrades and research paths loaded from \c data/tech_tree.json.
+
+    Each research path has an id, a name, an effect and one entry per level. A level needs a
+    minimum base level and costs gold and time. The effect value is applied to the base or to
+    the units around it, for example extra regeneration, more health or more shots per turn.
+
+    \sa base_orders_t
+*/
+
+/*!
+    \class ai_planner_t
+    \inmodule CreatureWars
+    \brief Decides what a computer controlled race does next.
+
+    \c plan() is a pure function. It takes the settings of the difficulty profile, a summary
+    of the race's situation and the list of actions its base currently offers, and returns a
+    strategy (recover, grow, defend, hunt, rally or assault), an optional base action and
+    whether to send units hunting or attacking. Because it has no state it is easy to test
+    and easy to reason about.
+
+    The difficulty profiles come from \c data/ai_profiles.json.
+*/
+
+/*!
+    \class wildlife_spawner_t
+    \inmodule CreatureWars
+    \brief Schedules wild creatures and troll lairs during a match.
+
+    The spawner plans each kind of wild creature on the game scheduler and places it near a
+    different race each time. \c reset() starts a new generation, which makes every event
+    planned for an older match do nothing when it fires.
+*/
+
+/*!
+    \class GameObserver
+    \inmodule CreatureWars
+    \brief Moves events from the game thread to the GUI thread.
+
+    GameObserver implements \l igame_observer_t. Every call copies the data it needs and posts
+    a queued call to the GUI thread, where it emits a Qt signal. \l GameBackend and the list
+    models connect to these signals.
+*/
+
+/*!
+    \class GameBackend
+    \inmodule CreatureWars
+    \brief The single object the QML client talks to.
+
+    GameBackend creates \l game_t with the rules from \c data, owns the \l GameObserver and the
+    list models for creatures, corpses, bases and base actions, and exposes the player's
+    state as properties for the HUD.
+
+    Its invokable functions such as \c startMatch(), \c walkCreature(), \c attackTarget() and
+    \c orderBaseAction() forward player input to the core. The core validates every command,
+    so the client cannot break the rules even by mistake.
+*/

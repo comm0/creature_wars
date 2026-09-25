@@ -1,0 +1,65 @@
+/*!
+    \page tutorial-project-setup.html
+    \title Tutorial 3: The Felgo Project
+    \previouspage {Tutorial 2: Install Felgo and Run the Game}
+    \nextpage {Tutorial 4: Scenes and the Game Window}
+
+    A Felgo game is a Qt app with a few extra pieces. Here is what they are.
+
+    \section1 Folders
+
+    \table
+        \header \li Folder \li Content
+        \row \li \c backend \li C++ game core and the classes that expose it to QML
+        \row \li \c qml \li Felgo scenes and QML components
+        \row \li \c data \li Game rules in JSON
+        \row \li \c assets \li Sprites and images
+    \endtable
+
+    \section1 CMake
+
+    The core is a plain library. The app target adds QML, data and shaders:
+
+    \quotefromfile CMakeLists.txt
+    \skipto qt_add_executable(appCreatureWars
+    \printuntil felgo_configure_executable(appCreatureWars)
+
+    \list
+        \li \c qt_add_resources puts JSON and images into \c qrc:/, so they work on every
+            platform. Example: \c {"qrc:/data/economy.json"}.
+        \li \c qt_add_shaders compiles shaders to \c .qsb, which Qt 6 needs.
+        \li \c felgo_configure_executable links Felgo and prepares Android and iOS packaging.
+    \endlist
+
+    \section1 main.cpp
+
+    Create \c FelgoApplication next to the QML engine and initialize it:
+
+    \quotefromfile main.cpp
+    \skipto QApplication app(argc, argv);
+    \printuntil felgo.initialize(&engine);
+
+    Pass your C++ object to QML and load the main file:
+
+    \quotefromfile main.cpp
+    \skipto engine.setInitialProperties({
+    \printuntil });
+
+    \quotefromfile main.cpp
+    \skipto felgo.setMainQmlFileName
+    \printuntil engine.load
+
+    In QML the object is then a required property:
+
+    \code
+    GameWindow {
+        required property var gameBackend
+    }
+    \endcode
+
+    \b {Why not a context property?} \c setContextProperty is the classic way, but required
+    properties are checked by the QML compiler and are the recommended Qt 6 style.
+
+    \note The Felgo splash screen and a license message appear until you set
+    \c PRODUCT_LICENSE_KEY in \c CMakeLists.txt.
+*/

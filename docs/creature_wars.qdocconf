@@ -1,6 +1,6 @@
 project = CreatureWars
-description = Creature Wars documentation
-version = 0.1
+description = Creature Wars, a real time strategy game made with Felgo
+version = 1.0
 moduleheader = game.h
 includepaths = ../backend
 
@@ -8,7 +8,17 @@ outputformats = HTML
 outputdir = html
 
 headerdirs = ../backend
-sourcedirs = . ../backend
+sourcedirs = . tutorial guide reference ../backend
+exampledirs = ..
+imagedirs = images
 
 headers.fileextensions = "*.h"
 sources.fileextensions = "*.cpp *.qdoc"
+
+navigation.homepage = "Creature Wars"
+navigation.landingpage = "Creature Wars"
+
+HTML.stylesheets = style/creature_wars.css
+HTML.headerstyles = "<link rel=\"stylesheet\" type=\"text/css\" href=\"style/creature_wars.css\" />\n"
+HTML.postheader = "<div class=\"header\"><a href=\"index.html\">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>\n<div class=\"content\">\n"
+HTML.footer = "</div>\n<div class=\"footer\">Copyright (c) 2026 PioD. All rights reserved.</div>\n"

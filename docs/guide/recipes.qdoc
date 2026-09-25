@@ -1,0 +1,100 @@
+/*!
+    \page guide-recipes.html
+    \title Recipes
+    \previouspage {Coding Conventions}
+
+    Short step by step instructions for the changes people make most often.
+
+    \section1 Add a creature
+
+    \list 1
+        \li Add an entry to \c data/creature_types.json with \c id, \c name, \c group (the
+            race or a wildlife group), \c color and the stats \c health, \c attack,
+            \c attackRange, \c visionRange and \c speed.
+        \li Optional fields: \c markerColor for a small mark on the placeholder graphic,
+            \c behavior (\c aggressive or \c fleeing), \c areaRadius and \c areaColor for area
+            damage.
+        \li If the creature has its own sprite sheet, add its id to the list in
+            \c qml/components/CreatureSprites.js. Without that, it is drawn as a tinted
+            placeholder box, which is fine for testing.
+        \li To make a race able to produce it, add it to the \c units list of the race's
+            base in \c data/base_types.json, see below.
+    \endlist
+
+    \section1 Let a base produce a unit
+
+    Every entry in \c units of a base type has a \c creature, a \c tier and the \c gold,
+    \c food and \c timeMs of one spawn. Tier 1 is available from the start. For higher tiers
+    add a \c training object with the \c gold and \c timeMs of the research that unlocks the
+    unit. A unit of tier N appears in the menu once the base reaches level N.
+
+    \section1 Add a research path
+
+    \list 1
+        \li Add an entry to \c researches in \c data/tech_tree.json with an \c id, a \c name,
+            an \c effect and a list of \c levels. Each level has \c baseLevel, \c gold,
+            \c timeMs and \c value.
+        \li Supported effects are \c baseRegeneration, \c baseHealthPercent, \c healingAura,
+            \c baseDamagePercent, \c shotCount and \c baseRangeBonus. A new kind of effect needs
+            a new \c research_effect_t value in \c backend/tech_tree.h and code in
+            \c game_t::apply_base_stats or wherever the effect applies.
+        \li Pick an icon for the research in the \c researchIcons map of
+            \c qml/components/ActionCircle.qml. Without one, a plus icon is shown.
+    \endlist
+
+    \section1 Tune the balance
+
+    Most balancing needs no code at all. Change the numbers in \c data and restart the game:
+    base health and damage per level in \c base_types.json, unit stats in
+    \c creature_types.json, costs and times in \c tech_tree.json and \c base_types.json,
+    income in \c economy.json and AI behaviour in \c ai_profiles.json.
+
+    \section1 Add a race
+
+    A race is a base type plus its creatures. The data part is easy, but some code still
+    lists the three current races by name:
+
+    \list 1
+        \li Add the creatures and a base type with a new \c group to the data files.
+        \li Add a card for the race to the race list in \c qml/scenes/MenuScene.qml and a
+            difficulty entry for it.
+        \li Pass the difficulty of the new race in \c GameBackend::startMatch and in
+            \c qml/Main.qml.
+        \li \c game_t::start_match places exactly three match bases. A fourth race needs a
+            fourth starting position there.
+    \endlist
+
+    Making races fully data driven is one of the planned improvements.
+
+    \section1 Add a sprite sheet
+
+    The quickest way is the import script, which packs the frames in the same format
+    TexturePacker produces:
+
+    \list 1
+        \li Draw an animation strip of 96 by 128 pixels: 3 columns (idle and two walking
+            frames) of 32 by 32, rows in the order north, east, south, west. Save it as
+            \c {<id>_animation_96x128.png}. Add \c {<id>_corpse_32x32.png} for the corpse.
+        \li Put both files into a folder named after the creature id, inside one source
+            folder for all creatures.
+        \li Run \c {python scripts/import_creature_sprites.py <source folder>}. It writes the
+            packed sheet with extrude and padding, the JSON and the corpse in all three
+            resolutions to \c {assets/creatures/<id>/}.
+        \li Add the id to \c qml/components/CreatureSprites.js.
+    \endlist
+
+    If you pack the sheet with TexturePacker instead, use the JSON (Hash) format, frame
+    names like \c south_1.png with rows north, south, west and east, one pixel of extrude
+    and two pixels of padding, and export \c +hd and \c +hd2 at twice and four times the size.
+
+    \section1 Regenerate the placeholder art
+
+    The bases of all four levels and the placeholder creature come from a script:
+
+    \badcode
+    python scripts/generate_placeholders.py
+    \endcode
+
+    It draws grey boxes in the oblique projection and writes all three resolutions. The
+    game tints them with the race colour at runtime.
+*/

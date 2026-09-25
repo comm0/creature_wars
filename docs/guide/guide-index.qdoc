@@ -1,0 +1,15 @@
+/*!
+    \page developer-guide.html
+    \title Developer Guide
+
+    This part of the documentation is for people who work on Creature Wars itself. The
+    tutorial explains how the game came together. The guide is the reference you come back
+    to when you build it, change it or add content.
+
+    \list
+        \li \l {Building and Running} covers the SDK, CMake options, tests and the docs.
+        \li \l {Architecture} explains the layers, threads and the flow of commands and events.
+        \li \l {Coding Conventions} lists the rules for C++, QML, graphics and commits.
+        \li \l {Recipes} shows how to add creatures, races, research and art.
+    \endlist
+*/
