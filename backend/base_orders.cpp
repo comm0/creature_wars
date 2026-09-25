@@ -44,9 +44,11 @@ order_progress_t base_orders_t::progress(const std::string& key_p) const
         return {0, std::chrono::milliseconds{0}, std::nullopt};
     }
 
-    const auto finish_time = queue->second.event_.has_value()
-        ? scheduler_.time_of(*queue->second.event_)
-        : std::nullopt;
+    std::optional<game_scheduler_t::time_point_t> finish_time;
+
+    if (queue->second.event_.has_value()) {
+        finish_time = scheduler_.time_of(queue->second.event_.value());
+    }
 
     return {queue->second.queued_, queue->second.duration_, finish_time};
 }

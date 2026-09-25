@@ -8,7 +8,7 @@ creature_type_t::creature_type_t(
     std::string group_p,
     std::uint32_t color_p,
     std::optional<std::uint32_t> marker_color_p,
-    creature_attributes_t attributes_p
+    const creature_attributes_t& attributes_p
 )
     : identifier_(std::move(identifier_p))
     , name_(std::move(name_p))

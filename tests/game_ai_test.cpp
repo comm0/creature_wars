@@ -123,13 +123,14 @@ public:
     void on_game_tick() override {}
     void on_creature_moved(std::uint64_t, position_t, direction_t) override {}
     void on_creature_health_changed(std::uint64_t, int) override {}
-    void on_creature_attack_performed(std::uint64_t) override {}
+    void on_creature_attack_performed(std::uint64_t, position_t) override {}
     void on_creature_walk_requested(std::uint64_t) override {}
     void on_creature_state_changed(std::uint64_t, creature_state_t) override {}
     void on_creature_spotted(std::uint64_t, std::uint64_t) override {}
     void on_creature_removed(std::uint64_t) override {}
     void on_corpse_created(std::uint64_t, position_t, const std::string&) override {}
     void on_corpse_removed(std::uint64_t) override {}
+    void on_resource_rewarded(position_t, int, int) override {}
     void on_base_health_changed(std::uint64_t, int) override {}
     void on_base_attack_performed(std::uint64_t, position_t) override {}
     void on_base_removed(std::uint64_t) override {}

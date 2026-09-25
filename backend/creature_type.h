@@ -34,7 +34,7 @@ public:
         std::string group_p,
         std::uint32_t color_p,
         std::optional<std::uint32_t> marker_color_p,
-        creature_attributes_t attributes_p
+        const creature_attributes_t& attributes_p
     );
 
     const std::string& identifier() const noexcept
