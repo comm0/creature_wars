@@ -41,6 +41,11 @@ public:
         const std::string& identifier_p
     ) override;
     void on_corpse_removed(std::uint64_t id_p) override;
+    void on_resource_rewarded(
+        position_t position_p,
+        int gold_p,
+        int food_p
+    ) override;
     void on_base_created(const base_t& base_p) override;
     void on_base_health_changed(std::uint64_t id_p, int health_p) override;
     void on_base_attack_performed(
@@ -105,6 +110,7 @@ signals:
         QString identifier_p
     );
     void corpseRemoved(std::uint64_t id_p);
+    void resourceRewarded(position_t position_p, int gold_p, int food_p);
     void baseCreated(
         std::uint64_t id_p,
         position_t position_p,

@@ -82,6 +82,7 @@ public:
         QString ai_strategy_p,
         bool human_controlled_p
     );
+    void publish_damage();
     void notify_base_attack(std::uint64_t id_p, position_t target_position_p);
     void remove_base(std::uint64_t id_p);
 
@@ -100,6 +101,7 @@ private:
         int maximum_health_;
         int attack_;
         int range_;
+        int pending_damage_;
         int damage_amount_;
         int damage_revision_;
         int attack_revision_;

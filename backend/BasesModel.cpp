@@ -159,6 +159,7 @@ void BasesModel::insert_base(
         0,
         0,
         0,
+        0,
         position_p,
         false,
         0,
@@ -213,12 +214,30 @@ void BasesModel::update_base_health(std::uint64_t id_p, int health_p)
     auto& base = bases_[static_cast<std::size_t>(row)];
 
     if (health_p < base.health_) {
-        base.damage_amount_ = base.health_ - health_p;
-        ++base.damage_revision_;
+        base.pending_damage_ += base.health_ - health_p;
     }
 
     base.health_ = health_p;
-    notify_row_changed(row, {health_role, damage_amount_role, damage_revision_role});
+    notify_row_changed(row, {health_role});
+}
+
+void BasesModel::publish_damage()
+{
+    for (std::size_t index = 0; index < bases_.size(); ++index) {
+        auto& base = bases_[index];
+
+        if (base.pending_damage_ <= 0) {
+            continue;
+        }
+
+        base.damage_amount_ = base.pending_damage_;
+        base.pending_damage_ = 0;
+        ++base.damage_revision_;
+        notify_row_changed(static_cast<int>(index), {
+            damage_amount_role,
+            damage_revision_role
+        });
+    }
 }
 
 void BasesModel::update_base_controller(

@@ -43,7 +43,11 @@ GameBackend::GameBackend(QObject* parent_p)
         &game_observer_,
         &GameObserver::gameTick,
         this,
-        &GameBackend::heartbeat
+        [this]() {
+            creatures_model_.publish_damage();
+            bases_model_.publish_damage();
+            emit heartbeat();
+        }
     );
     connect(
         &game_observer_,
@@ -143,6 +147,19 @@ GameBackend::GameBackend(QObject* parent_p)
         &GameObserver::corpseRemoved,
         &corpses_model_,
         &CorpsesModel::remove_corpse
+    );
+    connect(
+        &game_observer_,
+        &GameObserver::resourceRewarded,
+        this,
+        [this](position_t position_p, int gold_p, int food_p) {
+            emit resourceRewarded(
+                position_p.column_,
+                position_p.row_,
+                gold_p,
+                food_p
+            );
+        }
     );
 
     connect(

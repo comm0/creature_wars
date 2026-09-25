@@ -162,6 +162,7 @@ void CreaturesModel::update_or_insert_creature(
             0,
             0,
             0,
+            0,
             false
         });
         endInsertRows();
@@ -246,17 +247,32 @@ void CreaturesModel::update_creature_health(std::uint64_t id_p, int health_p)
     creature->health_ = health_p;
 
     if (health_p < previous_health) {
-        creature->damage_amount_ = previous_health - health_p;
-        ++creature->damage_revision_;
+        creature->pending_damage_ += previous_health - health_p;
     }
 
     const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
     const auto model_index = createIndex(row, 0);
-    emit dataChanged(model_index, model_index, {
-        health_role,
-        damage_amount_role,
-        damage_revision_role
-    });
+    emit dataChanged(model_index, model_index, {health_role});
+}
+
+void CreaturesModel::publish_damage()
+{
+    for (std::size_t index = 0; index < creatures_.size(); ++index) {
+        auto& creature = creatures_[index];
+
+        if (creature.pending_damage_ <= 0) {
+            continue;
+        }
+
+        creature.damage_amount_ = creature.pending_damage_;
+        creature.pending_damage_ = 0;
+        ++creature.damage_revision_;
+        const auto model_index = createIndex(static_cast<int>(index), 0);
+        emit dataChanged(model_index, model_index, {
+            damage_amount_role,
+            damage_revision_role
+        });
+    }
 }
 
 void CreaturesModel::update_creature_state(

@@ -271,6 +271,10 @@ Scene {
             worldMap.showAreaAttack(column, row, radius, color)
         }
 
+        function onResourceRewarded(column, row, gold, food) {
+            worldMap.showResourceReward(column, row, gold, food)
+        }
+
         function onCreatureRemoved(creatureId) {
             worldMap.removeSelectedCreature(creatureId)
         }

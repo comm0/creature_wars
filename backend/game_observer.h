@@ -43,6 +43,11 @@ public:
         const std::string& identifier_p
     ) = 0;
     virtual void on_corpse_removed(std::uint64_t id_p) = 0;
+    virtual void on_resource_rewarded(
+        position_t position_p,
+        int gold_p,
+        int food_p
+    ) = 0;
     virtual void on_base_created(const base_t& base_p) = 0;
     virtual void on_base_health_changed(std::uint64_t id_p, int health_p) = 0;
     virtual void on_base_attack_performed(

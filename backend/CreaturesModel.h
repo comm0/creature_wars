@@ -67,6 +67,7 @@ public:
         QString direction_p
     );
     void update_creature_health(std::uint64_t id_p, int health_p);
+    void publish_damage();
     void update_creature_state(std::uint64_t id_p, QString state_p);
     void notify_creature_spotted(std::uint64_t id_p);
     void notify_creature_attack(std::uint64_t id_p);
@@ -93,6 +94,7 @@ private:
         QString direction_;
         QString state_;
         int alert_revision_;
+        int pending_damage_;
         int damage_amount_;
         int damage_revision_;
         int attack_revision_;

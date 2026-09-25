@@ -210,6 +210,21 @@ void GameObserver::on_corpse_removed(std::uint64_t id_p)
     );
 }
 
+void GameObserver::on_resource_rewarded(
+    position_t position_p,
+    int gold_p,
+    int food_p
+)
+{
+    QMetaObject::invokeMethod(
+        this,
+        [this, position_p, gold_p, food_p]() {
+            emit resourceRewarded(position_p, gold_p, food_p);
+        },
+        Qt::QueuedConnection
+    );
+}
+
 void GameObserver::on_base_created(const base_t& base_p)
 {
     const auto id = base_p.id();

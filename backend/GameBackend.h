@@ -98,6 +98,7 @@ signals:
     void playerStateChanged();
     void matchEnded(bool victory, int durationMs);
     void areaAttack(int column_p, int row_p, int radius_p, QColor color_p);
+    void resourceRewarded(int column_p, int row_p, int gold_p, int food_p);
     void heartbeat();
     void creatureRemoved(std::uint64_t id_p);
 

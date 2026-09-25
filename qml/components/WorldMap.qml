@@ -21,6 +21,7 @@ Item {
     property int playerFood: 0
     property bool gameRunning: true
     property real gameTimeScale: 1
+    property int rewardEffectRevision: 0
     property bool spawnEnabled: true
     property int contextColumn: 0
     property int contextRow: 0
@@ -488,6 +489,25 @@ Item {
         AreaExplosion {}
     }
 
+    Item {
+        id: resourceFeedbackLayer
+
+        anchors.fill: parent
+        z: 4
+    }
+
+    EntityManager {
+        id: resourceFeedbackManager
+
+        entityContainer: resourceFeedbackLayer
+    }
+
+    Component {
+        id: resourceRewardComponent
+
+        ResourceRewardEffect {}
+    }
+
     function showAreaAttack(column, row, radius, color) {
         entityManager.createEntityFromComponentWithProperties(areaExplosionComponent, {
             x: (column - radius) * root.tileSize,
@@ -497,6 +517,27 @@ Item {
             color: color,
             gameTimeScale: root.gameTimeScale
         })
+    }
+
+    function showResourceReward(column, row, gold, food) {
+        const effectWidth = 96
+        const lane = rewardEffectRevision % 3
+        rewardEffectRevision += 1
+        resourceFeedbackManager.createEntityFromComponentWithProperties(
+            resourceRewardComponent,
+            {
+                x: Math.max(
+                    0,
+                    Math.min(
+                        root.width - effectWidth,
+                        (column + 0.5) * root.tileSize - effectWidth / 2
+                    )
+                ),
+                y: Math.max(0, row * root.tileSize - lane * 18),
+                gold: gold,
+                food: food
+            }
+        )
     }
 
     Item {

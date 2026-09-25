@@ -198,7 +198,7 @@ private:
         int damage_p,
         const std::string& attacker_group_p
     );
-    void award_reward(
+    resource_reward_t award_reward(
         const resource_reward_t& reward_p,
         const damage_contributions_t& contributions_p
     );

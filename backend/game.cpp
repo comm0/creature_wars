@@ -1945,7 +1945,7 @@ void game_t::damage_target(
     }
 }
 
-void game_t::award_reward(
+resource_reward_t game_t::award_reward(
     const resource_reward_t& reward_p,
     const damage_contributions_t& contributions_p
 )
@@ -1959,7 +1959,13 @@ void game_t::award_reward(
     }
 
     std::unordered_set<std::uint64_t> rewarded_base_ids;
-    const auto award = [this, &eligible_damage, &rewarded_base_ids](
+    resource_reward_t player_reward;
+    const auto award = [
+        this,
+        &eligible_damage,
+        &rewarded_base_ids,
+        &player_reward
+    ](
         int amount_p,
         int resource_reward_t::* resource_p
     ) {
@@ -1973,6 +1979,10 @@ void game_t::award_reward(
                     : controller->state_.food_.amount_;
                 resource += share.amount_;
                 rewarded_base_ids.insert(controller->state_.base_id_);
+
+                if (controller->human_controlled_) {
+                    player_reward.*resource_p += share.amount_;
+                }
             }
         }
     };
@@ -1988,6 +1998,8 @@ void game_t::award_reward(
     if (!rewarded_base_ids.empty()) {
         publish_base_actions();
     }
+
+    return player_reward;
 }
 
 void game_t::create_corpse(const creature_t& creature_p)
@@ -2027,7 +2039,22 @@ void game_t::remove_dead_bases()
             return false;
         }
 
-        award_reward(base_p->type().reward(), base_p->damage_contributions());
+        const auto reward = award_reward(
+            base_p->type().reward(),
+            base_p->damage_contributions()
+        );
+
+        if (reward.gold_ > 0 || reward.food_ > 0) {
+            auto reward_position = base_p->position();
+            const auto center_offset = base_p->type().size() / 2;
+            reward_position.column_ += center_offset;
+            reward_position.row_ += center_offset;
+            observer_->on_resource_rewarded(
+                reward_position,
+                reward.gold_,
+                reward.food_
+            );
+        }
 
         if (base_p->type().is_match_base()) {
             eliminated_groups.push_back(base_p->type().group());
@@ -2123,7 +2150,19 @@ void game_t::remove_dead_creatures()
             continue;
         }
 
-        award_reward(creature->type().reward(), creature->damage_contributions());
+        const auto reward = award_reward(
+            creature->type().reward(),
+            creature->damage_contributions()
+        );
+
+        if (reward.gold_ > 0 || reward.food_ > 0) {
+            observer_->on_resource_rewarded(
+                creature->position(),
+                reward.gold_,
+                reward.food_
+            );
+        }
+
         create_corpse(*creature);
         visibility_system_.remove_creature(*creature, creatures_);
         observer_->on_creature_removed(id);
