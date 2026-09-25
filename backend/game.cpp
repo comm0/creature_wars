@@ -1898,7 +1898,7 @@ bool game_t::check_creature_attack(
         return false;
     }
 
-    observer_->on_creature_attack_performed(attacker->id());
+    observer_->on_creature_attack_performed(attacker->id(), target->position_);
 
     if (attacker->type().area_radius() > 0) {
         damage_area(*attacker, target->position_, attacker->type().area_radius());

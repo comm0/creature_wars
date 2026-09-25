@@ -26,7 +26,10 @@ public:
         std::uint64_t id_p,
         int health_p
     ) = 0;
-    virtual void on_creature_attack_performed(std::uint64_t id_p) = 0;
+    virtual void on_creature_attack_performed(
+        std::uint64_t id_p,
+        position_t target_position_p
+    ) = 0;
     virtual void on_creature_walk_requested(std::uint64_t id_p) = 0;
     virtual void on_creature_state_changed(
         std::uint64_t id_p,

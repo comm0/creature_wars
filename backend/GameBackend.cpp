@@ -83,8 +83,8 @@ GameBackend::GameBackend(QObject* parent_p)
         &game_observer_,
         &GameObserver::creatureAttackPerformed,
         this,
-        [this](std::uint64_t id_p) {
-            creatures_model_.notify_creature_attack(id_p);
+        [this](std::uint64_t id_p, position_t target_position_p) {
+            creatures_model_.notify_creature_attack(id_p, target_position_p);
         }
     );
     connect(

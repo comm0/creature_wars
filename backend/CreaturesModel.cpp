@@ -73,6 +73,10 @@ QVariant CreaturesModel::data(const QModelIndex& index_p, int role_p) const
         return creature.damage_revision_;
     case attack_revision_role:
         return creature.attack_revision_;
+    case attack_target_column_role:
+        return creature.attack_target_.column_;
+    case attack_target_row_role:
+        return creature.attack_target_.row_;
     case walk_command_revision_role:
         return creature.walk_command_revision_;
     case target_id_role:
@@ -107,6 +111,8 @@ QHash<int, QByteArray> CreaturesModel::roleNames() const
         {damage_amount_role, "damageAmount"},
         {damage_revision_role, "damageRevision"},
         {attack_revision_role, "attackRevision"},
+        {attack_target_column_role, "attackTargetColumn"},
+        {attack_target_row_role, "attackTargetRow"},
         {walk_command_revision_role, "walkCommandRevision"},
         {target_id_role, "targetId"},
         {removing_role, "removing"}
@@ -161,6 +167,7 @@ void CreaturesModel::update_or_insert_creature(
             0,
             0,
             0,
+            position_p,
             0,
             0,
             false
@@ -318,7 +325,10 @@ void CreaturesModel::notify_creature_spotted(std::uint64_t id_p)
     emit dataChanged(model_index, model_index, {alert_revision_role});
 }
 
-void CreaturesModel::notify_creature_attack(std::uint64_t id_p)
+void CreaturesModel::notify_creature_attack(
+    std::uint64_t id_p,
+    position_t target_position_p
+)
 {
     const auto creature = std::find_if(
         creatures_.begin(),
@@ -332,10 +342,15 @@ void CreaturesModel::notify_creature_attack(std::uint64_t id_p)
         return;
     }
 
+    creature->attack_target_ = target_position_p;
     ++creature->attack_revision_;
     const auto row = static_cast<int>(std::distance(creatures_.begin(), creature));
     const auto model_index = createIndex(row, 0);
-    emit dataChanged(model_index, model_index, {attack_revision_role});
+    emit dataChanged(model_index, model_index, {
+        attack_revision_role,
+        attack_target_column_role,
+        attack_target_row_role
+    });
 }
 
 void CreaturesModel::notify_creature_walk_command(std::uint64_t id_p)

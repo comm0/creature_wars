@@ -140,6 +140,8 @@ Scene {
             spacing: 12
 
             HudResource {
+                id: goldResource
+
                 anchors.verticalCenter: parent.verticalCenter
                 imageSource: "qrc:/assets/ui/gold.png"
                 color: "#f2c438"
@@ -153,6 +155,8 @@ Scene {
             }
 
             HudResource {
+                id: foodResource
+
                 anchors.verticalCenter: parent.verticalCenter
                 imageSource: "qrc:/assets/ui/food.png"
                 color: "#e0955a"
@@ -259,6 +263,25 @@ Scene {
         }
     }
 
+    Item {
+        id: resourceFlyLayer
+
+        anchors.fill: parent
+        z: 100
+    }
+
+    EntityManager {
+        id: resourceFlyManager
+
+        entityContainer: resourceFlyLayer
+    }
+
+    Component {
+        id: resourceFlyComponent
+
+        ResourceFlyEffect {}
+    }
+
     Connections {
         target: gameScene.gameBackend
 
@@ -273,6 +296,7 @@ Scene {
 
         function onResourceRewarded(column, row, gold, food) {
             worldMap.showResourceReward(column, row, gold, food)
+            gameScene.showResourceFly(column, row, gold, food)
         }
 
         function onCreatureRemoved(creatureId) {
@@ -282,5 +306,53 @@ Scene {
 
     function resetGameTimer() {
         elapsedGameSeconds = 0
+    }
+
+    function showResourceFly(column, row, gold, food) {
+        const source = worldMap.mapToItem(
+            gameScene,
+            (column + 0.5) * worldMap.tileSize,
+            (row + 0.5) * worldMap.tileSize
+        )
+
+        if (gold > 0) {
+            const goldTarget = goldResource.mapToItem(
+                gameScene,
+                goldResource.width / 2,
+                goldResource.height / 2
+            )
+            resourceFlyManager.createEntityFromComponentWithProperties(
+                resourceFlyComponent,
+                {
+                    imageSource: "qrc:/assets/ui/gold.png",
+                    amount: gold,
+                    startX: source.x,
+                    startY: source.y,
+                    targetX: goldTarget.x,
+                    targetY: goldTarget.y,
+                    delay: 0
+                }
+            )
+        }
+
+        if (food > 0) {
+            const foodTarget = foodResource.mapToItem(
+                gameScene,
+                foodResource.width / 2,
+                foodResource.height / 2
+            )
+            resourceFlyManager.createEntityFromComponentWithProperties(
+                resourceFlyComponent,
+                {
+                    imageSource: "qrc:/assets/ui/food.png",
+                    amount: food,
+                    startX: source.x,
+                    startY: source.y + 8,
+                    targetX: foodTarget.x,
+                    targetY: foodTarget.y,
+                    delay: 100
+                }
+            )
+        }
     }
 }

@@ -29,6 +29,8 @@ Item {
     required property int damageAmount
     required property int damageRevision
     required property int attackRevision
+    required property int attackTargetColumn
+    required property int attackTargetRow
     required property int walkCommandRevision
     required property var targetId
     required property bool removing
@@ -331,6 +333,10 @@ Item {
     onAttackRevisionChanged: {
         if (attackRevision > 0) {
             creatureAttackAnimation.restart()
+
+            if (attackRange > 1) {
+                Qt.callLater(creatureProjectileAnimation.restart)
+            }
         }
     }
 
@@ -417,6 +423,20 @@ Item {
             z: 1
         }
 
+        Rectangle {
+            id: creatureProjectile
+
+            width: 4
+            height: 4
+            radius: 2
+            color: Qt.lighter(creatureView.creatureColor, 1.8)
+            border.width: 1
+            border.color: "#000000"
+            visible: creatureView.attackRange > 1
+                && creatureProjectileAnimation.running
+            z: 2
+        }
+
         Item {
             id: creatureIdentity
 
@@ -489,6 +509,32 @@ Item {
             visionRange: creatureView.visionRange
             movementSpeed: creatureView.movementSpeed
             z: 2
+        }
+    }
+
+    ParallelAnimation {
+        id: creatureProjectileAnimation
+
+        NumberAnimation {
+            target: creatureProjectile
+            property: "x"
+            from: creatureView.width / 2 - creatureProjectile.width / 2
+            to: (creatureView.attackTargetColumn + 0.5)
+                * creatureView.tileSize
+                - creatureView.x
+                - creatureProjectile.width / 2
+            duration: Math.max(1, 180 / creatureView.gameTimeScale)
+        }
+
+        NumberAnimation {
+            target: creatureProjectile
+            property: "y"
+            from: creatureView.height / 2 - creatureProjectile.height / 2
+            to: (creatureView.attackTargetRow + 0.5)
+                * creatureView.tileSize
+                - creatureView.y
+                - creatureProjectile.height / 2
+            duration: Math.max(1, 180 / creatureView.gameTimeScale)
         }
     }
 }

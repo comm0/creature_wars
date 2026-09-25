@@ -35,6 +35,8 @@ public:
         damage_amount_role,
         damage_revision_role,
         attack_revision_role,
+        attack_target_column_role,
+        attack_target_row_role,
         walk_command_revision_role,
         target_id_role,
         removing_role
@@ -70,7 +72,10 @@ public:
     void publish_damage();
     void update_creature_state(std::uint64_t id_p, QString state_p);
     void notify_creature_spotted(std::uint64_t id_p);
-    void notify_creature_attack(std::uint64_t id_p);
+    void notify_creature_attack(
+        std::uint64_t id_p,
+        position_t target_position_p
+    );
     void notify_creature_walk_command(std::uint64_t id_p);
     void remove_creature(std::uint64_t id_p);
     void update_creature_target(std::uint64_t id_p, std::uint64_t target_id_p);
@@ -98,6 +103,7 @@ private:
         int damage_amount_;
         int damage_revision_;
         int attack_revision_;
+        position_t attack_target_;
         int walk_command_revision_;
         std::uint64_t target_id_;
         bool removing_;
