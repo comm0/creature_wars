@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- 03-project-setup.qdoc -->
+  <title>Tutorial 3: The Felgo Project | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Tutorial 3: The Felgo Project</li>
+  <link rel="prev" href="tutorial-install-and-run.html" />
+  <link rel="next" href="tutorial-scenes.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="tutorial-install-and-run.html">Tutorial 2: Install Felgo and Run the Game</a>
+<a class="nextPage" href="tutorial-scenes.html">Tutorial 4: Scenes and the Game Window</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#folders">Folders</a></li>
+<li class="level1"><a href="#cmake">CMake</a></li>
+<li class="level1"><a href="#main-cpp">main.cpp</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Tutorial 3: The Felgo Project</h1>
+<!-- $$$tutorial-project-setup.html-description -->
+<div class="descr" id="details">
+<p>A Felgo game is a Qt app with a few extra pieces. Here is what they are.</p>
+<h2 id="folders">Folders</h2>
+<div class="table"><table class="generic">
+ <thead><tr class="qt-style"><th >Folder</th><th >Content</th></tr></thead>
+<tr valign="top" class="odd"><td ><code translate="no">backend</code></td><td >C++ game core and the classes that expose it to QML</td></tr>
+<tr valign="top" class="even"><td ><code translate="no">qml</code></td><td >Felgo scenes and QML components</td></tr>
+<tr valign="top" class="odd"><td ><code translate="no">data</code></td><td >Game rules in JSON</td></tr>
+<tr valign="top" class="even"><td ><code translate="no">assets</code></td><td >Sprites and images</td></tr>
+</table></div>
+<h2 id="cmake">CMake</h2>
+<p>The core is a plain library. The app target adds QML, data and shaders:</p>
+<pre class="cpp" translate="no">    qt_add_executable(appCreatureWars
+        main.cpp
+        ${ApplicationFiles}
+        ${QmlFiles}
+    )
+
+    qt_add_resources(appCreatureWars creature_wars_data
+        PREFIX &quot;/&quot;
+        FILES
+            data/creature_types.json
+            data/base_types.json
+            data/economy.json
+            data/tech_tree.json
+            data/ai_profiles.json
+            ${AssetFiles}
+    )
+
+    find_package(Qt6 REQUIRED COMPONENTS ShaderTools)
+
+    qt_add_shaders(appCreatureWars creature_wars_shaders
+        PREFIX &quot;/&quot;
+        FILES
+            shaders/outline.frag
+            shaders/tint.frag
+    )
+
+    felgo_configure_executable(appCreatureWars)</pre>
+<ul>
+<li><code translate="no">qt_add_resources</code> puts JSON and images into <code translate="no">qrc:/</code>, so they work on every platform. Example: <code translate="no">&quot;qrc:/data/economy.json&quot;</code>.</li>
+<li><code translate="no">qt_add_shaders</code> compiles shaders to <code translate="no">.qsb</code>, which Qt 6 needs.</li>
+<li><code translate="no">felgo_configure_executable</code> links Felgo and prepares Android and iOS packaging.</li>
+</ul>
+<h2 id="main-cpp">main.cpp</h2>
+<p>Create <code translate="no">FelgoApplication</code> next to the QML engine and initialize it:</p>
+<pre class="cpp" translate="no">    <span class="type">QApplication</span> app(argc<span class="operator">,</span> argv);
+
+    FelgoApplication felgo;
+    GameBackend game_backend;
+    <span class="type">QQmlApplicationEngine</span> engine;
+
+    felgo<span class="operator">.</span>initialize(<span class="operator">&amp;</span>engine);</pre>
+<p>Pass your C++ object to QML and load the main file:</p>
+<pre class="cpp" translate="no">    engine<span class="operator">.</span>setInitialProperties({
+        {<span class="type">QStringLiteral</span>(<span class="string">&quot;gameBackend&quot;</span>)<span class="operator">,</span> <span class="type">QVariant</span><span class="operator">::</span>fromValue(<span class="operator">&amp;</span>game_backend)}
+    });
+
+    felgo<span class="operator">.</span>setMainQmlFileName(<span class="type">QStringLiteral</span>(<span class="string">&quot;qml/Main.qml&quot;</span>));
+    engine<span class="operator">.</span>load(<span class="type">QUrl</span>(felgo<span class="operator">.</span>mainQmlFileName()));</pre>
+<p>In QML the object is then a required property:</p>
+<pre class="cpp" translate="no">GameWindow {
+    required property var gameBackend
+}</pre>
+<p><b>Why not a context property?</b> <code translate="no">setContextProperty</code> is the classic way, but required properties are checked by the QML compiler and are the recommended Qt 6 style.</p>
+<div class="admonition note">
+<p><b>Note: </b>The Felgo splash screen and a license message appear until you set <code translate="no">PRODUCT_LICENSE_KEY</code> in <code translate="no">CMakeLists.txt</code>.</p>
+</div>
+</div>
+<!-- @@@tutorial-project-setup.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="tutorial-install-and-run.html">Tutorial 2: Install Felgo and Run the Game</a>
+<a class="nextPage" href="tutorial-scenes.html">Tutorial 4: Scenes and the Game Window</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

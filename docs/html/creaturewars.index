@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE QDOCINDEX>
+<INDEX url="" title="Creature Wars, a real time strategy game made with Felgo" version="1.0" project="CreatureWars" indexTitle="Creature Wars">
+    <namespace name="" status="active" access="public" module="creaturewars">
+        <page name="guide-architecture.html" href="guide-architecture.html" status="active" location="architecture.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/guide/architecture.qdoc" lineno="1" documented="true" subtype="page" title="Architecture" fulltitle="Architecture" subtitle="">
+            <contents name="layers" title="Layers" level="1"/>
+            <contents name="threads" title="Threads" level="1"/>
+            <contents name="inside-the-game-thread" title="Inside the game thread" level="1"/>
+            <contents name="controllers" title="Controllers" level="1"/>
+            <contents name="data" title="Data" level="1"/>
+            <contents name="client-structure" title="Client structure" level="1"/>
+            <contents name="toward-online-play" title="Toward online play" level="1"/>
+        </page>
+        <page name="guide-building.html" href="guide-building.html" status="active" location="building.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/guide/building.qdoc" lineno="1" documented="true" subtype="page" title="Building and Running" fulltitle="Building and Running" subtitle="">
+            <contents name="requirements" title="Requirements" level="1"/>
+            <contents name="the-game" title="The game" level="1"/>
+            <contents name="cmake-options" title="CMake options" level="1"/>
+            <contents name="core-and-unit-tests" title="Core and unit tests" level="1"/>
+            <contents name="continuous-integration" title="Continuous integration" level="1"/>
+            <contents name="android" title="Android" level="1"/>
+            <contents name="this-documentation" title="This documentation" level="1"/>
+        </page>
+        <page name="guide-conventions.html" href="guide-conventions.html" status="active" location="conventions.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/guide/conventions.qdoc" lineno="1" documented="true" subtype="page" title="Coding Conventions" fulltitle="Coding Conventions" subtitle="">
+            <contents name="c" title="C++" level="1"/>
+            <contents name="qt-bridge-and-qml" title="Qt bridge and QML" level="1"/>
+            <contents name="comments" title="Comments" level="1"/>
+            <contents name="graphics" title="Graphics" level="1"/>
+            <contents name="commits" title="Commits" level="1"/>
+        </page>
+        <page name="core-reference.html" href="core-reference.html" status="active" location="reference.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/reference/reference.qdoc" lineno="1" documented="true" subtype="page" title="Core Reference" fulltitle="Core Reference" subtitle="">
+            <contents name="game-core" title="Game core" level="1"/>
+            <contents name="qt-bridge" title="Qt bridge" level="1"/>
+        </page>
+        <page name="index.html" href="index.html" status="active" location="index.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/index.qdoc" lineno="7" documented="true" subtype="page" title="Creature Wars" fulltitle="Creature Wars" subtitle="">
+            <contents name="tutorial" title="Tutorial" level="1"/>
+            <contents name="developer-guide" title="Developer Guide" level="1"/>
+            <contents name="reference" title="Reference" level="1"/>
+        </page>
+        <page name="developer-guide.html" href="developer-guide.html" status="active" location="guide-index.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/guide/guide-index.qdoc" lineno="1" documented="true" subtype="page" title="Developer Guide" fulltitle="Developer Guide" subtitle=""/>
+        <class name="GameBackend" href="gamebackend.html" status="active" access="public" location="GameBackend.h" filepath="C:/Users/piodo/source/creature_wars/backend/GameBackend.h" lineno="12" documented="true" module="CreatureWars" brief="Single object the QML client talks to"/>
+        <class name="GameObserver" href="gameobserver.html" status="active" access="public" location="GameObserver.h" filepath="C:/Users/piodo/source/creature_wars/backend/GameObserver.h" lineno="9" documented="true" bases="igame_observer_t" module="CreatureWars" brief="Moves events from the game thread to the GUI thread"/>
+        <page name="guide-recipes.html" href="guide-recipes.html" status="active" location="recipes.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/guide/recipes.qdoc" lineno="1" documented="true" subtype="page" title="Recipes" fulltitle="Recipes" subtitle="">
+            <contents name="add-a-creature" title="Add a creature" level="1"/>
+            <contents name="let-a-base-produce-a-unit" title="Let a base produce a unit" level="1"/>
+            <contents name="add-a-research-path" title="Add a research path" level="1"/>
+            <contents name="tune-the-balance" title="Tune the balance" level="1"/>
+            <contents name="add-a-race" title="Add a race" level="1"/>
+            <contents name="add-a-sprite-sheet" title="Add a sprite sheet" level="1"/>
+            <contents name="regenerate-the-placeholder-art" title="Regenerate the placeholder art" level="1"/>
+        </page>
+        <page name="tutorial-ai-and-wildlife.html" href="tutorial-ai-and-wildlife.html" status="active" location="10-ai-and-wildlife.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/tutorial/10-ai-and-wildlife.qdoc" lineno="1" documented="true" subtype="page" title="Tutorial 10: AI Opponents and Wildlife" fulltitle="Tutorial 10: AI Opponents and Wildlife" subtitle="">
+            <contents name="facts" title="Facts" level="1"/>
+            <contents name="decisions" title="Decisions" level="1"/>
+            <contents name="difficulty" title="Difficulty" level="1"/>
+            <contents name="wildlife" title="Wildlife" level="1"/>
+        </page>
+        <page name="tutorial-game-end.html" href="tutorial-game-end.html" status="active" location="11-game-end.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/tutorial/11-game-end.qdoc" lineno="1" documented="true" subtype="page" title="Tutorial 11: Ending the Match" fulltitle="Tutorial 11: Ending the Match" subtitle="">
+            <contents name="rules" title="Rules" level="1"/>
+            <contents name="the-game-over-scene" title="The game over scene" level="1"/>
+            <contents name="effects-with-entitymanager" title="Effects with EntityManager" level="1"/>
+            <contents name="next-steps" title="Next steps" level="1"/>
+        </page>
+        <page name="tutorial-overview.html" href="tutorial-overview.html" status="active" location="01-overview.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/tutorial/01-overview.qdoc" lineno="1" documented="true" subtype="page" title="Tutorial 1: What We Build" fulltitle="Tutorial 1: What We Build" subtitle="">
+            <contents name="what-you-learn" title="What you learn" level="1"/>
+            <contents name="how-the-game-is-split" title="How the game is split" level="1"/>
+            <contents name="how-to-use-this-tutorial" title="How to use this tutorial" level="1"/>
+        </page>
+        <page name="tutorial-install-and-run.html" href="tutorial-install-and-run.html" status="active" location="02-install-and-run.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/tutorial/02-install-and-run.qdoc" lineno="1" documented="true" subtype="page" title="Tutorial 2: Install Felgo and Run the Game" fulltitle="Tutorial 2: Install Felgo and Run the Game" subtitle="">
+            <contents name="1-install-felgo" title="1. Install Felgo" level="1"/>
+            <contents name="2-get-the-code" title="2. Get the code" level="1"/>
+            <contents name="3-open-the-project" title="3. Open the project" level="1"/>
+            <contents name="4-build-and-run" title="4. Build and run" level="1"/>
+            <contents name="5-run-the-unit-tests-optional" title="5. Run the unit tests (optional)" level="1"/>
+        </page>
+        <page name="tutorial-project-setup.html" href="tutorial-project-setup.html" status="active" location="03-project-setup.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/tutorial/03-project-setup.qdoc" lineno="1" documented="true" subtype="page" title="Tutorial 3: The Felgo Project" fulltitle="Tutorial 3: The Felgo Project" subtitle="">
+            <contents name="folders" title="Folders" level="1"/>
+            <contents name="cmake" title="CMake" level="1"/>
+            <contents name="main-cpp" title="main.cpp" level="1"/>
+        </page>
+        <page name="tutorial-scenes.html" href="tutorial-scenes.html" status="active" location="04-scenes.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/tutorial/04-scenes.qdoc" lineno="1" documented="true" subtype="page" title="Tutorial 4: Scenes and the Game Window" fulltitle="Tutorial 4: Scenes and the Game Window" subtitle="">
+            <contents name="gamewindow" title="GameWindow" level="1"/>
+            <contents name="a-scene-with-a-fixed-size" title="A scene with a fixed size" level="1"/>
+            <contents name="switching-scenes" title="Switching scenes" level="1"/>
+            <contents name="the-menu" title="The menu" level="1"/>
+        </page>
+        <page name="tutorial-game-core.html" href="tutorial-game-core.html" status="active" location="05-game-core.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/tutorial/05-game-core.qdoc" lineno="1" documented="true" subtype="page" title="Tutorial 5: A Game Core Like an MMORPG Server" fulltitle="Tutorial 5: A Game Core Like an MMORPG Server" subtitle="">
+            <contents name="one-game-thread" title="One game thread" level="1"/>
+            <contents name="dispatcher-and-scheduler" title="Dispatcher and scheduler" level="1"/>
+            <contents name="game-time" title="Game time" level="1"/>
+            <contents name="rules-as-data" title="Rules as data" level="1"/>
+        </page>
+        <page name="tutorial-qml-bridge.html" href="tutorial-qml-bridge.html" status="active" location="06-qml-bridge.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/tutorial/06-qml-bridge.qdoc" lineno="1" documented="true" subtype="page" title="Tutorial 6: Connecting the Core to QML" fulltitle="Tutorial 6: Connecting the Core to QML" subtitle="">
+            <contents name="events-out" title="Events out" level="1"/>
+            <contents name="changing-threads" title="Changing threads" level="1"/>
+            <contents name="models-and-commands" title="Models and commands" level="1"/>
+            <contents name="adding-new-data-to-the-screen" title="Adding new data to the screen" level="1"/>
+        </page>
+        <page name="tutorial-map-and-sprites.html" href="tutorial-map-and-sprites.html" status="active" location="07-map-and-sprites.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/tutorial/07-map-and-sprites.qdoc" lineno="1" documented="true" subtype="page" title="Tutorial 7: The Map, Sprites and Oblique Projection" fulltitle="Tutorial 7: The Map, Sprites and Oblique Projection" subtitle="">
+            <contents name="the-tile-map" title="The tile map" level="1"/>
+            <contents name="oblique-projection" title="Oblique projection" level="1"/>
+            <contents name="sprite-sheets" title="Sprite sheets" level="1"/>
+            <contents name="screen-densities" title="Screen densities" level="1"/>
+            <contents name="one-grey-image-many-colours" title="One grey image, many colours" level="1"/>
+        </page>
+        <page name="tutorial-selection-and-orders.html" href="tutorial-selection-and-orders.html" status="active" location="08-selection-and-orders.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/tutorial/08-selection-and-orders.qdoc" lineno="1" documented="true" subtype="page" title="Tutorial 8: Selecting Units and Giving Orders" fulltitle="Tutorial 8: Selecting Units and Giving Orders" subtitle="">
+            <contents name="selecting" title="Selecting" level="1"/>
+            <contents name="move-or-attack" title="Move or attack" level="1"/>
+            <contents name="attack-move" title="Attack move" level="1"/>
+            <contents name="outlines" title="Outlines" level="1"/>
+        </page>
+        <page name="tutorial-economy-and-bases.html" href="tutorial-economy-and-bases.html" status="active" location="09-economy-and-bases.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/tutorial/09-economy-and-bases.qdoc" lineno="1" documented="true" subtype="page" title="Tutorial 9: Economy, Bases and the Radial Menu" fulltitle="Tutorial 9: Economy, Bases and the Radial Menu" subtitle="">
+            <contents name="income" title="Income" level="1"/>
+            <contents name="what-a-base-can-do" title="What a base can do" level="1"/>
+            <contents name="orders" title="Orders" level="1"/>
+            <contents name="the-radial-menu" title="The radial menu" level="1"/>
+        </page>
+        <class name="ai_planner_t" href="ai-planner-t.html" status="active" access="public" location="ai_planner.h" filepath="C:/Users/piodo/source/creature_wars/backend/ai_planner.h" lineno="27" documented="true" module="CreatureWars" brief="Decides what a computer controlled race does next"/>
+        <class name="base_orders_t" href="base-orders-t.html" status="active" access="public" location="base_orders.h" filepath="C:/Users/piodo/source/creature_wars/backend/base_orders.h" lineno="18" documented="true" module="CreatureWars" brief="Runs timed base orders; each order key has its own queue"/>
+        <class name="game_clock_t" href="game-clock-t.html" status="active" access="public" location="game_clock.h" filepath="C:/Users/piodo/source/creature_wars/backend/game_clock.h" lineno="5" documented="true" module="CreatureWars" brief="Translates wall time into game time"/>
+        <class name="game_event_dispatcher_t" href="game-event-dispatcher-t.html" status="active" access="public" location="game_event_dispatcher.h" filepath="C:/Users/piodo/source/creature_wars/backend/game_event_dispatcher.h" lineno="7" documented="true" module="CreatureWars" brief="Processes game events in FIFO order">
+            <function name="dispatch_pending" fullname="game_event_dispatcher_t::dispatch_pending" href="game-event-dispatcher-t.html#dispatch_pending" status="active" access="public" location="game_event_dispatcher.h" filepath="C:/Users/piodo/source/creature_wars/backend/game_event_dispatcher.h" lineno="11" documented="true" meta="plain" type="void" signature="void dispatch_pending()"/>
+            <function name="enqueue" fullname="game_event_dispatcher_t::enqueue" href="game-event-dispatcher-t.html#enqueue" status="active" access="public" location="game_event_dispatcher.h" filepath="C:/Users/piodo/source/creature_wars/backend/game_event_dispatcher.h" lineno="10" documented="true" meta="plain" type="void" signature="void enqueue(std::function&lt;void ()&gt; event_p)">
+                <parameter type="std::function&lt;void ()&gt;" name="event_p" default=""/>
+            </function>
+        </class>
+        <class name="game_scheduler_t" href="game-scheduler-t.html" status="active" access="public" location="game_scheduler.h" filepath="C:/Users/piodo/source/creature_wars/backend/game_scheduler.h" lineno="12" documented="true" module="CreatureWars" brief="Holds events planned for a point in time, in time and scheduling order"/>
+        <class name="game_t" href="game-t.html" status="active" access="public" location="game.h" filepath="C:/Users/piodo/source/creature_wars/backend/game.h" lineno="36" documented="true" module="CreatureWars" brief="Owns the game thread and serializes all game actions">
+            <function name="game_t" fullname="game_t::game_t" href="game-t.html#game_t" status="active" access="public" location="game.h" filepath="C:/Users/piodo/source/creature_wars/backend/game.h" lineno="39" documented="true" meta="constructor" signature="game_t(const std::string &amp;creature_types_json_p, const std::string &amp;base_types_json_p, const std::string &amp;economy_json_p, const std::string &amp;tech_tree_json_p, const std::string &amp;ai_profiles_json_p)">
+                <parameter type="const std::string &amp;" name="creature_types_json_p" default=""/>
+                <parameter type="const std::string &amp;" name="base_types_json_p" default=""/>
+                <parameter type="const std::string &amp;" name="economy_json_p" default=""/>
+                <parameter type="const std::string &amp;" name="tech_tree_json_p" default=""/>
+                <parameter type="const std::string &amp;" name="ai_profiles_json_p" default=""/>
+            </function>
+            <function name="post" fullname="game_t::post" href="game-t.html#post" status="active" access="private" location="game.h" filepath="C:/Users/piodo/source/creature_wars/backend/game.h" lineno="127" documented="true" meta="plain" type="void" signature="void post(std::function&lt;void ()&gt; event_p)">
+                <parameter type="std::function&lt;void ()&gt;" name="event_p" default=""/>
+            </function>
+            <function name="spawn_creature" fullname="game_t::spawn_creature" href="game-t.html#spawn_creature" status="active" access="private" location="game.h" filepath="C:/Users/piodo/source/creature_wars/backend/game.h" lineno="128" documented="true" meta="plain" type="creature_t *" signature="creature_t * spawn_creature(std::string identifier_p, position_t position_p)">
+                <parameter type="std::string" name="identifier_p" default=""/>
+                <parameter type="position_t" name="position_p" default=""/>
+            </function>
+            <function name="start" fullname="game_t::start" href="game-t.html#start" status="active" access="public" location="game.h" filepath="C:/Users/piodo/source/creature_wars/backend/game.h" lineno="51" documented="true" meta="plain" type="void" signature="void start(igame_observer_t &amp;observer_p)">
+                <parameter type="igame_observer_t &amp;" name="observer_p" default=""/>
+            </function>
+            <function name="stop" fullname="game_t::stop" href="game-t.html#stop" status="active" access="public" location="game.h" filepath="C:/Users/piodo/source/creature_wars/backend/game.h" lineno="52" documented="true" meta="plain" type="void" signature="void stop()"/>
+        </class>
+        <class name="igame_observer_t" href="igame-observer-t.html" status="active" access="public" location="game_observer.h" filepath="C:/Users/piodo/source/creature_wars/backend/game_observer.h" lineno="13" documented="true" module="CreatureWars" brief="Interface through which the game core reports every change of the world"/>
+        <class name="tech_tree_t" href="tech-tree-t.html" status="active" access="public" location="tech_tree.h" filepath="C:/Users/piodo/source/creature_wars/backend/tech_tree.h" lineno="40" documented="true" module="CreatureWars" brief="Base upgrades and research paths loaded from data/tech_tree.json"/>
+        <class name="wildlife_spawner_t" href="wildlife-spawner-t.html" status="active" access="public" location="wildlife_spawner.h" filepath="C:/Users/piodo/source/creature_wars/backend/wildlife_spawner.h" lineno="18" documented="true" module="CreatureWars" brief="Schedules wild creatures and troll lairs during a match"/>
+        <module name="CreatureWars" href="creaturewars-module.html" status="active" location="index.qdoc" filepath="C:/Users/piodo/source/creature_wars/docs/index.qdoc" lineno="1" documented="true" seen="true" title="Creature Wars Core" brief="C++ game core and the Qt bridge of Creature Wars"/>
+    </namespace>
+</INDEX>

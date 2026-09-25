@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- conventions.qdoc -->
+  <title>Coding Conventions | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Coding Conventions</li>
+  <link rel="prev" href="guide-architecture.html" />
+  <link rel="next" href="guide-recipes.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="guide-architecture.html">Architecture</a>
+<a class="nextPage" href="guide-recipes.html">Recipes</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#c">C++</a></li>
+<li class="level1"><a href="#qt-bridge-and-qml">Qt bridge and QML</a></li>
+<li class="level1"><a href="#comments">Comments</a></li>
+<li class="level1"><a href="#graphics">Graphics</a></li>
+<li class="level1"><a href="#commits">Commits</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Coding Conventions</h1>
+<!-- $$$guide-conventions.html-description -->
+<div class="descr" id="details">
+<h2 id="c">C++</h2>
+<ul>
+<li>Everything in the core uses <code translate="no">snake_case</code>.</li>
+<li>Classes, structs, enums and type aliases end with <code translate="no">_t</code>, for example <a href="game-t.html" translate="no">game_t</a> or <code translate="no">position_t</code>.</li>
+<li>Function parameters end with <code translate="no">_p</code> and data members end with <code translate="no">_</code>.</li>
+<li>The core must not include Qt headers. If you need Qt, the code belongs in the bridge.</li>
+<li>Numbers a designer might want to change go to <code translate="no">data</code>, not into the code.</li>
+<li>New logic in the core comes with a GoogleTest test when it can be tested in isolation.</li>
+</ul>
+<h2 id="qt-bridge-and-qml">Qt bridge and QML</h2>
+<ul>
+<li>The bridge and everything QML sees use the usual Qt <code translate="no">camelCase</code>.</li>
+<li>Import Qt modules without a version, for example <code translate="no">import QtQuick</code>. A versioned import hides newer properties.</li>
+<li>Add <code translate="no">pragma ComponentBehavior: Bound</code> to files where a delegate, <code translate="no">Loader</code> component or <code translate="no">layer.effect</code> uses ids from outside.</li>
+<li>Do not name your own properties like built in ones. <code translate="no">Item</code> already has <code translate="no">left</code>, <code translate="no">top</code> and similar anchor lines, and redefining them fails when the file loads.</li>
+<li>Inside a scaled <code translate="no">Scene</code> give sizes in scene units with <code translate="no">font.pixelSize</code> and <code translate="no">size</code>. Felgo's <code translate="no">sp()</code> and <code translate="no">dp()</code> would scale a second time on phones.</li>
+</ul>
+<h2 id="comments">Comments</h2>
+<p>Code should explain itself through names and structure. When something really is not obvious, a comment of a few words is enough, one sentence at most. Longer explanations belong in this documentation.</p>
+<h2 id="graphics">Graphics</h2>
+<ul>
+<li>Everything uses the oblique projection: an object stands on its tiles anchored at the bottom right, height goes up and to the left at 45 degrees.</li>
+<li>The light comes from the top left. Top faces are the brightest, east faces darker, south faces the darkest.</li>
+<li>One pixel of art is one scene unit. A tile is 16 by 16, a creature frame 32 by 32.</li>
+<li>Every image has a base version, a <code translate="no">+hd</code> version at twice the size and a <code translate="no">+hd2</code> version at four times the size, scaled without smoothing.</li>
+<li>Sprite sheets use TexturePacker JSON (Hash) with frames named <code translate="no">&lt;direction&gt;_&lt;index&gt;.png</code>, rows in the order north, south, west, east, one pixel of extrude and two pixels of padding.</li>
+</ul>
+<h2 id="commits">Commits</h2>
+<p>Write commit messages in English with a short title and a few lines about what changed and why. The history is public, so it should read well to someone new to the project.</p>
+</div>
+<!-- @@@guide-conventions.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="guide-architecture.html">Architecture</a>
+<a class="nextPage" href="guide-recipes.html">Recipes</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

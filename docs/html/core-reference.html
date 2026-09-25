@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- reference.qdoc -->
+  <title>Core Reference | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Core Reference</li>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#game-core">Game core</a></li>
+<li class="level1"><a href="#qt-bridge">Qt bridge</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Core Reference</h1>
+<!-- $$$core-reference.html-description -->
+<div class="descr" id="details">
+<p>The most important classes of Creature Wars, grouped by layer. The game core uses <code translate="no">snake_case</code> names with a <code translate="no">_t</code> suffix, the Qt bridge uses Qt style names.</p>
+<h2 id="game-core">Game core</h2>
+<div class="table"><table class="generic">
+ <thead><tr class="qt-style"><th >Class</th><th >Role</th></tr></thead>
+<tr valign="top" class="odd"><td ><a href="game-t.html" translate="no">game_t</a></td><td >Owns the game thread, the world and the match rules.</td></tr>
+<tr valign="top" class="even"><td ><a href="game-event-dispatcher-t.html" translate="no">game_event_dispatcher_t</a></td><td >Runs queued tasks in arrival order.</td></tr>
+<tr valign="top" class="odd"><td ><a href="game-scheduler-t.html" translate="no">game_scheduler_t</a></td><td >Holds events planned for a point in game time.</td></tr>
+<tr valign="top" class="even"><td ><a href="game-clock-t.html" translate="no">game_clock_t</a></td><td >Turns wall time into game time with pause and speed.</td></tr>
+<tr valign="top" class="odd"><td ><a href="base-orders-t.html" translate="no">base_orders_t</a></td><td >Runs timed base orders with one queue per action.</td></tr>
+<tr valign="top" class="even"><td ><a href="tech-tree-t.html" translate="no">tech_tree_t</a></td><td >Base upgrades and research paths loaded from data.</td></tr>
+<tr valign="top" class="odd"><td ><a href="ai-planner-t.html" translate="no">ai_planner_t</a></td><td >Picks the next strategy and action for a computer race.</td></tr>
+<tr valign="top" class="even"><td ><a href="wildlife-spawner-t.html" translate="no">wildlife_spawner_t</a></td><td >Schedules deer, wolves and troll lairs during a match.</td></tr>
+<tr valign="top" class="odd"><td ><a href="igame-observer-t.html" translate="no">igame_observer_t</a></td><td >Interface through which the core reports changes.</td></tr>
+</table></div>
+<h2 id="qt-bridge">Qt bridge</h2>
+<div class="table"><table class="generic">
+ <thead><tr class="qt-style"><th >Class</th><th >Role</th></tr></thead>
+<tr valign="top" class="odd"><td ><a href="gameobserver.html" translate="no">GameObserver</a></td><td >Moves core events to the GUI thread as Qt signals.</td></tr>
+<tr valign="top" class="even"><td ><a href="gamebackend.html" translate="no">GameBackend</a></td><td >The object QML talks to: properties, models and commands.</td></tr>
+</table></div>
+</div>
+<!-- @@@core-reference.html -->
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

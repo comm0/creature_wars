@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- building.qdoc -->
+  <title>Building and Running | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Building and Running</li>
+  <link rel="next" href="guide-architecture.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="nextPage" href="guide-architecture.html">Architecture</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#requirements">Requirements</a></li>
+<li class="level1"><a href="#the-game">The game</a></li>
+<li class="level1"><a href="#cmake-options">CMake options</a></li>
+<li class="level1"><a href="#core-and-unit-tests">Core and unit tests</a></li>
+<li class="level1"><a href="#continuous-integration">Continuous integration</a></li>
+<li class="level1"><a href="#android">Android</a></li>
+<li class="level1"><a href="#this-documentation">This documentation</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Building and Running</h1>
+<!-- $$$guide-building.html-description -->
+<div class="descr" id="details">
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>Felgo 4 SDK with Qt 6.8.3 and Qt Creator.</li>
+<li>CMake 3.16 or newer and Ninja (both come with the SDK).</li>
+<li>A C++20 compiler. On Windows the SDK ships MinGW 13.</li>
+<li>Optional: <code translate="no">ccache</code> and <code translate="no">lld</code> are used automatically when they are installed.</li>
+<li>Optional: Python 3 with Pillow for <code translate="no">scripts/generate_placeholders.py</code>.</li>
+</ul>
+<h2 id="the-game">The game</h2>
+<p>Open <code translate="no">CMakeLists.txt</code> in the Qt Creator from the Felgo SDK, select the Felgo desktop kit and run the <code translate="no">appCreatureWars</code> target. The first configure step downloads nlohmann/json, and GoogleTest when tests are enabled, so it needs a network connection.</p>
+<p>Debug builds open a second console window called <i>Creature Wars Debug</i>. It shows log messages and a line with the game tick time, the creature count and the dispatcher queue, which helps a lot when you look at performance.</p>
+<h2 id="cmake-options">CMake options</h2>
+<div class="table"><table class="generic">
+ <thead><tr class="qt-style"><th >Option</th><th >Default</th><th >Effect</th></tr></thead>
+<tr valign="top" class="odd"><td ><code translate="no">CREATURE_WARS_BUILD_APP</code></td><td ><code translate="no">ON</code></td><td >Build the Felgo application. Turn it off to build only the core and tests.</td></tr>
+<tr valign="top" class="even"><td ><code translate="no">CREATURE_WARS_MAP_SIZE</code></td><td ><code translate="no">64x32</code></td><td >Map size preset: <code translate="no">40x20</code>, <code translate="no">48x24</code>, <code translate="no">56x28</code> or <code translate="no">64x32</code>.</td></tr>
+<tr valign="top" class="odd"><td ><code translate="no">CREATURE_WARS_WARNINGS_AS_ERRORS</code></td><td ><code translate="no">OFF</code></td><td >Treat compiler warnings as errors, as the CI does.</td></tr>
+<tr valign="top" class="even"><td ><code translate="no">CREATURE_WARS_ENABLE_CLANG_TIDY</code></td><td ><code translate="no">OFF</code></td><td >Run clang-tidy on the core while building.</td></tr>
+<tr valign="top" class="odd"><td ><code translate="no">CREATURE_WARS_ENABLE_CPPCHECK</code></td><td ><code translate="no">OFF</code></td><td >Run cppcheck on the core while building.</td></tr>
+<tr valign="top" class="even"><td ><code translate="no">CREATURE_WARS_USE_CCACHE</code></td><td ><code translate="no">ON</code></td><td >Use ccache when it is found.</td></tr>
+<tr valign="top" class="odd"><td ><code translate="no">CREATURE_WARS_USE_LLD</code></td><td ><code translate="no">ON</code></td><td >Link with lld when it is found.</td></tr>
+</table></div>
+<h2 id="core-and-unit-tests">Core and unit tests</h2>
+<p>The core builds without Qt and Felgo. That is also how the CI builds it:</p>
+<pre class="cpp plain" translate="no">cmake -S . -B build/core -G Ninja -DCREATURE_WARS_BUILD_APP=OFF \
+    -DCREATURE_WARS_WARNINGS_AS_ERRORS=ON -DBUILD_TESTING=ON
+cmake --build build/core
+ctest --test-dir build/core --output-on-failure</pre>
+<p>The tests live in <code translate="no">tests/</code> and use GoogleTest. They cover the dispatcher, the scheduler, the game clock, base orders, the map, the pathfinder, the AI planner and a few full games between AI players. Scheduler based logic is tested with fixed points in time, so the tests do not wait for real time to pass.</p>
+<h2 id="continuous-integration">Continuous integration</h2>
+<p><code translate="no">.github/workflows/ci.yml</code> builds the core with GCC and Clang, runs the tests under AddressSanitizer and UndefinedBehaviorSanitizer and runs clang-tidy and cppcheck. Warnings count as errors there, so build with <code translate="no">CREATURE_WARS_WARNINGS_AS_ERRORS=ON</code> before you push.</p>
+<h2 id="android">Android</h2>
+<p>On the todo list. The Android build is not tested yet, so there are no build steps here.</p>
+<h2 id="this-documentation">This documentation</h2>
+<p>The documentation is written in QDoc and lives in <code translate="no">docs</code>. With <code translate="no">qdoc</code> in your <code translate="no">PATH</code> (it comes with the SDK) build the <code translate="no">docs</code> target, or run it by hand:</p>
+<pre class="cpp plain" translate="no">cd docs
+qdoc creature_wars.qdocconf</pre>
+<p>The HTML ends up in <code translate="no">docs/html</code> and is committed, so readers can open <code translate="no">docs/html/index.html</code> without building anything. Rebuild it after every change to the docs or to quoted code. Code snippets in the tutorial are quoted straight from the source files with <code translate="no">\\quotefromfile</code>, so they stay in sync with the code as long as the quoted lines keep existing.</p>
+</div>
+<!-- @@@guide-building.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="nextPage" href="guide-architecture.html">Architecture</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

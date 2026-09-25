@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- 01-overview.qdoc -->
+  <title>Tutorial 1: What We Build | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Tutorial 1: What We Build</li>
+  <link rel="next" href="tutorial-install-and-run.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="nextPage" href="tutorial-install-and-run.html">Tutorial 2: Install Felgo and Run the Game</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#what-you-learn">What you learn</a></li>
+<li class="level1"><a href="#how-the-game-is-split">How the game is split</a></li>
+<li class="level1"><a href="#how-to-use-this-tutorial">How to use this tutorial</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Tutorial 1: What We Build</h1>
+<!-- $$$tutorial-overview.html-description -->
+<div class="descr" id="details">
+<p>We build a small real time strategy game with Felgo. Three races share one map. Each race has a base that makes units, researches upgrades and shoots at enemies. You play one race, the computer plays the others. The last base standing wins.</p>
+<p class="centerAlign"><img src="images/readme-start-screen.png" alt="" /></p><p class="figCaption">The start screen.</p>
+<h2 id="what-you-learn">What you learn</h2>
+<ul>
+<li>Setting up a Felgo game with CMake.</li>
+<li>Scenes, scaling and switching screens with <code translate="no">GameWindow</code> and <code translate="no">Scene</code>.</li>
+<li>Animated sprites with TexturePacker and images for several screen densities.</li>
+<li>Short lived effects with <code translate="no">EntityManager</code>.</li>
+<li>Keeping game rules in a C++ core and showing them in QML.</li>
+</ul>
+<h2 id="how-the-game-is-split">How the game is split</h2>
+<ul>
+<li><b>C++ core</b> in <code translate="no">backend</code>. Owns the game state and all rules. No Qt inside.</li>
+<li><b>Felgo client</b> in <code translate="no">qml</code>. Draws what the core reports and sends player input.</li>
+</ul>
+<p><b>Why not only QML?</b> Most Felgo games keep their logic in QML, often with <code translate="no">EntityManager</code> and physics. That is the fastest way for a small game. We put the rules in C++ because the game should later run on a server, like an online RPG. Chapter 5 explains it.</p>
+<h2 id="how-to-use-this-tutorial">How to use this tutorial</h2>
+<p>Every code block comes straight from the repository, with the file name. Read a chapter, open the file, run the game and compare.</p>
+</div>
+<!-- @@@tutorial-overview.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="nextPage" href="tutorial-install-and-run.html">Tutorial 2: Install Felgo and Run the Game</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

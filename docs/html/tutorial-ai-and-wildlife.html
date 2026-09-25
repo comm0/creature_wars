@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- 10-ai-and-wildlife.qdoc -->
+  <title>Tutorial 10: AI Opponents and Wildlife | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Tutorial 10: AI Opponents and Wildlife</li>
+  <link rel="prev" href="tutorial-economy-and-bases.html" />
+  <link rel="next" href="tutorial-game-end.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="tutorial-economy-and-bases.html">Tutorial 9: Economy, Bases and the Radial Menu</a>
+<a class="nextPage" href="tutorial-game-end.html">Tutorial 11: Ending the Match</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#facts">Facts</a></li>
+<li class="level1"><a href="#decisions">Decisions</a></li>
+<li class="level1"><a href="#difficulty">Difficulty</a></li>
+<li class="level1"><a href="#wildlife">Wildlife</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Tutorial 10: AI Opponents and Wildlife</h1>
+<!-- $$$tutorial-ai-and-wildlife.html-description -->
+<div class="descr" id="details">
+<p>The computer races use the same economy, actions and orders as the player. Only the decisions come from code.</p>
+<h2 id="facts">Facts</h2>
+<p>Before each decision the core collects what the AI needs:</p>
+<pre class="cpp" translate="no">    ai_context_t context{
+        <span class="operator">.</span>gold_ <span class="operator">=</span> controller_p<span class="operator">.</span>state_<span class="operator">.</span>gold_<span class="operator">.</span>amount_<span class="operator">,</span>
+        <span class="operator">.</span>food_ <span class="operator">=</span> controller_p<span class="operator">.</span>state_<span class="operator">.</span>food_<span class="operator">.</span>amount_<span class="operator">,</span>
+        <span class="operator">.</span>base_level_ <span class="operator">=</span> base<span class="operator">-</span><span class="operator">&gt;</span>level()<span class="operator">,</span>
+        <span class="operator">.</span>base_health_ <span class="operator">=</span> base<span class="operator">-</span><span class="operator">&gt;</span>health()<span class="operator">,</span>
+        <span class="operator">.</span>base_max_health_ <span class="operator">=</span> base<span class="operator">-</span><span class="operator">&gt;</span>stats()<span class="operator">.</span>max_health_<span class="operator">,</span>
+        <span class="operator">.</span>neutral_target_available_ <span class="operator">=</span> neutral_target<span class="operator">.</span>has_value()
+    };</pre>
+<h2 id="decisions">Decisions</h2>
+<p><a href="ai-planner-t.html" translate="no">ai_planner_t</a> is a pure function. The rules in short:</p>
+<ol class="1" type="1"><li>Enemies near the base: defend, spawn units.</li>
+<li>Army too small: spawn more.</li>
+<li>Low on resources and a wild creature close by: go hunting.</li>
+<li>Army big enough: attack an enemy base.</li>
+<li>Spare resources: training, upgrades, research.</li>
+</ol>
+<p>The first rule in code:</p>
+<pre class="cpp" translate="no">    <span class="keyword">const</span> <span class="keyword">auto</span> under_attack <span class="operator">=</span> context_p<span class="operator">.</span>nearby_enemy_count_ <span class="operator">&gt;</span> <span class="number">0</span>
+        <span class="operator">|</span><span class="operator">|</span> context_p<span class="operator">.</span>base_health_ <span class="operator">*</span> <span class="number">100</span> <span class="operator">&lt;</span> context_p<span class="operator">.</span>base_max_health_ <span class="operator">*</span> <span class="number">70</span>;
+
+    <span class="keyword">if</span> (under_attack) {
+        decision<span class="operator">.</span>strategy_ <span class="operator">=</span> ai_strategy_t<span class="operator">::</span>defend;
+        <span class="keyword">const</span> <span class="keyword">auto</span><span class="operator">*</span> spawn <span class="operator">=</span> select_spawn(profile_p<span class="operator">,</span> context_p<span class="operator">,</span> actions_p<span class="operator">,</span> <span class="keyword">true</span><span class="operator">,</span> <span class="keyword">false</span>);
+        <span class="keyword">if</span> (spawn <span class="operator">!</span><span class="operator">=</span> nullptr) {
+            decision<span class="operator">.</span>action_key_ <span class="operator">=</span> spawn<span class="operator">-</span><span class="operator">&gt;</span>key_;
+        }
+        <span class="keyword">return</span> decision;</pre>
+<h2 id="difficulty">Difficulty</h2>
+<p>Easy, normal and hard use the same planner with other numbers from <code translate="no">data/ai_profiles.json</code>:</p>
+<pre class="cpp" translate="no">    &quot;hard&quot;: {
+      &quot;decisionIntervalMs&quot;: 750,
+      &quot;goldReserve&quot;: 8,
+      &quot;foodReserve&quot;: 0,
+      &quot;minimumArmyForGrowth&quot;: 2,
+      &quot;minimumArmyForAssault&quot;: 2,
+      &quot;maximumSpawnQueue&quot;: 3,
+      &quot;huntGoldBelow&quot;: 100,
+      &quot;huntFoodBelow&quot;: 8,
+      &quot;huntMaximumDistance&quot;: 18
+    }</pre>
+<h2 id="wildlife">Wildlife</h2>
+<p><a href="wildlife-spawner-t.html" translate="no">wildlife_spawner_t</a> plans deer, wolves and troll lairs on the scheduler, each time near another race:</p>
+<pre class="cpp" translate="no"><span class="type">void</span> wildlife_spawner_t<span class="operator">::</span>start(game_scheduler_t<span class="operator">::</span>time_point_t time_p)
+{
+    reset();
+    <span class="keyword">const</span> <span class="keyword">auto</span> generation <span class="operator">=</span> generation_;
+    schedule_deer(time_p <span class="operator">+</span> deer_initial_delay<span class="operator">,</span> generation);
+    schedule_wolf(time_p <span class="operator">+</span> wildlife_spawn_interval<span class="operator">,</span> generation);
+    schedule_lair(time_p <span class="operator">+</span> lair_spawn_interval<span class="operator">,</span> generation);
+}</pre>
+<p>A killed wild creature pays a reward. It is split between the races by the damage they dealt. Hunting pays, but it leaves your base open.</p>
+</div>
+<!-- @@@tutorial-ai-and-wildlife.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="tutorial-economy-and-bases.html">Tutorial 9: Economy, Bases and the Radial Menu</a>
+<a class="nextPage" href="tutorial-game-end.html">Tutorial 11: Ending the Match</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

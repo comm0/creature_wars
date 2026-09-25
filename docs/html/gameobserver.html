@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- reference.qdoc -->
+  <meta name="description" content="Moves events from the game thread to the GUI thread.">
+  <title>GameObserver Class | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="creaturewars-module.html" translate="no">CreatureWars</a></li>
+<li>GameObserver</li>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#details">Detailed Description</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title" translate="no">GameObserver Class</h1>
+<!-- $$$GameObserver-brief -->
+<p>Moves events from the game thread to the GUI thread. <a href="#details">More...</a></p>
+<!-- @@@GameObserver -->
+<div class="table"><table class="alignedsummary requisites" translate="no">
+<tr><td class="memItemLeft rightAlign topAlign"> Header:</td><td class="memItemRight bottomAlign"> <code translate="no">#include &lt;GameObserver&gt;</code></td></tr>
+<tr><td class="memItemLeft rightAlign topAlign"> Inherits:</td><td class="memItemRight bottomAlign"> <a href="igame-observer-t.html" translate="no">igame_observer_t</a></td></tr>
+</table></div>
+<!-- $$$GameObserver-description -->
+<div class="descr">
+<h2 id="details">Detailed Description</h2>
+<p>GameObserver implements <a href="igame-observer-t.html" translate="no">igame_observer_t</a>. Every call copies the data it needs and posts a queued call to the GUI thread, where it emits a Qt signal. <a href="gamebackend.html" translate="no">GameBackend</a> and the list models connect to these signals.</p>
+</div>
+<!-- @@@GameObserver -->
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

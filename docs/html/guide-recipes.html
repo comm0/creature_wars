@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- recipes.qdoc -->
+  <title>Recipes | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Recipes</li>
+  <link rel="prev" href="guide-conventions.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="guide-conventions.html">Coding Conventions</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#add-a-creature">Add a creature</a></li>
+<li class="level1"><a href="#let-a-base-produce-a-unit">Let a base produce a unit</a></li>
+<li class="level1"><a href="#add-a-research-path">Add a research path</a></li>
+<li class="level1"><a href="#tune-the-balance">Tune the balance</a></li>
+<li class="level1"><a href="#add-a-race">Add a race</a></li>
+<li class="level1"><a href="#add-a-sprite-sheet">Add a sprite sheet</a></li>
+<li class="level1"><a href="#regenerate-the-placeholder-art">Regenerate the placeholder art</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Recipes</h1>
+<!-- $$$guide-recipes.html-description -->
+<div class="descr" id="details">
+<p>Short step by step instructions for the changes people make most often.</p>
+<h2 id="add-a-creature">Add a creature</h2>
+<ol class="1" type="1"><li>Add an entry to <code translate="no">data/creature_types.json</code> with <code translate="no">id</code>, <code translate="no">name</code>, <code translate="no">group</code> (the race or a wildlife group), <code translate="no">color</code> and the stats <code translate="no">health</code>, <code translate="no">attack</code>, <code translate="no">attackRange</code>, <code translate="no">visionRange</code> and <code translate="no">speed</code>.</li>
+<li>Optional fields: <code translate="no">markerColor</code> for a small mark on the placeholder graphic, <code translate="no">behavior</code> (<code translate="no">aggressive</code> or <code translate="no">fleeing</code>), <code translate="no">areaRadius</code> and <code translate="no">areaColor</code> for area damage.</li>
+<li>If the creature has its own sprite sheet, add its id to the list in <code translate="no">qml/components/CreatureSprites.js</code>. Without that, it is drawn as a tinted placeholder box, which is fine for testing.</li>
+<li>To make a race able to produce it, add it to the <code translate="no">units</code> list of the race's base in <code translate="no">data/base_types.json</code>, see below.</li>
+</ol>
+<h2 id="let-a-base-produce-a-unit">Let a base produce a unit</h2>
+<p>Every entry in <code translate="no">units</code> of a base type has a <code translate="no">creature</code>, a <code translate="no">tier</code> and the <code translate="no">gold</code>, <code translate="no">food</code> and <code translate="no">timeMs</code> of one spawn. Tier 1 is available from the start. For higher tiers add a <code translate="no">training</code> object with the <code translate="no">gold</code> and <code translate="no">timeMs</code> of the research that unlocks the unit. A unit of tier N appears in the menu once the base reaches level N.</p>
+<h2 id="add-a-research-path">Add a research path</h2>
+<ol class="1" type="1"><li>Add an entry to <code translate="no">researches</code> in <code translate="no">data/tech_tree.json</code> with an <code translate="no">id</code>, a <code translate="no">name</code>, an <code translate="no">effect</code> and a list of <code translate="no">levels</code>. Each level has <code translate="no">baseLevel</code>, <code translate="no">gold</code>, <code translate="no">timeMs</code> and <code translate="no">value</code>.</li>
+<li>Supported effects are <code translate="no">baseRegeneration</code>, <code translate="no">baseHealthPercent</code>, <code translate="no">healingAura</code>, <code translate="no">baseDamagePercent</code>, <code translate="no">shotCount</code> and <code translate="no">baseRangeBonus</code>. A new kind of effect needs a new <code translate="no">research_effect_t</code> value in <code translate="no">backend/tech_tree.h</code> and code in <code translate="no">game_t::apply_base_stats</code> or wherever the effect applies.</li>
+<li>Pick an icon for the research in the <code translate="no">researchIcons</code> map of <code translate="no">qml/components/ActionCircle.qml</code>. Without one, a plus icon is shown.</li>
+</ol>
+<h2 id="tune-the-balance">Tune the balance</h2>
+<p>Most balancing needs no code at all. Change the numbers in <code translate="no">data</code> and restart the game: base health and damage per level in <code translate="no">base_types.json</code>, unit stats in <code translate="no">creature_types.json</code>, costs and times in <code translate="no">tech_tree.json</code> and <code translate="no">base_types.json</code>, income in <code translate="no">economy.json</code> and AI behaviour in <code translate="no">ai_profiles.json</code>.</p>
+<h2 id="add-a-race">Add a race</h2>
+<p>A race is a base type plus its creatures. The data part is easy, but some code still lists the three current races by name:</p>
+<ol class="1" type="1"><li>Add the creatures and a base type with a new <code translate="no">group</code> to the data files.</li>
+<li>Add a card for the race to the race list in <code translate="no">qml/scenes/MenuScene.qml</code> and a difficulty entry for it.</li>
+<li>Pass the difficulty of the new race in <code translate="no">GameBackend::startMatch</code> and in <code translate="no">qml/Main.qml</code>.</li>
+<li><code translate="no">game_t::start_match</code> places exactly three match bases. A fourth race needs a fourth starting position there.</li>
+</ol>
+<p>Making races fully data driven is one of the planned improvements.</p>
+<h2 id="add-a-sprite-sheet">Add a sprite sheet</h2>
+<p>The quickest way is the import script, which packs the frames in the same format TexturePacker produces:</p>
+<ol class="1" type="1"><li>Draw an animation strip of 96 by 128 pixels: 3 columns (idle and two walking frames) of 32 by 32, rows in the order north, east, south, west. Save it as <code translate="no">&lt;id&gt;_animation_96x128.png</code>. Add <code translate="no">&lt;id&gt;_corpse_32x32.png</code> for the corpse.</li>
+<li>Put both files into a folder named after the creature id, inside one source folder for all creatures.</li>
+<li>Run <code translate="no">python scripts/import_creature_sprites.py &lt;source folder&gt;</code>. It writes the packed sheet with extrude and padding, the JSON and the corpse in all three resolutions to <code translate="no">assets/creatures/&lt;id&gt;/</code>.</li>
+<li>Add the id to <code translate="no">qml/components/CreatureSprites.js</code>.</li>
+</ol>
+<p>If you pack the sheet with TexturePacker instead, use the JSON (Hash) format, frame names like <code translate="no">south_1.png</code> with rows north, south, west and east, one pixel of extrude and two pixels of padding, and export <code translate="no">+hd</code> and <code translate="no">+hd2</code> at twice and four times the size.</p>
+<h2 id="regenerate-the-placeholder-art">Regenerate the placeholder art</h2>
+<p>The bases of all four levels and the placeholder creature come from a script:</p>
+<pre class="cpp plain" translate="no">python scripts/generate_placeholders.py</pre>
+<p>It draws grey boxes in the oblique projection and writes all three resolutions. The game tints them with the race colour at runtime.</p>
+</div>
+<!-- @@@guide-recipes.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="guide-conventions.html">Coding Conventions</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- 11-game-end.qdoc -->
+  <title>Tutorial 11: Ending the Match | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Tutorial 11: Ending the Match</li>
+  <link rel="prev" href="tutorial-ai-and-wildlife.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="tutorial-ai-and-wildlife.html">Tutorial 10: AI Opponents and Wildlife</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#rules">Rules</a></li>
+<li class="level1"><a href="#the-game-over-scene">The game over scene</a></li>
+<li class="level1"><a href="#effects-with-entitymanager">Effects with EntityManager</a></li>
+<li class="level1"><a href="#next-steps">Next steps</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Tutorial 11: Ending the Match</h1>
+<!-- $$$tutorial-game-end.html-description -->
+<div class="descr" id="details">
+<h2 id="rules">Rules</h2>
+<p>A destroyed base knocks its race out and kills its creatures. Troll lairs do not count. After each destroyed base the core checks:</p>
+<pre class="cpp" translate="no">    <span class="keyword">if</span> (<span class="operator">!</span>player_base_alive) {
+        end_match(<span class="keyword">false</span>);
+    } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="operator">!</span>enemy_base_alive) {
+        end_match(<span class="keyword">true</span>);
+    }</pre>
+<p>Ending the match stops wildlife and all order queues, then reports the result:</p>
+<pre class="cpp" translate="no"><span class="type">void</span> game_t<span class="operator">::</span>end_match(<span class="type">bool</span> victory_p)
+{
+    match_active_ <span class="operator">=</span> <span class="keyword">false</span>;
+    wildlife_spawner_<span class="operator">.</span>reset();
+    <span class="keyword">for</span> (<span class="keyword">auto</span><span class="operator">&amp;</span> controller : controllers_) {
+        controller<span class="operator">-</span><span class="operator">&gt;</span>orders_<span class="operator">-</span><span class="operator">&gt;</span>clear();
+    }
+    publish_base_actions();
+    observer_<span class="operator">-</span><span class="operator">&gt;</span>on_match_ended(
+        victory_p<span class="operator">,</span>
+        std<span class="operator">::</span>chrono<span class="operator">::</span>duration_cast<span class="operator">&lt;</span>std<span class="operator">::</span>chrono<span class="operator">::</span>milliseconds<span class="operator">&gt;</span>(
+            current_time() <span class="operator">-</span> match_started_at_
+        )
+    );
+}</pre>
+<h2 id="the-game-over-scene">The game over scene</h2>
+<p>QML gets the <code translate="no">matchEnded</code> signal and switches state:</p>
+<pre class="cpp" translate="no">        <span class="keyword">function</span> <span class="name">onMatchEnded</span>(victory, durationMs) {
+            <span class="name">gameOverScene</span>.<span class="name">victory</span> <span class="operator">=</span> <span class="name">victory</span>
+            <span class="name">gameOverScene</span>.<span class="name">durationMs</span> <span class="operator">=</span> <span class="name">durationMs</span>
+            <span class="name">gameWindow</span>.<span class="name">state</span> <span class="operator">=</span> <span class="string">&quot;gameOver&quot;</span>
+        }</pre>
+<p><code translate="no">GameOverScene</code> is a third scene with a see through background, so the battle stays visible behind it. Two <code translate="no">AppButton</code> items offer <b translate="no">Play again</b> and <b translate="no">Main menu</b>.</p>
+<p class="centerAlign"><img src="images/readme-victory.png" alt="" /></p><p class="figCaption">Victory.</p>
+<h2 id="effects-with-entitymanager">Effects with EntityManager</h2>
+<p>Mages hit a 3 by 3 area. Each hit spawns a short explosion through Felgo's <code translate="no">EntityManager</code>:</p>
+<pre class="cpp" translate="no">    <span class="keyword">function</span> <span class="name">showAreaAttack</span>(column, row, radius, color) {
+        <span class="name">entityManager</span>.<span class="name">createEntityFromComponentWithProperties</span>(<span class="name">areaExplosionComponent</span>, {
+            x: (<span class="name">column</span> <span class="operator">-</span> <span class="name">radius</span>) <span class="operator">*</span> <span class="name">root</span>.<span class="name">tileSize</span>,
+            y: (<span class="name">row</span> <span class="operator">-</span> <span class="name">radius</span>) <span class="operator">*</span> <span class="name">root</span>.<span class="name">tileSize</span>,
+            tileSize: <span class="name">root</span>.<span class="name">tileSize</span>,
+            radius: <span class="name">radius</span>,
+            color: <span class="name">color</span>,
+            gameTimeScale: <span class="name">root</span>.<span class="name">gameTimeScale</span>
+        })</pre>
+<p>The explosion is an <code translate="no">EntityBase</code> that removes itself when its animation ends:</p>
+<pre class="cpp" translate="no">        <span class="type">ScriptAction</span> {
+            <span class="name">script</span>: <span class="name">explosion</span>.<span class="name">removeEntity</span>()
+        }</pre>
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li>Android and iOS builds with touch controls. Not tested yet.</li>
+<li>A standalone server and network clients.</li>
+<li>More races and a strong neutral boss.</li>
+<li>Music and sounds with <code translate="no">GameSoundEffect</code> and <code translate="no">BackgroundMusic</code>.</li>
+<li>Original pixel art.</li>
+</ul>
+<p>More details: <a href="developer-guide.html">Developer Guide</a>.</p>
+</div>
+<!-- @@@tutorial-game-end.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="tutorial-ai-and-wildlife.html">Tutorial 10: AI Opponents and Wildlife</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

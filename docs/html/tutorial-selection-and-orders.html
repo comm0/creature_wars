@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- 08-selection-and-orders.qdoc -->
+  <title>Tutorial 8: Selecting Units and Giving Orders | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Tutorial 8: Selecting Units and Giving Orders</li>
+  <link rel="prev" href="tutorial-map-and-sprites.html" />
+  <link rel="next" href="tutorial-economy-and-bases.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="tutorial-map-and-sprites.html">Tutorial 7: The Map, Sprites and Oblique Projection</a>
+<a class="nextPage" href="tutorial-economy-and-bases.html">Tutorial 9: Economy, Bases and the Radial Menu</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#selecting">Selecting</a></li>
+<li class="level1"><a href="#move-or-attack">Move or attack</a></li>
+<li class="level1"><a href="#attack-move">Attack move</a></li>
+<li class="level1"><a href="#outlines">Outlines</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Tutorial 8: Selecting Units and Giving Orders</h1>
+<!-- $$$tutorial-selection-and-orders.html-description -->
+<div class="descr" id="details">
+<h2 id="selecting">Selecting</h2>
+<p>Left click selects one unit, a drag selects many. Only your own race can be selected:</p>
+<pre class="cpp" translate="no">    <span class="keyword">function</span> <span class="name">isOwn</span>(group) {
+        <span class="keyword">return</span> <span class="name">playerGroup</span>.<span class="name">length</span> <span class="operator">===</span> <span class="number">0</span> <span class="operator">||</span> <span class="name">group</span> <span class="operator">===</span> <span class="name">playerGroup</span>
+    }</pre>
+<p>Clicking your base selects it and keeps its menu open.</p>
+<h2 id="move-or-attack">Move or attack</h2>
+<p>Right click on an enemy attacks it, right click on the ground moves there:</p>
+<pre class="cpp" translate="no">                const enemy = <span class="name">root</span>.<span class="name">creatureAt</span>(<span class="name">eventPoint</span>.<span class="name">position</span>, <span class="number">false</span>)
+                const base = <span class="name">enemy</span> <span class="operator">===</span> <span class="number">null</span> ? <span class="name">root</span>.<span class="name">baseAt</span>(<span class="name">column</span>, <span class="name">row</span>) : <span class="number">null</span>
+                const targetId = <span class="name">enemy</span> <span class="operator">!==</span> <span class="number">null</span>
+                    ? <span class="name">enemy</span>.<span class="name">creatureId</span>
+                    : <span class="name">base</span> <span class="operator">!==</span> <span class="number">null</span> <span class="operator">&amp;&amp;</span> !<span class="name">root</span>.<span class="name">isOwn</span>(<span class="name">base</span>.<span class="name">baseGroup</span>) ? <span class="name">base</span>.<span class="name">baseId</span> : <span class="number">0</span>
+
+                <span class="name">moveTargetMarker</span>.<span class="name">x</span> <span class="operator">=</span> <span class="name">column</span> <span class="operator">*</span> <span class="name">root</span>.<span class="name">tileSize</span>
+                <span class="name">moveTargetMarker</span>.<span class="name">y</span> <span class="operator">=</span> <span class="name">row</span> <span class="operator">*</span> <span class="name">root</span>.<span class="name">tileSize</span>
+                <span class="name">moveTargetMarker</span>.<span class="name">attack</span> <span class="operator">=</span> <span class="name">targetId</span> <span class="operator">!==</span> <span class="number">0</span>
+                <span class="name">moveTargetAnimation</span>.<span class="name">restart</span>()
+
+                <span class="keyword">for</span> (const creatureId of <span class="name">root</span>.<span class="name">selectedCreatureIds</span>) {
+                    <span class="keyword">if</span> (<span class="name">targetId</span> <span class="operator">!==</span> <span class="number">0</span>) {
+                        <span class="name">root</span>.<span class="name">attackRequested</span>(<span class="name">creatureId</span>, <span class="name">targetId</span>)
+                    } <span class="keyword">else</span> {
+                        <span class="name">root</span>.<span class="name">walkRequested</span>(<span class="name">creatureId</span>, <span class="name">column</span>, <span class="name">row</span>)
+                    }
+                }
+
+                <span class="keyword">return</span></pre>
+<h2 id="attack-move">Attack move</h2>
+<p>The <b translate="no">Attack move</b> toggle in the bottom bar decides what a move order does:</p>
+<ul>
+<li>On: units fight enemies on the way and then go on.</li>
+<li>Off: units drop their target and just walk. Use it to retreat.</li>
+</ul>
+<p>A unit that only walks could get stuck and be killed without fighting back. So a blocked unit that was hit in the last two seconds gives up the move and fights:</p>
+<pre class="cpp" translate="no">    <span class="keyword">if</span> (active_movement_goal_ <span class="operator">=</span><span class="operator">=</span> movement_goal_t<span class="operator">::</span>manual
+        <span class="operator">&amp;</span><span class="operator">&amp;</span> <span class="operator">!</span>game_p<span class="operator">.</span>aggressive()
+        <span class="operator">&amp;</span><span class="operator">&amp;</span> recently_hit(now_p)) {
+        finish_manual_movement(game_p);
+        <span class="keyword">return</span>;
+    }</pre>
+<h2 id="outlines">Outlines</h2>
+<p>Selected units get a yellow outline around the sprite shape. Their target gets a red one:</p>
+<pre class="cpp" translate="no">OutlineEffect {
+    source: creatureSprite
+    color: <span class="string">&quot;#ff4a3d&quot;</span>
+    visible: creatureView<span class="operator">.</span>targeted
+}</pre>
+<p><code translate="no">OutlineEffect</code> captures the source with <code translate="no">ShaderEffectSource</code> and a shader colours transparent pixels next to opaque ones.</p>
+</div>
+<!-- @@@tutorial-selection-and-orders.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="tutorial-map-and-sprites.html">Tutorial 7: The Map, Sprites and Oblique Projection</a>
+<a class="nextPage" href="tutorial-economy-and-bases.html">Tutorial 9: Economy, Bases and the Radial Menu</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

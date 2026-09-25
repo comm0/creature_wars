@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- 09-economy-and-bases.qdoc -->
+  <title>Tutorial 9: Economy, Bases and the Radial Menu | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Tutorial 9: Economy, Bases and the Radial Menu</li>
+  <link rel="prev" href="tutorial-selection-and-orders.html" />
+  <link rel="next" href="tutorial-ai-and-wildlife.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="tutorial-selection-and-orders.html">Tutorial 8: Selecting Units and Giving Orders</a>
+<a class="nextPage" href="tutorial-ai-and-wildlife.html">Tutorial 10: AI Opponents and Wildlife</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#income">Income</a></li>
+<li class="level1"><a href="#what-a-base-can-do">What a base can do</a></li>
+<li class="level1"><a href="#orders">Orders</a></li>
+<li class="level1"><a href="#the-radial-menu">The radial menu</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Tutorial 9: Economy, Bases and the Radial Menu</h1>
+<!-- $$$tutorial-economy-and-bases.html-description -->
+<div class="descr" id="details">
+<h2 id="income">Income</h2>
+<p>Income is a scheduler event that repeats itself:</p>
+<pre class="cpp" translate="no"><span class="type">void</span> game_t<span class="operator">::</span>schedule_income(
+    std<span class="operator">::</span>uint64_t base_id_p<span class="operator">,</span>
+    resource_state_t player_state_t<span class="operator">::</span><span class="operator">*</span> resource_p<span class="operator">,</span>
+    game_scheduler_t<span class="operator">::</span>time_point_t time_p
+)
+{
+    scheduler_<span class="operator">.</span>schedule(
+        time_p<span class="operator">,</span>
+        <span class="operator">[</span><span class="keyword">this</span><span class="operator">,</span> base_id_p<span class="operator">,</span> resource_p<span class="operator">,</span> match_id <span class="operator">=</span> match_id_<span class="operator">]</span>(
+            game_scheduler_t<span class="operator">::</span>time_point_t scheduled_time_p
+        ) {
+            <span class="keyword">if</span> (match_id <span class="operator">!</span><span class="operator">=</span> match_id_ <span class="operator">|</span><span class="operator">|</span> <span class="operator">!</span>match_active_) {
+                <span class="keyword">return</span>;
+            }
+
+            <span class="keyword">auto</span><span class="operator">*</span> controller <span class="operator">=</span> controller_for_base(base_id_p);
+            <span class="keyword">if</span> (controller <span class="operator">=</span><span class="operator">=</span> nullptr <span class="operator">|</span><span class="operator">|</span> find_base(base_id_p) <span class="operator">=</span><span class="operator">=</span> nullptr) {
+                <span class="keyword">return</span>;
+            }
+
+            <span class="keyword">auto</span><span class="operator">&amp;</span> resource <span class="operator">=</span> controller<span class="operator">-</span><span class="operator">&gt;</span>state_<span class="operator">.</span><span class="operator">*</span>resource_p;
+            resource<span class="operator">.</span>amount_ <span class="operator">+</span><span class="operator">=</span> resource<span class="operator">.</span>income_;</pre>
+<p>Old events check the match id and stop after a new match starts, so we do not have to cancel them by hand.</p>
+<p>The HUD shows a bar that fills until the next income. The core only sends a counter, QML animates the bar.</p>
+<h2 id="what-a-base-can-do">What a base can do</h2>
+<p>Units, research and upgrades come from data. A unit in <code translate="no">data/base_types.json</code>:</p>
+<pre class="cpp" translate="no">{
+  <span class="string">&quot;creature&quot;</span>: <span class="string">&quot;orc_spearman&quot;</span><span class="operator">,</span> <span class="string">&quot;tier&quot;</span>: <span class="number">2</span><span class="operator">,</span> <span class="string">&quot;gold&quot;</span>: <span class="number">25</span><span class="operator">,</span> <span class="string">&quot;food&quot;</span>: <span class="number">1</span><span class="operator">,</span> <span class="string">&quot;timeMs&quot;</span>: <span class="number">12000</span><span class="operator">,</span>
+  <span class="string">&quot;training&quot;</span>: { <span class="string">&quot;gold&quot;</span>: <span class="number">30</span><span class="operator">,</span> <span class="string">&quot;timeMs&quot;</span>: <span class="number">30000</span> }
+}</pre>
+<p>Tier 2 units need base level 2 and a training research first. A research path in <code translate="no">data/tech_tree.json</code>:</p>
+<pre class="cpp" translate="no">      &quot;id&quot;: &quot;base_regeneration&quot;,
+      &quot;name&quot;: &quot;Base Regeneration&quot;,
+      &quot;effect&quot;: &quot;baseRegeneration&quot;,
+      &quot;levels&quot;: [
+        { &quot;baseLevel&quot;: 1, &quot;gold&quot;: 15, &quot;timeMs&quot;: 15000, &quot;value&quot;: 1 },
+        { &quot;baseLevel&quot;: 2, &quot;gold&quot;: 80, &quot;timeMs&quot;: 40000, &quot;value&quot;: 3 },
+        { &quot;baseLevel&quot;: 3, &quot;gold&quot;: 200, &quot;timeMs&quot;: 60000, &quot;value&quot;: 6 },
+        { &quot;baseLevel&quot;: 4, &quot;gold&quot;: 350, &quot;timeMs&quot;: 75000, &quot;value&quot;: 10 }
+      ]</pre>
+<h2 id="orders">Orders</h2>
+<p>Each action has its own queue in <a href="base-orders-t.html" translate="no">base_orders_t</a>, so a base can research and produce at the same time. An order ends with a scheduler event:</p>
+<pre class="cpp" translate="no"><span class="type">void</span> base_orders_t<span class="operator">::</span>complete(
+    <span class="keyword">const</span> std<span class="operator">::</span>string<span class="operator">&amp;</span> key_p<span class="operator">,</span>
+    game_scheduler_t<span class="operator">::</span>time_point_t time_p
+)
+{
+    <span class="keyword">auto</span><span class="operator">&amp;</span> queue <span class="operator">=</span> queues_<span class="operator">[</span>key_p<span class="operator">]</span>;
+    queue<span class="operator">.</span>event_<span class="operator">.</span>reset();
+
+    <span class="keyword">if</span> (<span class="operator">!</span>completion_(key_p)) {
+        schedule_completion(key_p<span class="operator">,</span> time_p <span class="operator">+</span> retry_interval);
+        <span class="keyword">return</span>;
+    }
+
+    <span class="operator">-</span><span class="operator">-</span>queue<span class="operator">.</span>queued_;
+
+    <span class="keyword">if</span> (queue<span class="operator">.</span>queued_ <span class="operator">&gt;</span> <span class="number">0</span>) {
+        schedule_completion(key_p<span class="operator">,</span> time_p <span class="operator">+</span> queue<span class="operator">.</span>duration_);
+    }
+
+    change_();</pre>
+<p>If there is no free tile for a new unit, the order retries one second later.</p>
+<h2 id="the-radial-menu">The radial menu</h2>
+<p>Felgo has no radial menu, so we build one from a <code translate="no">Repeater</code>. Each circle goes on a ring around the base:</p>
+<pre class="cpp" translate="no">            readonly property <span class="type">real</span> <span class="name">angle</span>:
+                (-<span class="number">90</span> <span class="operator">+</span> <span class="name">index</span> <span class="operator">*</span> <span class="number">360</span> <span class="operator">/</span> <span class="name">Math</span>.<span class="name">max</span>(<span class="number">1</span>, <span class="name">circleRepeater</span>.<span class="name">count</span>)) <span class="operator">*</span> <span class="name">Math</span>.<span class="name">PI</span> <span class="operator">/</span> <span class="number">180</span>
+
+            <span class="name">x</span>: <span class="name">radialMenu</span>.<span class="name">width</span> <span class="operator">/</span> <span class="number">2</span> <span class="operator">+</span> <span class="name">radialMenu</span>.<span class="name">radius</span> <span class="operator">*</span> <span class="name">Math</span>.<span class="name">cos</span>(<span class="name">angle</span>) <span class="operator">-</span> <span class="name">width</span> <span class="operator">/</span> <span class="number">2</span>
+            <span class="name">y</span>: <span class="name">radialMenu</span>.<span class="name">height</span> <span class="operator">/</span> <span class="number">2</span> <span class="operator">+</span> <span class="name">radialMenu</span>.<span class="name">radius</span> <span class="operator">*</span> <span class="name">Math</span>.<span class="name">sin</span>(<span class="name">angle</span>) <span class="operator">-</span> <span class="name">height</span> <span class="operator">/</span> <span class="number">2</span></pre>
+<p>The progress ring is a Qt Quick <code translate="no">Shape</code>:</p>
+<pre class="cpp" translate="no">            <span class="type">PathAngleArc</span> {
+                <span class="name">centerX</span>: <span class="name">actionCircle</span>.<span class="name">width</span> <span class="operator">/</span> <span class="number">2</span>
+                <span class="name">centerY</span>: <span class="name">actionCircle</span>.<span class="name">height</span> <span class="operator">/</span> <span class="number">2</span>
+                <span class="name">radiusX</span>: <span class="name">actionCircle</span>.<span class="name">width</span> <span class="operator">/</span> <span class="number">2</span> <span class="operator">-</span> <span class="number">2</span> <span class="operator">*</span> <span class="name">actionCircle</span>.<span class="name">sizeScale</span>
+                <span class="name">radiusY</span>: <span class="name">actionCircle</span>.<span class="name">height</span> <span class="operator">/</span> <span class="number">2</span> <span class="operator">-</span> <span class="number">2</span> <span class="operator">*</span> <span class="name">actionCircle</span>.<span class="name">sizeScale</span>
+                <span class="name">startAngle</span>: -<span class="number">90</span>
+                <span class="name">sweepAngle</span>: <span class="number">360</span> <span class="operator">*</span> <span class="name">actionCircle</span>.<span class="name">progress</span>
+            }</pre>
+<p>Research icons use Felgo <code translate="no">AppIcon</code>. Actions you cannot use yet turn grey with <code translate="no">MultiEffect</code>:</p>
+<pre class="cpp" translate="no">MultiEffect {
+    source: circleContent
+    saturation: actionCircle<span class="operator">.</span>clickable <span class="operator">?</span> <span class="number">0</span> : <span class="operator">-</span><span class="number">1</span>
+}</pre>
+<p><b>Why not AppToolTip for the cost?</b> Felgo's <code translate="no">AppToolTip</code> is a tutorial overlay that dims the screen. A small <code translate="no">Rectangle</code> works better for hover tips.</p>
+<p class="centerAlign"><img src="images/readme-base-menu.png" alt="" /></p><p class="figCaption">The radial menu with a unit queue and running research.</p>
+</div>
+<!-- @@@tutorial-economy-and-bases.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="tutorial-selection-and-orders.html">Tutorial 8: Selecting Units and Giving Orders</a>
+<a class="nextPage" href="tutorial-ai-and-wildlife.html">Tutorial 10: AI Opponents and Wildlife</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

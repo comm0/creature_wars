@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- 05-game-core.qdoc -->
+  <title>Tutorial 5: A Game Core Like an MMORPG Server | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Tutorial 5: A Game Core Like an MMORPG Server</li>
+  <link rel="prev" href="tutorial-scenes.html" />
+  <link rel="next" href="tutorial-qml-bridge.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="tutorial-scenes.html">Tutorial 4: Scenes and the Game Window</a>
+<a class="nextPage" href="tutorial-qml-bridge.html">Tutorial 6: Connecting the Core to QML</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#one-game-thread">One game thread</a></li>
+<li class="level1"><a href="#dispatcher-and-scheduler">Dispatcher and scheduler</a></li>
+<li class="level1"><a href="#game-time">Game time</a></li>
+<li class="level1"><a href="#rules-as-data">Rules as data</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Tutorial 5: A Game Core Like an MMORPG Server</h1>
+<!-- $$$tutorial-game-core.html-description -->
+<div class="descr" id="details">
+<p>All rules live in a C++ core without Qt. It works like the server of an online RPG such as <a href="https://github.com/otland/forgottenserver">The Forgotten Server</a>.</p>
+<p><b>Why not in QML?</b> A usual Felgo game would use a <code translate="no">Timer</code> and JavaScript. That is faster to write. We use a separate core because it can be tested without a window, it treats the player and the AI exactly the same, and it can move to a real server later.</p>
+<h2 id="one-game-thread">One game thread</h2>
+<p><a href="game-t.html" translate="no">game_t</a> runs the game in its own thread. QML never touches the game state. It only sends commands:</p>
+<pre class="cpp" translate="no">    <span class="type">void</span> request_spawn_creature(
+        std<span class="operator">::</span>string identifier_p<span class="operator">,</span>
+        position_t position_p
+    );
+    <span class="type">void</span> request_spawn_base(std<span class="operator">::</span>string identifier_p<span class="operator">,</span> position_t center_p);
+    <span class="type">void</span> request_order_base_action(std<span class="operator">::</span>string key_p);
+    <span class="type">void</span> request_start_match(
+        std<span class="operator">::</span>string player_base_identifier_p<span class="operator">,</span>
+        std<span class="operator">::</span>unordered_map<span class="operator">&lt;</span>std<span class="operator">::</span>string<span class="operator">,</span> ai_difficulty_t<span class="operator">&gt;</span> ai_difficulties_p
+    );
+    <span class="type">void</span> request_attack_target(std<span class="operator">::</span>uint64_t id_p<span class="operator">,</span> std<span class="operator">::</span>uint64_t target_id_p);
+    <span class="type">void</span> request_walk_to(
+        std<span class="operator">::</span>uint64_t id_p<span class="operator">,</span>
+        position_t destination_p
+    );
+    <span class="type">void</span> request_set_aggressive(<span class="type">bool</span> aggressive_p);
+    <span class="type">void</span> request_set_time_scale(<span class="type">double</span> time_scale_p);</pre>
+<p>Example from the bridge:</p>
+<pre class="cpp" translate="no">game_<span class="operator">.</span>request_walk_to(creature_id<span class="operator">,</span> position_t{column<span class="operator">,</span> row});</pre>
+<p>Each call only queues a task. The game thread runs the tasks one by one, so the game logic needs no locks.</p>
+<h2 id="dispatcher-and-scheduler">Dispatcher and scheduler</h2>
+<ul>
+<li><a href="game-event-dispatcher-t.html" translate="no">game_event_dispatcher_t</a> runs tasks in the order they arrive.</li>
+<li><a href="game-scheduler-t.html" translate="no">game_scheduler_t</a> keeps tasks for a point in time: the game tick, income, production, research, wildlife.</li>
+</ul>
+<pre class="cpp" translate="no"><span class="keyword">class</span> game_scheduler_t
+{
+<span class="keyword">public</span>:
+    <span class="keyword">using</span> time_point_t <span class="operator">=</span> std<span class="operator">::</span>chrono<span class="operator">::</span>steady_clock<span class="operator">::</span>time_point;
+    <span class="keyword">using</span> event_id_t <span class="operator">=</span> std<span class="operator">::</span>uint64_t;
+    <span class="keyword">using</span> event_t <span class="operator">=</span> std<span class="operator">::</span>function<span class="operator">&lt;</span><span class="type">void</span>(time_point_t)<span class="operator">&gt;</span>;
+
+    event_id_t schedule(time_point_t time_p<span class="operator">,</span> event_t event_p);
+    <span class="type">bool</span> cancel(event_id_t id_p);
+    <span class="type">void</span> clear() noexcept;
+    <span class="type">void</span> delay_all(std<span class="operator">::</span>chrono<span class="operator">::</span>steady_clock<span class="operator">::</span>duration delay_p);
+    std<span class="operator">::</span>optional<span class="operator">&lt;</span>time_point_t<span class="operator">&gt;</span> next_time() <span class="keyword">const</span> noexcept;
+    std<span class="operator">::</span>optional<span class="operator">&lt;</span>time_point_t<span class="operator">&gt;</span> time_of(event_id_t id_p) <span class="keyword">const</span> noexcept;
+    std<span class="operator">::</span>vector<span class="operator">&lt;</span>std<span class="operator">::</span>function<span class="operator">&lt;</span><span class="type">void</span>()<span class="operator">&gt;</span><span class="operator">&gt;</span> take_due(time_point_t now_p);</pre>
+<p>Example: run something in two seconds and cancel it again:</p>
+<pre class="cpp" translate="no"><span class="keyword">const</span> <span class="keyword">auto</span> id <span class="operator">=</span> scheduler_<span class="operator">.</span>schedule(now <span class="operator">+</span> std<span class="operator">::</span>chrono<span class="operator">::</span>seconds{<span class="number">2</span>}<span class="operator">,</span> <span class="operator">[</span><span class="operator">]</span>(<span class="keyword">auto</span> time) {
+    <span class="comment">// happens two seconds later</span>
+});
+scheduler_<span class="operator">.</span>cancel(id);</pre>
+<p>In the game loop, due events go to the dispatcher. The scheduler never runs game code itself, like in TFS:</p>
+<pre class="cpp" translate="no">        collect_actions();
+
+        <span class="keyword">for</span> (<span class="keyword">auto</span><span class="operator">&amp;</span> event : scheduler_<span class="operator">.</span>take_due(game_clock_<span class="operator">.</span>now())) {
+            dispatcher_<span class="operator">.</span>enqueue(std<span class="operator">::</span>move(event));
+        }
+
+        dispatcher_<span class="operator">.</span>dispatch_pending();</pre>
+<h2 id="game-time">Game time</h2>
+<p><a href="game-clock-t.html" translate="no">game_clock_t</a> turns real time into game time. Pause stops it, 2x and 5x speed it up. Scheduled events just follow.</p>
+<h2 id="rules-as-data">Rules as data</h2>
+<p>Numbers live in <code translate="no">data</code>, not in code:</p>
+<pre class="cpp" translate="no">  &quot;income&quot;: {
+    &quot;gold&quot;: {
+      &quot;amount&quot;: 1,
+      &quot;intervalMs&quot;: 1000
+    },
+    &quot;food&quot;: {
+      &quot;amount&quot;: 1,
+      &quot;intervalMs&quot;: 10000
+    }
+  },
+  &quot;levelIncomeBonusPercent&quot;: 20</pre>
+<p>Change a value, restart the game, done. No rebuild.</p>
+</div>
+<!-- @@@tutorial-game-core.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="tutorial-scenes.html">Tutorial 4: Scenes and the Game Window</a>
+<a class="nextPage" href="tutorial-qml-bridge.html">Tutorial 6: Connecting the Core to QML</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

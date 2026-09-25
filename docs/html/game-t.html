@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- game.cpp -->
+  <meta name="description" content="Owns the game thread and serializes all game actions.">
+  <title>game_t Class | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="creaturewars-module.html" translate="no">CreatureWars</a></li>
+<li>game_t</li>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#public-functions">Public Functions</a></li>
+<li class="level1"><a href="#details">Detailed Description</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title" translate="no">game_t Class</h1>
+<!-- $$$game_t-brief -->
+<p>Owns the game thread and serializes all game actions. <a href="#details">More...</a></p>
+<!-- @@@game_t -->
+<div class="table"><table class="alignedsummary requisites" translate="no">
+<tr><td class="memItemLeft rightAlign topAlign"> Header:</td><td class="memItemRight bottomAlign"> <code translate="no">#include &lt;game_t&gt;</code></td></tr>
+</table></div>
+<ul>
+<li><a href="game-t-members.html">List of all members, including inherited members</a></li>
+</ul>
+<h2 id="public-functions">Public Functions</h2>
+<div class="table"><table class="alignedsummary" translate="no">
+<tr><td class="memItemLeft rightAlign topAlign"> </td><td class="memItemRight bottomAlign"><b><a href="game-t.html#game_t" translate="no">game_t</a></b>(const std::string &amp;<i>creature_types_json_p</i>, const std::string &amp;<i>base_types_json_p</i>, const std::string &amp;<i>economy_json_p</i>, const std::string &amp;<i>tech_tree_json_p</i>, const std::string &amp;<i>ai_profiles_json_p</i>)</td></tr>
+<tr><td class="memItemLeft rightAlign topAlign"> void </td><td class="memItemRight bottomAlign"><b><a href="game-t.html#start" translate="no">start</a></b>(igame_observer_t &amp;<i>observer_p</i>)</td></tr>
+<tr><td class="memItemLeft rightAlign topAlign"> void </td><td class="memItemRight bottomAlign"><b><a href="game-t.html#stop" translate="no">stop</a></b>()</td></tr>
+</table></div>
+<!-- $$$game_t-description -->
+<div class="descr">
+<h2 id="details">Detailed Description</h2>
+</div>
+<!-- @@@game_t -->
+<div class="func">
+<h2>Member Function Documentation</h2>
+<!-- $$$game_t[overload1]$$$game_tconststd::string&conststd::string&conststd::string&conststd::string&conststd::string& -->
+<h3 class="fn" translate="no" id="game_t">game_t::<span class="name">game_t</span>(const <span class="type">std::string</span> &amp;<i>creature_types_json_p</i>, const <span class="type">std::string</span> &amp;<i>base_types_json_p</i>, const <span class="type">std::string</span> &amp;<i>economy_json_p</i>, const <span class="type">std::string</span> &amp;<i>tech_tree_json_p</i>, const <span class="type">std::string</span> &amp;<i>ai_profiles_json_p</i>)</h3>
+<p>Creates a stopped game.</p>
+<!-- @@@game_t -->
+<!-- $$$start[overload1]$$$startigame_observer_t& -->
+<h3 class="fn" translate="no" id="start"><span class="type">void</span> game_t::<span class="name">start</span>(<span class="type"><a href="igame-observer-t.html" translate="no">igame_observer_t</a></span> &amp;<i>observer_p</i>)</h3>
+<p>Starts the game thread and reports state changes to <i translate="no">observer_p</i>.</p>
+<!-- @@@start -->
+<!-- $$$stop[overload1]$$$stop -->
+<h3 class="fn" translate="no" id="stop"><span class="type">void</span> game_t::<span class="name">stop</span>()</h3>
+<p>Stops the game thread after its current action.</p>
+<!-- @@@stop -->
+</div>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

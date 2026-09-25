@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- 06-qml-bridge.qdoc -->
+  <title>Tutorial 6: Connecting the Core to QML | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Tutorial 6: Connecting the Core to QML</li>
+  <link rel="prev" href="tutorial-game-core.html" />
+  <link rel="next" href="tutorial-map-and-sprites.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="tutorial-game-core.html">Tutorial 5: A Game Core Like an MMORPG Server</a>
+<a class="nextPage" href="tutorial-map-and-sprites.html">Tutorial 7: The Map, Sprites and Oblique Projection</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#events-out">Events out</a></li>
+<li class="level1"><a href="#changing-threads">Changing threads</a></li>
+<li class="level1"><a href="#models-and-commands">Models and commands</a></li>
+<li class="level1"><a href="#adding-new-data-to-the-screen">Adding new data to the screen</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Tutorial 6: Connecting the Core to QML</h1>
+<!-- $$$tutorial-qml-bridge.html-description -->
+<div class="descr" id="details">
+<p>The core runs in its own thread and knows no Qt. QML runs in the GUI thread. A thin bridge connects them.</p>
+<h2 id="events-out">Events out</h2>
+<p>The core reports changes through a plain C++ interface:</p>
+<pre class="cpp" translate="no"><span class="keyword">class</span> igame_observer_t
+{
+<span class="keyword">public</span>:
+    <span class="keyword">virtual</span> <span class="operator">~</span>igame_observer_t() <span class="operator">=</span> <span class="keyword">default</span>;
+
+    <span class="keyword">virtual</span> <span class="type">void</span> on_game_tick() <span class="operator">=</span> <span class="number">0</span>;
+    <span class="keyword">virtual</span> <span class="type">void</span> on_creature_created(<span class="keyword">const</span> creature_t<span class="operator">&amp;</span> creature_p) <span class="operator">=</span> <span class="number">0</span>;</pre>
+<h2 id="changing-threads">Changing threads</h2>
+<p><a href="gameobserver.html" translate="no">GameObserver</a> implements it and moves each event to the GUI thread:</p>
+<pre class="cpp" translate="no"><span class="type">void</span> GameObserver<span class="operator">::</span>on_creature_health_changed(
+    std<span class="operator">::</span>uint64_t id_p<span class="operator">,</span>
+    <span class="type">int</span> health_p
+)
+{
+    <span class="type">QMetaObject</span><span class="operator">::</span>invokeMethod(
+        <span class="keyword">this</span><span class="operator">,</span>
+        <span class="operator">[</span><span class="keyword">this</span><span class="operator">,</span> id_p<span class="operator">,</span> health_p<span class="operator">]</span>() {
+            <span class="keyword">emit</span> creatureHealthChanged(id_p<span class="operator">,</span> health_p);
+        }<span class="operator">,</span>
+        <span class="type">Qt</span><span class="operator">::</span>QueuedConnection
+    );
+}</pre>
+<p><code translate="no">Qt::QueuedConnection</code> runs the lambda in the GUI thread, so QML never sees half updated data.</p>
+<h2 id="models-and-commands">Models and commands</h2>
+<p><a href="gamebackend.html" translate="no">GameBackend</a> owns one list model per kind of object (creatures, bases, base actions, corpses) and forwards input to the core:</p>
+<pre class="cpp" translate="no">    Q_INVOKABLE <span class="type">void</span> orderBaseAction(<span class="keyword">const</span> <span class="type">QString</span><span class="operator">&amp;</span> key_p);</pre>
+<p>Example use in QML:</p>
+<pre class="cpp" translate="no">Repeater {
+    model: gameBackend<span class="operator">.</span>creaturesModel
+    delegate: CreatureView {}
+}
+
+onClicked: gameBackend<span class="operator">.</span>orderBaseAction(<span class="string">&quot;spawn:orc&quot;</span>)</pre>
+<p>The core checks every command. QML cannot, for example, move the units of another race.</p>
+<h2 id="adding-new-data-to-the-screen">Adding new data to the screen</h2>
+<p>Always the same path:</p>
+<ol class="1" type="1"><li>Add a function to <a href="igame-observer-t.html" translate="no">igame_observer_t</a> and call it in the core.</li>
+<li>Emit a signal from <a href="gameobserver.html" translate="no">GameObserver</a>.</li>
+<li>Update a model or a property in <a href="gamebackend.html" translate="no">GameBackend</a>.</li>
+<li>Bind to it in QML.</li>
+</ol>
+</div>
+<!-- @@@tutorial-qml-bridge.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="tutorial-game-core.html">Tutorial 5: A Game Core Like an MMORPG Server</a>
+<a class="nextPage" href="tutorial-map-and-sprites.html">Tutorial 7: The Map, Sprites and Oblique Projection</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

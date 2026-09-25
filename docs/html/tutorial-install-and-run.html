@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- 02-install-and-run.qdoc -->
+  <title>Tutorial 2: Install Felgo and Run the Game | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Tutorial 2: Install Felgo and Run the Game</li>
+  <link rel="prev" href="tutorial-overview.html" />
+  <link rel="next" href="tutorial-project-setup.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="tutorial-overview.html">Tutorial 1: What We Build</a>
+<a class="nextPage" href="tutorial-project-setup.html">Tutorial 3: The Felgo Project</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#1-install-felgo">1. Install Felgo</a></li>
+<li class="level1"><a href="#2-get-the-code">2. Get the code</a></li>
+<li class="level1"><a href="#3-open-the-project">3. Open the project</a></li>
+<li class="level1"><a href="#4-build-and-run">4. Build and run</a></li>
+<li class="level1"><a href="#5-run-the-unit-tests-optional">5. Run the unit tests (optional)</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Tutorial 2: Install Felgo and Run the Game</h1>
+<!-- $$$tutorial-install-and-run.html-description -->
+<div class="descr" id="details">
+<p>This chapter takes you from nothing to a running game.</p>
+<h2 id="1-install-felgo">1. Install Felgo</h2>
+<ol class="1" type="1"><li>Go to <a href="https://felgo.com/download">felgo.com/download</a> and create a free account.</li>
+<li>Download and start the Felgo installer.</li>
+<li>Select Felgo 4 with Qt 6.8.3. On Windows pick the <b>MinGW 64-bit</b> desktop kit.</li>
+<li>Finish the installation. It includes Qt Creator, CMake, Ninja and the compiler.</li>
+</ol>
+<h2 id="2-get-the-code">2. Get the code</h2>
+<pre class="cpp plain" translate="no">git clone https://github.com/comm0/creature_wars.git</pre>
+<h2 id="3-open-the-project">3. Open the project</h2>
+<ol class="1" type="1"><li>Start Qt Creator from the Felgo installation.</li>
+<li><b translate="no">File &gt; Open File or Project</b> and select <code translate="no">CMakeLists.txt</code>.</li>
+<li>Select the <b>Felgo Desktop Qt 6.8.3 MinGW 64-bit</b> kit and click <b translate="no">Configure Project</b>.</li>
+</ol>
+<p>The first configure downloads nlohmann/json from GitHub, so you need internet.</p>
+<h2 id="4-build-and-run">4. Build and run</h2>
+<p>Select the <code translate="no">appCreatureWars</code> target and press <b translate="no">Run</b> (Ctrl+R). You get the start screen. Pick a race and press <b translate="no">Start</b>.</p>
+<p>In Debug builds a second window, <i>Creature Wars Debug</i>, shows log messages and the game tick time. That is normal.</p>
+<div class="admonition note">
+<p><b>Note: </b>Android is on the todo list. It is not tested yet, so this tutorial covers the desktop build only.</p>
+</div>
+<h2 id="5-run-the-unit-tests-optional">5. Run the unit tests (optional)</h2>
+<p>The core has its own tests that need no Felgo:</p>
+<pre class="cpp plain" translate="no">cmake -S . -B build/core -DCREATURE_WARS_BUILD_APP=OFF -DBUILD_TESTING=ON
+cmake --build build/core
+ctest --test-dir build/core</pre>
+</div>
+<!-- @@@tutorial-install-and-run.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="tutorial-overview.html">Tutorial 1: What We Build</a>
+<a class="nextPage" href="tutorial-project-setup.html">Tutorial 3: The Felgo Project</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

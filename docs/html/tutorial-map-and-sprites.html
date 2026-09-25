@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- 07-map-and-sprites.qdoc -->
+  <title>Tutorial 7: The Map, Sprites and Oblique Projection | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Tutorial 7: The Map, Sprites and Oblique Projection</li>
+  <link rel="prev" href="tutorial-qml-bridge.html" />
+  <link rel="next" href="tutorial-selection-and-orders.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="tutorial-qml-bridge.html">Tutorial 6: Connecting the Core to QML</a>
+<a class="nextPage" href="tutorial-selection-and-orders.html">Tutorial 8: Selecting Units and Giving Orders</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#the-tile-map">The tile map</a></li>
+<li class="level1"><a href="#oblique-projection">Oblique projection</a></li>
+<li class="level1"><a href="#sprite-sheets">Sprite sheets</a></li>
+<li class="level1"><a href="#screen-densities">Screen densities</a></li>
+<li class="level1"><a href="#one-grey-image-many-colours">One grey image, many colours</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Tutorial 7: The Map, Sprites and Oblique Projection</h1>
+<!-- $$$tutorial-map-and-sprites.html-description -->
+<div class="descr" id="details">
+<h2 id="the-tile-map">The tile map</h2>
+<p>Tiles are 16 by 16 units. Each creature item covers one tile:</p>
+<pre class="cpp" translate="no">    <span class="name">x</span>: <span class="name">column</span> <span class="operator">*</span> <span class="name">tileSize</span>
+    <span class="name">y</span>: <span class="name">row</span> <span class="operator">*</span> <span class="name">tileSize</span>
+    <span class="name">width</span>: <span class="name">tileSize</span>
+    <span class="name">height</span>: <span class="name">tileSize</span></pre>
+<p>A <code translate="no">Behavior</code> on <code translate="no">x</code> and <code translate="no">y</code> turns tile jumps into a smooth walk.</p>
+<p><b>Why Repeater and not a tile map editor?</b> Felgo games often use Tiled maps. Our map is plain grass for now, so a <code translate="no">Repeater</code> is enough. A Tiled map is the way to go once the map gets terrain.</p>
+<h2 id="oblique-projection">Oblique projection</h2>
+<p>Like in many classic 2D RPGs, height is drawn up and to the left. A sprite is 32 by 32, a tile 16 by 16, so we anchor the sprite's bottom right corner to the tile:</p>
+<pre class="cpp" translate="no">    readonly property <span class="type">real</span> <span class="name">visualLeft</span>: <span class="name">tileSize</span> <span class="operator">-</span> <span class="name">spriteSize</span>
+    readonly property <span class="type">real</span> <span class="name">visualTop</span>: <span class="name">tileSize</span> <span class="operator">-</span> <span class="name">spriteSize</span></pre>
+<p>Objects further south or east are closer to the viewer and must be drawn on top:</p>
+<pre class="cpp" translate="no">    <span class="name">z</span>: (<span class="name">x</span> <span class="operator">+</span> <span class="name">y</span>) <span class="operator">/</span> <span class="name">tileSize</span> <span class="operator">+</span> <span class="name">y</span> <span class="operator">/</span> <span class="name">tileSize</span> <span class="operator">/</span> <span class="number">1000</span></pre>
+<h2 id="sprite-sheets">Sprite sheets</h2>
+<p>Each creature has 12 frames: 4 directions, one idle and two walking frames each. Felgo reads TexturePacker sheets directly:</p>
+<pre class="cpp" translate="no">            <span class="name">sourceComponent</span>: <span class="name">TexturePackerSpriteSequence</span> {
+                <span class="name">id</span>: <span class="name">creatureSprite</span>
+
+                readonly property <span class="type">string</span> <span class="name">sheet</span>:
+                    <span class="name">CreatureSprites</span>.<span class="name">sheetSource</span>(<span class="name">creatureView</span>.<span class="name">creatureTypeIdentifier</span>)
+                readonly property <span class="type">real</span> <span class="name">walkFrameRate</span>:
+                    <span class="number">1000</span> <span class="operator">/</span> <span class="name">Math</span>.<span class="name">max</span>(<span class="number">100</span>, <span class="name">creatureView</span>.<span class="name">movementDuration</span> <span class="operator">/</span> <span class="number">2</span>)
+
+                <span class="name">running</span>: <span class="name">creatureView</span>.<span class="name">spriteWalking</span>
+
+                <span class="type">TexturePackerSprite</span> {
+                    <span class="name">name</span>: <span class="string">&quot;north_idle&quot;</span>
+                    <span class="name">source</span>: <span class="name">creatureSprite</span>.<span class="name">sheet</span>
+                    <span class="name">frameNames</span>: [<span class="string">&quot;north_0.png&quot;</span>]
+                }</pre>
+<p>Switch animations by name:</p>
+<pre class="cpp" translate="no">creatureSprite<span class="operator">.</span>jumpTo(<span class="string">&quot;south_walk&quot;</span>)</pre>
+<div class="admonition note">
+<p><b>Note: </b>Pack sheets with 1 pixel extrude and 2 pixels padding. Without it scaled pixel art shows thin lines at the frame edges.</p>
+</div>
+<h2 id="screen-densities">Screen densities</h2>
+<p>Put each image in three sizes: normal, <code translate="no">+hd</code> (2x) and <code translate="no">+hd2</code> (4x). Felgo picks one:</p>
+<pre class="cpp" translate="no">assets<span class="operator">/</span>structures<span class="operator">/</span>base<span class="operator">/</span>base_1<span class="operator">.</span>png
+assets<span class="operator">/</span>structures<span class="operator">/</span>base<span class="operator">/</span><span class="operator">+</span>hd<span class="operator">/</span>base_1<span class="operator">.</span>png
+assets<span class="operator">/</span>structures<span class="operator">/</span>base<span class="operator">/</span><span class="operator">+</span>hd2<span class="operator">/</span>base_1<span class="operator">.</span>png</pre>
+<p>Use the normal path in QML:</p>
+<pre class="cpp" translate="no">    <span class="type">MultiResolutionImage</span> {
+        <span class="name">id</span>: <span class="name">baseImage</span>
+
+        <span class="name">x</span>: -<span class="name">baseView</span>.<span class="name">artHeight</span>
+        <span class="name">y</span>: -<span class="name">baseView</span>.<span class="name">artHeight</span>
+        <span class="name">width</span>: <span class="name">baseView</span>.<span class="name">width</span> <span class="operator">+</span> <span class="name">baseView</span>.<span class="name">artHeight</span>
+        <span class="name">height</span>: <span class="name">baseView</span>.<span class="name">height</span> <span class="operator">+</span> <span class="name">baseView</span>.<span class="name">artHeight</span>
+        <span class="name">source</span>: <span class="string">&quot;qrc:/assets/structures/base/base_&quot;</span> <span class="operator">+</span> <span class="name">baseView</span>.<span class="name">artLevel</span> <span class="operator">+</span> <span class="string">&quot;.png&quot;</span>
+        <span class="name">smooth</span>: <span class="number">false</span>
+        <span class="name">layer</span>.enabled: <span class="number">true</span>
+        <span class="name">layer</span>.effect: <span class="name">TintEffect</span> {
+            <span class="name">color</span>: <span class="name">baseView</span>.<span class="name">baseColor</span>
+        }
+    }</pre>
+<h2 id="one-grey-image-many-colours">One grey image, many colours</h2>
+<p>Bases are grey. A tiny shader multiplies them with the race colour:</p>
+<pre class="cpp" translate="no">void main()
+{
+    vec4 color = texture(source, qt_TexCoord0);
+    fragColor = vec4(color.rgb * tintColor.rgb, color.a) * qt_Opacity;
+}</pre>
+<p>The grey art comes from <code translate="no">scripts/generate_placeholders.py</code>.</p>
+</div>
+<!-- @@@tutorial-map-and-sprites.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="tutorial-qml-bridge.html">Tutorial 6: Connecting the Core to QML</a>
+<a class="nextPage" href="tutorial-selection-and-orders.html">Tutorial 8: Selecting Units and Giving Orders</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>

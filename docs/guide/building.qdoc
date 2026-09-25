@@ -78,7 +78,9 @@
     qdoc creature_wars.qdocconf
     \endcode
 
-    The HTML ends up in \c docs/html. Code snippets in the tutorial are quoted straight from
+    The HTML ends up in \c docs/html and is committed, so readers can open
+    \c docs/html/index.html without building anything. Rebuild it after every change to the
+    docs or to quoted code. Code snippets in the tutorial are quoted straight from
     the source files with \c \\quotefromfile, so they stay in sync with the code as long as
     the quoted lines keep existing.
 */

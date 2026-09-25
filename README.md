@@ -114,12 +114,14 @@ The docs folder has a developer tutorial written in QDoc, as asked by the Felgo 
 - Developer guide with build options, architecture, coding conventions and recipes
 - Reference for the main classes of the game core and the Qt bridge
 
-Build it with the docs target (qdoc has to be in your PATH) or by hand:
+Read it online at https://comm0.github.io/creature_wars/html/index.html or open
+docs/html/index.html from the repository in a browser.
+
+After changing the docs, rebuild them with the docs target (qdoc has to be in your PATH)
+or by hand:
 
     cd docs
     qdoc creature_wars.qdocconf
-
-Then open docs/html/index.html in a browser.
 
 ## Project structure
 

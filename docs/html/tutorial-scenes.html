@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- 04-scenes.qdoc -->
+  <title>Tutorial 4: Scenes and the Game Window | Creature Wars 1.0</title>
+<link rel="stylesheet" type="text/css" href="style/creature_wars.css" />
+</head>
+<body>
+<div class="header"><a href="index.html">Creature Wars</a> <span>Felgo tutorial and developer docs</span></div>
+<div class="content">
+<li><a href="index.html">Creature Wars</a></li>
+<li><a href="index.html">Creature Wars</a></li>
+<li>Tutorial 4: Scenes and the Game Window</li>
+  <link rel="prev" href="tutorial-project-setup.html" />
+  <link rel="next" href="tutorial-game-core.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="tutorial-project-setup.html">Tutorial 3: The Felgo Project</a>
+<a class="nextPage" href="tutorial-game-core.html">Tutorial 5: A Game Core Like an MMORPG Server</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#gamewindow">GameWindow</a></li>
+<li class="level1"><a href="#a-scene-with-a-fixed-size">A scene with a fixed size</a></li>
+<li class="level1"><a href="#switching-scenes">Switching scenes</a></li>
+<li class="level1"><a href="#the-menu">The menu</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Tutorial 4: Scenes and the Game Window</h1>
+<!-- $$$tutorial-scenes.html-description -->
+<div class="descr" id="details">
+<p>Felgo splits a game into one <code translate="no">GameWindow</code> and several <code translate="no">Scene</code> items. We have three scenes: menu, game and game over.</p>
+<h2 id="gamewindow">GameWindow</h2>
+<pre class="cpp" translate="no"><span class="type">GameWindow</span> {
+    <span class="name">id</span>: <span class="name">gameWindow</span>
+
+    required property <span class="type">var</span> <span class="name">gameBackend</span>
+
+    <span class="name">screenWidth</span>: <span class="number">1280</span>
+    <span class="name">screenHeight</span>: <span class="number">720</span>
+    <span class="name">storeWindowGeometry</span>: <span class="number">false</span>
+    <span class="name">activeScene</span>: <span class="name">menuScene</span>
+    <span class="name">state</span>: <span class="string">&quot;menu&quot;</span></pre>
+<p><code translate="no">screenWidth</code> and <code translate="no">screenHeight</code> only matter on desktop. On phones the window fills the screen.</p>
+<h2 id="a-scene-with-a-fixed-size">A scene with a fixed size</h2>
+<p>Design every scene for one size. Felgo scales it to the screen:</p>
+<pre class="cpp" translate="no">    <span class="name">width</span>: <span class="number">640</span>
+    <span class="name">height</span>: <span class="number">360</span>
+    <span class="name">scaleMode</span>: <span class="string">&quot;letterbox&quot;</span></pre>
+<p>With <code translate="no">letterbox</code> the aspect ratio stays the same and free space becomes bars. To fill the bars too, anchor backgrounds to <code translate="no">gameWindowAnchorItem</code>:</p>
+<pre class="cpp" translate="no">Rectangle {
+    anchors<span class="operator">.</span>fill: gameScene<span class="operator">.</span>gameWindowAnchorItem
+    color: <span class="string">&quot;#111814&quot;</span>
+}</pre>
+<h2 id="switching-scenes">Switching scenes</h2>
+<p>Hide every scene by default and show the right one with a state on the window:</p>
+<pre class="cpp" translate="no">    <span class="name">states</span>: [
+        <span class="type">State</span> {
+            <span class="name">name</span>: <span class="string">&quot;menu&quot;</span>
+
+            <span class="type">PropertyChanges</span> {
+                <span class="name">menuScene</span>.opacity: <span class="number">1</span>
+                <span class="name">gameWindow</span>.activeScene: <span class="name">menuScene</span>
+            }
+        },
+        <span class="type">State</span> {
+            <span class="name">name</span>: <span class="string">&quot;game&quot;</span>
+
+            <span class="type">PropertyChanges</span> {
+                <span class="name">gameScene</span>.opacity: <span class="number">1</span>
+                <span class="name">gameWindow</span>.activeScene: <span class="name">gameScene</span>
+            }
+        },
+        <span class="type">State</span> {
+            <span class="name">name</span>: <span class="string">&quot;gameOver&quot;</span>
+
+            <span class="type">PropertyChanges</span> {
+                <span class="name">gameScene</span>.opacity: <span class="number">1</span>
+                <span class="name">gameOverScene</span>.opacity: <span class="number">1</span>
+                <span class="name">gameWindow</span>.activeScene: <span class="name">gameOverScene</span>
+            }
+        }
+    ]</pre>
+<p>Each scene has this, so the change fades in and out:</p>
+<pre class="cpp" translate="no">opacity: <span class="number">0</span>
+visible: opacity <span class="operator">&gt;</span> <span class="number">0</span>
+Behavior on opacity { NumberAnimation { duration: <span class="number">250</span> } }</pre>
+<p>Switching is one line:</p>
+<pre class="cpp" translate="no">gameWindow<span class="operator">.</span>state <span class="operator">=</span> <span class="string">&quot;game&quot;</span></pre>
+<h2 id="the-menu">The menu</h2>
+<p>The menu shows one card per race and a Felgo <code translate="no">AppButton</code>. Each card shows the first frame of a sprite sheet:</p>
+<pre class="cpp" translate="no">TexturePackerAnimatedSprite {
+    source: <span class="string">&quot;qrc:/assets/creatures/orc/orc.json&quot;</span>
+    frameNames: <span class="operator">[</span><span class="string">&quot;south_0.png&quot;</span><span class="operator">]</span>
+}</pre>
+</div>
+<!-- @@@tutorial-scenes.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="tutorial-project-setup.html">Tutorial 3: The Felgo Project</a>
+<a class="nextPage" href="tutorial-game-core.html">Tutorial 5: A Game Core Like an MMORPG Server</a>
+</p>
+</div>
+<div class="footer">Copyright (c) 2026 PioD. All rights reserved.</div>
+</body>
+</html>
